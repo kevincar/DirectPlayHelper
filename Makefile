@@ -2,13 +2,13 @@
 # Author: kevincar
 
 # Working Directory
-SRCDIR :=
-SRCS :=
+SRCDIR := src
+SRCS := $(wildcard $(SRCDIR)/*.cpp)
 
 OBJDIR :=
 OBJS :=
 
-BINDIR :=
+BINDIR := bin
 
 # Project Settings
 PROJECT_NAME := "DPServer"
@@ -21,3 +21,6 @@ LDFLAGS :=
 # Rules
 all:
 	echo "Nothing yet..."
+
+nix: $(SRCS)
+	g++ -o $(BINDIR)/$(PROJECT_NAME) @^

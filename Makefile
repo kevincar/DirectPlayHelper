@@ -18,11 +18,18 @@ CXXFLAGS :=
 CPPFLAGS :=
 LDFLAGS :=
 
+# Cross Compile Settings
+mingw := /usr/local/bin/i686-w64-mingw32-g++
+minCPPFLAGS := -static -static-libstdc++ -static-libgcc
+
 # Rules
 all: bindir objdir nix
 
 nix: $(SRCS)
 	g++ -o $(BINDIR)/$(PROJECT_NAME) $^ 
+
+winnix: $(SRCS)
+	$(mingw) $(minCPPFLAGS) -o $(BINDIR)/$(PROJECT_NAME).exe $^
 
 bindir:
 	if [ ! -d $(BINDIR) ] ; then mkdir $(BINDIR) ; fi

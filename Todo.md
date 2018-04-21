@@ -9,4 +9,6 @@ Below is the current todo list for the project. The legend is as follows:
 ----------------------------
 
 [√] - Hello World
-[ ] - DPServer Class
+[√] - DPServer Class
+[ ] - Server class
+[ ] - Client class

@@ -7,16 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# we should probably be using g3log package
-#find_library(g3log_location libg3logger.dylib)
-#find_path(G3LOG_ROOT_DIR
-	#NAMES include/g3log/g3log.hpp
-	#)
-#message(STATUS ${G3LOG_ROOT_DIR})
-
-#add_library(g3log STATIC IMPORTED)
-#set_target_properties(g3log PROPERTIES IMPORTED_LOCATION ${g3log_location})
-
 # G3Logger the package cmake script doesn't add the library we'll do that here
 find_package(g3logger REQUIRED CONFIG)
 add_library(g3logger STATIC IMPORTED)

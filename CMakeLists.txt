@@ -12,12 +12,16 @@ add_executable(DPServer
 	src/DPServer.cpp
 	)
 
-find_library(g3log_location NAMES libg3logger.dylib)
-message(STATUS ${g3log_location})
+find_library(g3log_location libg3logger.dylib)
+find_path(G3LOG_ROOT_DIR
+	NAMES include/g3log/g3log.hpp
+	)
+message(STATUS ${G3LOG_ROOT_DIR})
 
 target_include_directories(DPServer 
 	PUBLIC
 		include
+		${G3LOG_ROOT_DIR}/include
 	)
 
 add_library(g3log STATIC IMPORTED)

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <g3log/g3log.hpp>
 #include "DPServer.hpp"
 
 DPServer::DPServer(int argc, char* argv[]) : nArgs(argc), args(argv) {}
@@ -8,7 +9,8 @@ void DPServer::processArgs(void) {
 		return this->usage();
 	}
 
-	std::cout << "Not yet implemented..." << std::endl;
+	//std::cout << "Not yet implemented..." << std::endl;
+	LOG(INFO) << "Not yet implemented...";
 
 	return;
 }

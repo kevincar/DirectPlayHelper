@@ -10,6 +10,7 @@ public:
 	DPServer(int argc, char* argv[]);
 
 	void start(void);
+	int test(void);
 
 private:
 	int nArgs;

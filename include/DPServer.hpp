@@ -1,8 +1,9 @@
 
-#ifndef DPSERVER
-#define DPSERVER
+#ifndef __DPSERVER_HPP__
+#define __DPSERVER_HPP__
 
-class DPServer {
+class DPServer 
+{
 
 public:
 
@@ -19,4 +20,4 @@ private:
 
 };
 
-#endif /* DPServer */
+#endif /* __DPServer_HPP__ */

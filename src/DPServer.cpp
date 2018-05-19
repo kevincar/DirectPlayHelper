@@ -4,8 +4,10 @@
 
 DPServer::DPServer(int argc, char* argv[]) : nArgs(argc), args(argv) {}
 
-void DPServer::processArgs(void) {
-	if(this->nArgs <= 1) {
+void DPServer::processArgs(void) 
+{
+	if(this->nArgs <= 1) 
+	{
 		return this->usage();
 	}
 
@@ -15,7 +17,8 @@ void DPServer::processArgs(void) {
 	return;
 }
 
-void DPServer::usage(void) {
+void DPServer::usage(void) 
+{
 	std::cout << "Usage: DPServer (-s | -c) [options]" << "\n"
 			  << "\n"
 			  << "Arguments" << "\n"
@@ -29,7 +32,8 @@ void DPServer::usage(void) {
 	return;
 }
 
-void DPServer::start(void) {
+void DPServer::start(void) 
+{
 	this->processArgs();
 	return;
 }

@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(g3logger REQUIRED CONFIG)
 add_library(g3logger STATIC IMPORTED)
 set_target_properties(g3logger PROPERTIES IMPORTED_LOCATION ${G3LOG_LIBRARIES})
+message(STATUS "g3logger libraries: ${G3LOG_INCLUDE_DIRS}")
 
 # build the app
 add_executable(DPServer
@@ -28,3 +29,6 @@ target_include_directories(DPServer BEFORE
 target_link_libraries(DPServer
 	PUBLIC
 		g3logger)
+
+# Oh yeah, and add the tests
+add_subdirectory(tests)

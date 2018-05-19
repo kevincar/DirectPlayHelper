@@ -4,20 +4,19 @@
 
 DPServer::DPServer(int argc, char* argv[]) : nArgs(argc), args(argv) {}
 
-void DPServer::processArgs(void) 
+void DPServer::processArgs(void)
 {
-	if(this->nArgs <= 1) 
+	if(this->nArgs <= 1)
 	{
 		return this->usage();
 	}
 
-	//std::cout << "Not yet implemented..." << std::endl;
 	LOG(INFO) << "Not yet implemented...";
 
 	return;
 }
 
-void DPServer::usage(void) 
+void DPServer::usage(void)
 {
 	std::cout << "Usage: DPServer (-s | -c) [options]" << "\n"
 			  << "\n"
@@ -32,7 +31,7 @@ void DPServer::usage(void)
 	return;
 }
 
-void DPServer::start(void) 
+void DPServer::start(void)
 {
 	this->processArgs();
 	return;

@@ -36,3 +36,8 @@ void DPServer::start(void)
 	this->processArgs();
 	return;
 }
+
+int DPServer::test(void)
+{
+	return 1001;
+}

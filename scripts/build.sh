@@ -7,6 +7,12 @@ function fail_and_exit() {
 	exit 1
 }
 
+echo "Checking for build directory..."
+if [ -d build ] ; then
+	echo "build directory already exists. Remvoing..."
+	rm -rf ./build
+fi
+
 echo "Creating build directory"
 mkdir build || fail_and_exit "Failed to make directory"
 

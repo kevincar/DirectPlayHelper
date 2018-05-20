@@ -2,10 +2,10 @@
 
 # This file should be run from the repository root directory
 
-function fail_and_exit {
-	echo $@
-	exit 1
-}
+#function fail_and_exit {
+	#echo $@
+	#exit 1
+#}
 
 echo "Checking for build directory..."
 if [ -d build ] ; then
@@ -14,14 +14,14 @@ if [ -d build ] ; then
 fi
 
 echo "Creating build directory"
-mkdir build || fail_and_exit "Failed to make directory"
+mkdir build || echo "Failed to make directory" && exit 1
 
 echo "Moving into build directory"
-cd ./build || fail_and_exit "Failed to cd into build"
+cd ./build || echo "Failed to cd into build" && exit 1
 
 echo "Generating build environment..."
-cmake .. || fail_and_exit "Failed to generate the build environment"
+cmake .. || echo "Failed to generate the build environment" && exit 1
 
 echo "Making..."
-make || fail_and_exit "Failed to make"
+make || echo "Failed to make" && exit 1
 #make install || fail_and_exit "Failed to install"

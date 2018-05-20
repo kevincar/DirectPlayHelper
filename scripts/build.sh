@@ -2,7 +2,7 @@
 
 # This file should be run from the repository root directory
 
-function fail_and_exit() {
+function fail_and_exit {
 	echo $@
 	exit 1
 }

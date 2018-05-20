@@ -14,14 +14,14 @@ if [ -d build ] ; then
 fi
 
 echo "Creating build directory"
-mkdir build || echo "Failed to make directory" && exit 1
+mkdir build #|| echo "Failed to make directory" && exit 1
 
 echo "Moving into build directory"
-cd ./build || echo "Failed to cd into build" && exit 1
+cd ./build #|| echo "Failed to cd into build" && exit 1
 
 echo "Generating build environment..."
-cmake .. || echo "Failed to generate the build environment" && exit 1
+cmake .. #|| echo "Failed to generate the build environment" && exit 1
 
 echo "Making..."
-make || echo "Failed to make" && exit 1
+make #|| echo "Failed to make" && exit 1
 #make install || fail_and_exit "Failed to install"

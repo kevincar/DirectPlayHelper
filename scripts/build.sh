@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /usr/bin/sh
 
 # This file should be run from the repository root directory
 

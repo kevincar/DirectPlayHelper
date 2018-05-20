@@ -25,3 +25,6 @@ cmake .. #|| echo "Failed to generate the build environment" && exit 1
 echo "Making..."
 make #|| echo "Failed to make" && exit 1
 #make install || fail_and_exit "Failed to install"
+
+echo "testing..."
+./tests/DPServerTest

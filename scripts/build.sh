@@ -1,4 +1,4 @@
-#! /usr/bin/sh
+#! /usr/bin/env sh
 
 # This file should be run from the repository root directory
 

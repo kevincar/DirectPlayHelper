@@ -7,13 +7,21 @@ add_executable(DPServerTest
 target_include_directories(DPServerTest BEFORE
 	PUBLIC
 		../include
+		${CMAKE_CURRENT_SOURCE_DIR}/gtest/googletest-release-1.8.0/googletest/include
 		${G3LOG_INCLUDE_DIRS})
 
 # Google Testing Library
-find_library(GTEST_LIB_DIR libgtest.a)
+find_library(GTEST_LIB_DIR 
+	NAMES libgtest.a
+	HINTS ${CMAKE_CURRENT_SOURCE_DIR}/gtest/googletest-release-1.8.0/build/googlemock/gtest/)
+message(STATUS "libgtest: ${GTEST_LIB_DIR}")
 add_library(gtest STATIC IMPORTED)
 set_target_properties(gtest PROPERTIES IMPORTED_LOCATION ${GTEST_LIB_DIR})
-find_library(GTEST_MAIN_DIR libgtest_main.a)
+
+find_library(GTEST_MAIN_DIR 
+	NAMES libgtest_main.a
+	HINTS ${CMAKE_CURRENT_SOURCE_DIR}/gtest/googletest-release-1.8.0/build/googlemock/gtest/)
+message(STATUS "libgtest_main: ${GTEST_MAIN_DIR}")
 add_library(gtest_main STATIC IMPORTED)
 set_target_properties(gtest_main PROPERTIES IMPORTED_LOCATION ${GTEST_MAIN_DIR})
 

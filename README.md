@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kevincar/DPServer.svg?branch=master)](https://travis-ci.org/kevincar/DPServer)
+
 # Direct Play Server
 
 DirectPlay is a deprecated API that was part of Microsoft's DirectX API.

@@ -1,7 +1,9 @@
 # Make the test executable
 add_executable(DPServerTest 
 	../src/DPServer.cpp
-	./src/DPServer_test.cpp)
+	../src/ArgParser.cpp
+	./src/DPServer_test.cpp
+	./src/ArgParser_test.cpp)
 
 # Includes
 target_include_directories(DPServerTest BEFORE

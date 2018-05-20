@@ -17,6 +17,7 @@ message(STATUS "g3logger libraries: ${G3LOG_INCLUDE_DIRS}")
 add_executable(DPServer
 	src/main.cpp
 	src/DPServer.cpp
+	src/ArgParser.cpp
 	)
 
 # Includes

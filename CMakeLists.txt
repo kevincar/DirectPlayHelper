@@ -32,3 +32,10 @@ target_link_libraries(DPServer
 
 # Oh yeah, and add the tests
 add_subdirectory(tests)
+
+
+#############################
+#       INSTALL             #
+#############################
+
+install(TARGETS DPServer DESTINATION bin)

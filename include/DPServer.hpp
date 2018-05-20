@@ -7,16 +7,18 @@ class DPServer
 
 public:
 
+	bool isServer;
+
 	DPServer(int argc, char* argv[]);
 
 	void start(void);
+	void processArgs(void);
 	int test(void);
 
 private:
 	int nArgs;
 	char** args;
 
-	void processArgs(void);
 	void usage(void);
 
 };

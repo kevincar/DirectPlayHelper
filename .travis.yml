@@ -6,4 +6,6 @@ addons:
         packages:
             - cmake
 
+install: ./scripts/install-dependencies.sh
+
 script: ./scripts/build.sh

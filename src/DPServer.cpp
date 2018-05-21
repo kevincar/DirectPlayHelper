@@ -62,6 +62,17 @@ void DPServer::processArgs(void)
 			}
 
 			this->hostIPAddress = potentialHostIPAddress;
+			i++;
+		}
+		else if( (curArg == "-p") || (curArg == "--port") )
+		{
+			if(i == this->args.size())
+			{
+				LOG(INFO) << "Port flag used but no port number provided";
+			}
+
+			std::string potentialPortNum = this->args[i+1];
+			this->connPort = std::stoi(potentialPortNum);
 		}
 	}
 

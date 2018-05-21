@@ -61,3 +61,21 @@ TEST(DPServerTest, setServerAndClient)
 	EXPECT_EQ(dps.getHostIPAddress(), "");
 	EXPECT_EQ(dps.getConnPort(), 0);
 }
+
+TEST(DPServerTest, setPort)
+{
+	int argc = 5;
+	char* argv[] = {
+		(char*)"DPServer",
+		(char*)"--client",
+		(char*)"192.168.8.8",
+		(char*)"--port",
+		(char*)"2300"
+	};
+
+	DPServer dps(argc, argv);
+	dps.processArgs();
+	EXPECT_EQ(dps.getAppState(), DPServer::CLIENT);
+	EXPECT_EQ(dps.getHostIPAddress(), "192.168.8.8");
+	EXPECT_EQ(dps.getConnPort(), 2300);
+}

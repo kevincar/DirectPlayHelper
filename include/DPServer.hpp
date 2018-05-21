@@ -2,24 +2,41 @@
 #ifndef __DPSERVER_HPP__
 #define __DPSERVER_HPP__
 
+#include <string>
+#include <vector>
+
 class DPServer 
 {
 
 public:
 
-	bool isServer;
+	enum APPSTATE
+	{
+		NOT_SET,
+		SERVER,
+		CLIENT
+	};
 
 	DPServer(int argc, char* argv[]);
 
 	void start(void);
 	void processArgs(void);
-	int test(void);
+
+	APPSTATE getAppState(void);
+	std::string getHostIPAddress(void);
+	int getConnPort(void);
 
 private:
 	int nArgs;
-	char** args;
+	std::vector<std::string> args;
+
+	APPSTATE appState = NOT_SET;
+	std::string hostIPAddress = "";
+	int connPort = 0;
 
 	void usage(void);
+
+	bool setAppState(APPSTATE as);
 
 };
 

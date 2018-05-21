@@ -13,6 +13,8 @@ class ArgParser
 
 		static std::vector<std::string> vectorize(int argc, char** argv);
 
+		std::vector<std::string> getArgs(void);
+
 	private:
 
 		int nArgs;

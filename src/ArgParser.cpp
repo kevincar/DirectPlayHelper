@@ -19,3 +19,8 @@ std::vector<std::string> ArgParser::vectorize(int argc, char** argv)
 
 	return result;
 }
+
+std::vector<std::string> ArgParser::getArgs(void)
+{
+	return this->args;
+}

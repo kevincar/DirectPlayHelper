@@ -3,5 +3,5 @@ bin/
 obj/
 *.gch
 build/
-.clang_complete
 gtest
+.lvimrc

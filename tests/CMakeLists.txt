@@ -3,7 +3,8 @@ add_executable(DPServerTest
 	../src/DPServer.cpp
 	../src/ArgParser.cpp
 	./src/DPServer_test.cpp
-	./src/ArgParser_test.cpp)
+	./src/ArgParser_test.cpp
+	./src/inet/Socket_test.cpp)
 
 # Includes
 target_include_directories(DPServerTest BEFORE
@@ -31,6 +32,6 @@ set_target_properties(gtest_main PROPERTIES IMPORTED_LOCATION ${GTEST_MAIN_DIR})
 target_link_libraries(DPServerTest
 	PUBLIC
 		g3logger
+		inet
 		gtest
 		gtest_main)
-

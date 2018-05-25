@@ -26,10 +26,14 @@ target_include_directories(DPServer BEFORE
 		include
 		${G3LOG_INCLUDE_DIRS})
 
+# build the inet library
+add_subdirectory(src/inet)
+
 # Link dependencies
 target_link_libraries(DPServer
 	PUBLIC
-		g3logger)
+		g3logger
+		inet)
 
 # Oh yeah, and add the tests
 add_subdirectory(tests)

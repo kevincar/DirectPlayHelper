@@ -1,5 +1,7 @@
 #include <string>
 
+#include <unistd.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -15,6 +17,16 @@ namespace inet
 		if(this->socket == -1)
 		{
 			throw "Bad socket";
+		}
+	}
+
+	Socket::~Socket(void) noexcept(false)
+	{
+		int result = close(this->socket);
+
+		if(result != 0)
+		{
+			throw std::string("Error closing socket: ") + std::to_string(errno);
 		}
 	}
 }

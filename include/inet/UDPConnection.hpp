@@ -10,6 +10,7 @@ namespace inet
 	{
 		public:
 			UDPConnection(void);
+			bool send(void* data) override;
 	};
 }
 

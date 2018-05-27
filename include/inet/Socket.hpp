@@ -12,6 +12,7 @@ namespace inet
 			int protocol = -1;
 
 			Socket(int f, int t, int p);
+			~Socket() noexcept(false);
 		private:
 			int socket = -1;
 	};

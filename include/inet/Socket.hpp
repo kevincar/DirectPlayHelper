@@ -1,6 +1,6 @@
 
-#ifndef __SOCKET_HPP__
-#define __SOCKET_HPP__
+#ifndef INET_SOCKET_HPP
+#define INET_SOCKET_HPP
 
 namespace inet
 {
@@ -17,4 +17,4 @@ namespace inet
 	};
 }
 
-#endif /* __SOCKET_HPP__ */
+#endif /* INET_SOCKET_HPP */

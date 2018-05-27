@@ -1,6 +1,6 @@
 
-#ifndef __DPSERVER_HPP__
-#define __DPSERVER_HPP__
+#ifndef DPS_DPSERVER_HPP
+#define DPS_DPSERVER_HPP
 
 #include <string>
 #include <vector>
@@ -40,4 +40,4 @@ private:
 
 };
 
-#endif /* __DPServer_HPP__ */
+#endif /* DPS_DPSERVER_HPP */

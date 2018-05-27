@@ -1,6 +1,6 @@
 
-#ifndef __IP_CONNECTION_HPP__
-#define __IP_CONNECTION_HPP__
+#ifndef INET_IP_CONNECTION_HPP
+#define INET_IP_CONNECTION_HPP
 
 #include <memory>
 #include "inet/Socket.hpp"
@@ -17,4 +17,5 @@ namespace inet
 			std::unique_ptr<Socket> socket;
 	};
 }
-#endif /* __IP_CONNECTION_HPP__ */
+
+#endif /* INET_IP_CONNECTION_HPP */

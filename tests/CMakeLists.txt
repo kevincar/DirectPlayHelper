@@ -5,6 +5,7 @@ add_executable(DPServerTest
 	./src/DPServer_test.cpp
 	./src/ArgParser_test.cpp
 	./src/inet/Socket_test.cpp
+	./src/inet/TCPConnection_test.cpp
 	./src/inet/UDPConnection_test.cpp)
 
 # Includes

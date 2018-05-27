@@ -8,7 +8,8 @@ namespace inet
 {
 	class UDPConnection : public IPConnection
 	{
-
+		public:
+			UDPConnection(void);
 	};
 }
 

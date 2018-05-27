@@ -1,5 +1,7 @@
 add_library(inet
-	Socket.cpp)
+	Socket.cpp
+	IPConnection.cpp
+	UDPConnection.cpp)
 
 target_include_directories(inet BEFORE
 	PUBLIC

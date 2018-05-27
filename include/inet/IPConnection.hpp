@@ -12,7 +12,8 @@ namespace inet
 		public:
 
 			IPConnection(int type, int protocol);
-
+			virtual ~IPConnection() = default;
+			virtual bool send(void* data) = 0;
 		private:
 			std::unique_ptr<Socket> socket;
 	};

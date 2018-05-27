@@ -4,7 +4,8 @@ add_executable(DPServerTest
 	../src/ArgParser.cpp
 	./src/DPServer_test.cpp
 	./src/ArgParser_test.cpp
-	./src/inet/Socket_test.cpp)
+	./src/inet/Socket_test.cpp
+	./src/inet/UDPConnection_test.cpp)
 
 # Includes
 target_include_directories(DPServerTest BEFORE

@@ -1,6 +1,6 @@
 add_library(inet
 	Socket.cpp
-	IPAddress.cpp
+	ServiceAddress.cpp
 	IPConnection.cpp
 	TCPConnection.cpp
 	UDPConnection.cpp)

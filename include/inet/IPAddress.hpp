@@ -16,7 +16,7 @@ namespace inet
 			std::string getAddress(void) const;
 		private:
 			sockaddr_in addr {};
-			std::mutex addr_mutex;
+			mutable std::mutex addr_mutex;
 	};
 }
 

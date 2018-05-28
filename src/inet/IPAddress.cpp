@@ -14,7 +14,7 @@ namespace inet
 		}
 	}
 
-	std::string IPAddress::getAddress(void)
+	std::string IPAddress::getAddress(void) const
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
 		char* result = ::inet_ntoa(this->addr.sin_addr);

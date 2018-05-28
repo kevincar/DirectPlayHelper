@@ -6,7 +6,7 @@ namespace inet
 {
 	TCPConnection::TCPConnection(void) : IPConnection(SOCK_STREAM, 0) {}
 
-	bool TCPConnection::send(void* data)
+	bool TCPConnection::send(void* data) const
 	{
 		if(data == nullptr)
 		{

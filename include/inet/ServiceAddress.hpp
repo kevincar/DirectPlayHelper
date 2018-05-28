@@ -13,7 +13,8 @@ namespace inet
 		public:
 			ServiceAddress(const std::string AddressString);
 
-			const std::string getAddress(void) const;
+			const std::string getAddressString(void) const;
+			const std::string getPortString(void) const;
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;

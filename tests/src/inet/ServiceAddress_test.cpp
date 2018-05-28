@@ -16,8 +16,14 @@ TEST(ServiceAddress, badconstructor)
 			});
 }
 
-TEST(ServiceAddress, getAddress)
+TEST(ServiceAddress, getAddressString)
 {
 	inet::ServiceAddress addr("192.168.1.100:47624");
-	ASSERT_STREQ(addr.getAddress().data(), "192.168.1.100");
+	ASSERT_STREQ(addr.getAddressString().data(), "192.168.1.100");
+}
+
+TEST(ServiceAddress, getPortString)
+{
+	inet::ServiceAddress addr("10.0.0.1:2400");
+	ASSERT_STREQ(addr.getPortString().data(), "2400");
 }

@@ -10,10 +10,10 @@ namespace inet
 			Socket(int f, int t, int p);
 			~Socket() noexcept(false);
 		private:
-			int socket = -1;
-			int family = -1;
-			int type = -1;
-			int protocol = -1;
+			int socket {-1};
+			int family {-1};
+			int type {-1};
+			int protocol {-1};
 	};
 }
 

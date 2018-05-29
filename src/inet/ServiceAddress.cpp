@@ -86,6 +86,7 @@ namespace inet
 		}
 
 		// set our socket
+		std::lock_guard<std::mutex> lock {this->sock_mutex};
 		this->boundSocket = sock;
 
 		// Now update the sockaddr
@@ -94,6 +95,7 @@ namespace inet
 
 	void ServiceAddress::updateAddr(void)
 	{
+		std::lock_guard<std::mutex> lock {this->addr_mutex};
 		unsigned int addrlen {sizeof(sockaddr_in)};
 		int result = ::getsockname(*this->boundSocket.get(), (sockaddr*)&this->addr, &addrlen);
 		if(result == -1)

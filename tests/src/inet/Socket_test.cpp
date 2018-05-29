@@ -15,3 +15,9 @@ TEST(SocketTest, constructorFail)
 			inet::Socket socket(999, 999, 999);
 			});
 }
+
+TEST(SocketTest, operatorInt)
+{
+	inet::Socket sock {AF_INET, SOCK_STREAM, 0};
+	EXPECT_GE(sock, 0);
+}

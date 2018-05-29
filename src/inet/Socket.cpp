@@ -29,4 +29,9 @@ namespace inet
 			throw std::string("Error closing socket: ") + std::to_string(errno);
 		}
 	}
+
+	Socket::operator int() const
+	{
+		return this->socket;
+	}
 }

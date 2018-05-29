@@ -75,19 +75,27 @@ namespace inet
 		this->addr.sin_port = htons(port);
 	}
 
-	void ServiceAddress::bind(Socket& sock)
+	void ServiceAddress::bind(std::shared_ptr<Socket>& sock)
 	{
+		// bind doesn't affect the addr, so no neet to lock
 		//Attempt to bind the socket
-		std::lock_guard<std::mutex> lock {this->addr_mutex};
-		int result = ::bind(sock, (sockaddr const*)&this->addr, sizeof(sockaddr_in));
+		int result = ::bind(*sock.get(), (sockaddr const*)&this->addr, sizeof(sockaddr_in));
 		if(result == -1)
 		{
 			throw "ServiceAddress:bind failed to bind the socket to the address: " + std::to_string(errno);
 		}
 
+		// set our socket
+		this->boundSocket = sock;
+
 		// Now update the sockaddr
+		this->updateAddr();
+	}
+
+	void ServiceAddress::updateAddr(void)
+	{
 		unsigned int addrlen {sizeof(sockaddr_in)};
-		result = ::getsockname(sock, (sockaddr*)&this->addr, &addrlen);
+		int result = ::getsockname(*this->boundSocket.get(), (sockaddr*)&this->addr, &addrlen);
 		if(result == -1)
 		{
 			throw "ServiceAddress::bind failed to obtain the host name socket";

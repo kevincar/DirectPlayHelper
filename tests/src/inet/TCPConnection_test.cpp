@@ -16,5 +16,4 @@ TEST(TCPConnection, setAddress)
 			tcpc.setAddress("0.0.0.0:0");
 			});
 
-	std::cout << tcpc.getAddressString() << std::endl;
 }

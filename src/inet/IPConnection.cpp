@@ -1,4 +1,3 @@
-
 #include "sys/socket.h"
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
@@ -9,7 +8,7 @@ namespace inet
 	IPConnection::IPConnection(int type, int protocol)
 	{
 		std::lock_guard<std::mutex> lock {this->socket_mutex};
-		this->socket = std::unique_ptr<Socket>(new Socket(AF_INET, type, protocol));
+		this->socket = std::make_shared<Socket>(AF_INET, type, protocol);
 	}
 
 	std::string const IPConnection::getAddressString(void) const
@@ -20,9 +19,9 @@ namespace inet
 	void IPConnection::setAddress(std::string const& address)
 	{
 		// Set the address
-		this->srcAddress = std::unique_ptr<ServiceAddress>(new ServiceAddress {address});
+		this->srcAddress = std::make_unique<ServiceAddress>(address);
 		
 		// Bind
-		this->srcAddress->bind(*this->socket);
+		this->srcAddress->bind(this->socket);
 	}
 }

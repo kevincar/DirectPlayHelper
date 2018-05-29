@@ -25,9 +25,9 @@ namespace inet
 	{
 		int result = close(this->socket);
 
-		if(result != 0)
+		if(result == -1)
 		{
-			std::cout << std::string("Error closing socket: ") + std::to_string(errno) << std::endl;
+			std::cout << std::string("Socket::~Socket() Error closing socket: ") + std::to_string(errno) << std::endl;
 		}
 	}
 

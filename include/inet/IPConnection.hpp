@@ -12,9 +12,6 @@ namespace inet
 	class IPConnection
 	{
 		public:
-			std::unique_ptr<ServiceAddress> srcAddress;
-			std::unique_ptr<ServiceAddress> destAddress;
-
 			IPConnection(int type, int protocol);
 			virtual ~IPConnection() = default;
 			std::string const getAddressString(void) const;
@@ -23,7 +20,10 @@ namespace inet
 
 		private:
 			std::mutex socket_mutex;
-			std::unique_ptr<Socket> socket;
+			std::shared_ptr<Socket> socket;
+			std::unique_ptr<ServiceAddress> srcAddress;
+			std::unique_ptr<ServiceAddress> destAddress;
+
 	};
 }
 

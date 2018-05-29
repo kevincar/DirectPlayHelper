@@ -24,11 +24,14 @@ namespace inet
 			void setPortString(std::string const& port);
 			void setPort(int port);
 
-			void bind(Socket& sock);
+			void bind(std::shared_ptr<Socket>& sock);
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;
+			std::shared_ptr<Socket> boundSocket;
+			mutable std::mutex sock_mutex;
 
+			void updateAddr(void);
 			static const std::vector<const std::string> getIPandPort(const std::string AddressString);
 	};
 }

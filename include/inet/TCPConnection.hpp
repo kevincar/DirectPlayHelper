@@ -10,7 +10,6 @@ namespace inet
 	{
 		public:
 			TCPConnection(void);
-			
 			bool send(void* data) const override;
 	};
 }

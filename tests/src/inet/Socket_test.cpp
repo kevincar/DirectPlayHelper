@@ -16,6 +16,14 @@ TEST(SocketTest, constructorFail)
 			});
 }
 
+TEST(SocketTest, listen)
+{
+	inet::Socket socket(AF_INET, SOCK_STREAM, 0);
+	EXPECT_NO_THROW({
+			socket.listen();
+			});
+}
+
 TEST(SocketTest, operatorInt)
 {
 	inet::Socket sock {AF_INET, SOCK_STREAM, 0};

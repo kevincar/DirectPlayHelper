@@ -30,6 +30,15 @@ namespace inet
 		}
 	}
 
+	void Socket::listen(void)
+	{
+		int result = ::listen(this->socket, SOMAXCONN);
+		if(result == -1)
+		{
+			throw std::string("Socket::listen failed: ") + std::to_string(errno);
+		}
+	}
+
 	Socket::operator int() const
 	{
 		return this->socket;

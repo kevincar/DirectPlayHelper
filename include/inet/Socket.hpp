@@ -9,7 +9,8 @@ namespace inet
 		public:
 			Socket(int f, int t, int p);
 			~Socket() noexcept(false);
-
+			
+			void listen(void);
 			operator int() const;
 		private:
 			int socket {-1};

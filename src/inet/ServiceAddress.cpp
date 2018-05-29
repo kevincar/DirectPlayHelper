@@ -1,6 +1,7 @@
 
 #include <vector>
 #include <iostream>
+#include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
 #include "arpa/inet.h"
 
@@ -8,6 +9,10 @@ namespace inet
 {
 	ServiceAddress::ServiceAddress(std::string const& AddressString)
 	{
+		{
+			std::lock_guard<std::mutex> lock{this->addr_mutex};
+			this->addr.sin_family = AF_INET;
+		}
 		this->setAddressString(AddressString);
 	}
 
@@ -53,7 +58,7 @@ namespace inet
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
 		int result = ::inet_aton(IPAddress.data(), &this->addr.sin_addr);
-		if(result != 1)
+		if(result == 0)
 		{
 			throw IPAddress + std::string(" is an invalid IP Address");
 		}
@@ -68,6 +73,17 @@ namespace inet
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
 		this->addr.sin_port = htons(port);
+	}
+
+	void ServiceAddress::bind(Socket& sock)
+	{
+		//Attempt to bind the socket
+		std::lock_guard<std::mutex> lock {this->addr_mutex};
+		int result = ::bind(sock, (sockaddr const*)&this->addr, sizeof(sockaddr_in));
+		if(result == -1)
+		{
+			throw "ServiceAddress:bind failed to bind the socket to the address: " + std::to_string(errno);
+		}
 	}
 
 	std::vector<std::string const> const ServiceAddress::getIPandPort(std::string const AddressString)

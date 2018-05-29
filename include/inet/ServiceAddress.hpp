@@ -8,6 +8,7 @@
 
 namespace inet
 {
+	class Socket;
 	class ServiceAddress
 	{
 		public:
@@ -22,6 +23,8 @@ namespace inet
 			void setIPAddressString(std::string const& IPAddress);
 			void setPortString(std::string const& port);
 			void setPort(int port);
+
+			void bind(Socket& sock);
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;

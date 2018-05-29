@@ -8,7 +8,7 @@ namespace inet
 	{
 		public:
 			Socket(int f, int t, int p);
-			~Socket() noexcept(false);
+			virtual ~Socket();
 			
 			void listen(void);
 			operator int() const;

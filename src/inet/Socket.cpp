@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include <unistd.h>
 #include <errno.h>
@@ -20,13 +21,13 @@ namespace inet
 		}
 	}
 
-	Socket::~Socket(void) noexcept(false)
+	Socket::~Socket(void)
 	{
 		int result = close(this->socket);
 
 		if(result != 0)
 		{
-			throw std::string("Error closing socket: ") + std::to_string(errno);
+			std::cout << std::string("Error closing socket: ") + std::to_string(errno) << std::endl;
 		}
 	}
 

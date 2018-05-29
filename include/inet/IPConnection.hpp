@@ -12,17 +12,18 @@ namespace inet
 	class IPConnection
 	{
 		public:
+			std::unique_ptr<ServiceAddress> srcAddress;
+			std::unique_ptr<ServiceAddress> destAddress;
 
 			IPConnection(int type, int protocol);
 			virtual ~IPConnection() = default;
+			std::string const getAddressString(void) const;
 			void setAddress(std::string const& address);
 			virtual bool send(void* data) const = 0;
-		private:
-			std::unique_ptr<Socket> socket;
 
-		protected:
-			std::unique_ptr<ServiceAddress> srcAddress;
-			std::unique_ptr<ServiceAddress> destAddress;
+		private:
+			std::mutex socket_mutex;
+			std::unique_ptr<Socket> socket;
 	};
 }
 

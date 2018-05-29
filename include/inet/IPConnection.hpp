@@ -4,6 +4,7 @@
 
 #include <memory>
 #include "inet/Socket.hpp"
+#include "inet/ServiceAddress.hpp"
 
 namespace inet
 {
@@ -16,6 +17,10 @@ namespace inet
 			virtual bool send(void* data) const = 0;
 		private:
 			std::unique_ptr<Socket> socket;
+
+		protected:
+			std::unique_ptr<ServiceAddress> srcAddress;
+			std::unique_ptr<ServiceAddress> destAddress;
 	};
 }
 

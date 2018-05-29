@@ -11,10 +11,17 @@ namespace inet
 	class ServiceAddress
 	{
 		public:
-			ServiceAddress(const std::string AddressString);
+			ServiceAddress(std::string const& AddressString);
 
-			const std::string getAddressString(void) const;
-			const std::string getPortString(void) const;
+			std::string const getAddressString(void) const;
+			std::string const getIPAddressString(void) const;
+			std::string const getPortString(void) const;
+			unsigned int getPort(void) const;
+
+			void setAddressString(std::string const& address);
+			void setIPAddressString(std::string const& IPAddress);
+			void setPortString(std::string const& port);
+			void setPort(int port);
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;

@@ -6,35 +6,68 @@
 
 namespace inet
 {
-	ServiceAddress::ServiceAddress(std::string const AddressString)
+	ServiceAddress::ServiceAddress(std::string const& AddressString)
 	{
-		std::lock_guard<std::mutex> lock(this->addr_mutex);
-		std::vector<std::string const> const ipAndPort = getIPandPort(AddressString);
-		std::string const IPAddressString = ipAndPort.at(0);
-		std::string const portString = ipAndPort.at(1);
-
-		// Set the IP Address
-		int result = inet_aton(IPAddressString.data(), &this->addr.sin_addr);
-		if(result != 1)
-		{
-			throw IPAddressString + std::string(" is an invalid IP Address");
-		}
-
-		// Set the port
-		this->addr.sin_port = htons(std::stoi(portString));
+		this->setAddressString(AddressString);
 	}
 
-	const std::string ServiceAddress::getAddressString(void) const
+	std::string const ServiceAddress::getAddressString(void) const
+	{
+		return this->getIPAddressString() + ":" + this->getPortString();
+	}
+
+	std::string const ServiceAddress::getIPAddressString(void) const
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
 		char* result = ::inet_ntoa(this->addr.sin_addr);
 		return std::string(result);
 	}
 
-	const std::string ServiceAddress::getPortString(void) const
+	std::string const ServiceAddress::getPortString(void) const
+	{
+		// no need to lock the addr_mutex since this function
+		// doesn't directly access addr
+		return std::to_string(this->getPort());
+	}
+
+	unsigned int ServiceAddress::getPort(void) const
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
-		return std::to_string(ntohs(this->addr.sin_port));
+		return ntohs(this->addr.sin_port);
+	}
+
+	void ServiceAddress::setAddressString(std::string const& address)
+	{
+		std::vector<std::string const> const ipAndPort = getIPandPort(address);
+		std::string const IPAddressString = ipAndPort.at(0);
+		std::string const portString = ipAndPort.at(1);
+
+		// Set the IP Address
+		this->setIPAddressString(IPAddressString);
+
+		// Set the port
+		this->setPortString(portString);
+	}
+
+	void ServiceAddress::setIPAddressString(std::string const& IPAddress)
+	{
+		std::lock_guard<std::mutex> lock(this->addr_mutex);
+		int result = ::inet_aton(IPAddress.data(), &this->addr.sin_addr);
+		if(result != 1)
+		{
+			throw IPAddress + std::string(" is an invalid IP Address");
+		}
+	}
+
+	void ServiceAddress::setPortString(std::string const& port)
+	{
+		this->setPort(std::stoi(port));
+	}
+
+	void ServiceAddress::setPort(int port)
+	{
+		std::lock_guard<std::mutex> lock(this->addr_mutex);
+		this->addr.sin_port = htons(port);
 	}
 
 	std::vector<std::string const> const ServiceAddress::getIPandPort(std::string const AddressString)

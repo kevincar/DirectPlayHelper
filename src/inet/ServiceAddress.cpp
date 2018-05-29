@@ -84,6 +84,14 @@ namespace inet
 		{
 			throw "ServiceAddress:bind failed to bind the socket to the address: " + std::to_string(errno);
 		}
+
+		// Now update the sockaddr
+		unsigned int addrlen {sizeof(sockaddr_in)};
+		result = ::getsockname(sock, (sockaddr*)&this->addr, &addrlen);
+		if(result == -1)
+		{
+			throw "ServiceAddress::bind failed to obtain the host name socket";
+		}
 	}
 
 	std::vector<std::string const> const ServiceAddress::getIPandPort(std::string const AddressString)

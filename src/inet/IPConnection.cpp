@@ -27,4 +27,24 @@ namespace inet
 		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
 		this->srcAddress->bind(this->socket);
 	}
+
+	void IPConnection::listen(void)
+	{
+		// We need to have an address to listen on
+		bool haveSrcAddr {false};
+		{
+			std::lock_guard<std::mutex> srcAddr_lock {this->srcAddr_mutex};
+			haveSrcAddr = this->srcAddress != nullptr;
+		}
+
+		if(!haveSrcAddr)
+		{
+			this->setAddress("0.0.0.0:0");
+		}
+
+		// Set the socket to listen
+		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
+		this->socket->listen();
+
+	}
 }

@@ -15,8 +15,12 @@ namespace inet
 			IPConnection(int type, int protocol);
 			virtual ~IPConnection() = default;
 			std::string const getAddressString(void) const;
+			std::string const getIPAddressString(void) const;
+			std::string const getPortString(void) const;
+			std::string const getPort(void) const;
 			void setAddress(std::string const& address);
 			virtual bool send(void* data) const = 0;
+			void listen(void);
 
 		private:
 			mutable std::mutex socket_mutex;
@@ -25,7 +29,6 @@ namespace inet
 			std::shared_ptr<Socket> socket;
 			std::unique_ptr<ServiceAddress> srcAddress;
 			std::unique_ptr<ServiceAddress> destAddress;
-
 	};
 }
 

@@ -9,6 +9,12 @@ TEST(TCPConnectionTest, Constructor)
 			});
 }
 
+TEST(TCPConnectionTest, getAddressString)
+{
+	inet::TCPConnection tcpc;
+	EXPECT_STREQ(tcpc.getAddressString().data(), "0.0.0.0:0");
+}
+
 TEST(TCPConnectionTest, setAddress)
 {
 	inet::TCPConnection tcpc;
@@ -23,5 +29,5 @@ TEST(TCPConnectionTest, listen)
 	inet::TCPConnection tcpc;
 	ASSERT_NO_THROW({
 			tcpc.listen();
-			})
+			});
 }

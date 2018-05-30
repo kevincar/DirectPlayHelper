@@ -12,6 +12,7 @@ namespace inet
 	class ServiceAddress
 	{
 		public:
+			ServiceAddress(void);
 			ServiceAddress(std::string const& AddressString);
 
 			std::string const getAddressString(void) const;
@@ -25,6 +26,7 @@ namespace inet
 			void setPort(int port);
 
 			void bind(std::shared_ptr<Socket>& sock);
+			void listen(std::shared_ptr<Socket>& sock);
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;

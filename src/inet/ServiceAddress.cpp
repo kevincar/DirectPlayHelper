@@ -7,12 +7,14 @@
 
 namespace inet
 {
+	ServiceAddress::ServiceAddress(void)
+	{
+		this->addr.sin_family = AF_INET;
+	}
+
 	ServiceAddress::ServiceAddress(std::string const& AddressString)
 	{
-		{
-			std::lock_guard<std::mutex> lock{this->addr_mutex};
-			this->addr.sin_family = AF_INET;
-		}
+		this->addr.sin_family = AF_INET;
 		this->setAddressString(AddressString);
 	}
 
@@ -79,23 +81,49 @@ namespace inet
 	{
 		// bind doesn't affect the addr, so no neet to lock
 		//Attempt to bind the socket
-		int result = ::bind(*sock.get(), (sockaddr const*)&this->addr, sizeof(sockaddr_in));
-		if(result == -1)
 		{
-			throw "ServiceAddress:bind failed to bind the socket to the address: " + std::to_string(errno);
+			std::lock_guard<std::mutex> lock {this->addr_mutex};
+			int result = ::bind(*sock.get(), (sockaddr const*)&this->addr, sizeof(sockaddr_in));
+			if(result == -1)
+			{
+				throw "ServiceAddress:bind failed to bind the socket to the address: " + std::to_string(errno);
+			}
 		}
 
 		// set our socket
-		std::lock_guard<std::mutex> lock {this->sock_mutex};
-		this->boundSocket = sock;
-
+		{
+			std::lock_guard<std::mutex> lock {this->sock_mutex};
+			this->boundSocket = sock;
+		}
+		
 		// Now update the sockaddr
+		this->updateAddr();
+	}
+
+	void ServiceAddress::listen(std::shared_ptr<Socket>& sock)
+	{
+		{
+			std::lock_guard<std::mutex> lock {this->sock_mutex};
+			if(this->boundSocket == nullptr)
+			{
+				this->boundSocket = sock;
+			}
+
+			this->boundSocket->listen();
+		}
 		this->updateAddr();
 	}
 
 	void ServiceAddress::updateAddr(void)
 	{
-		std::lock_guard<std::mutex> lock {this->addr_mutex};
+		std::lock_guard<std::mutex> addr_lock {this->addr_mutex};
+		std::lock_guard<std::mutex> sock_lock {this->sock_mutex};
+
+		if(this->boundSocket == nullptr)
+		{
+			throw "SerivceAddress:updateaddr Cannot update addr. Address must be bound to a socket before updating";
+		}
+
 		unsigned int addrlen {sizeof(sockaddr_in)};
 		int result = ::getsockname(*this->boundSocket.get(), (sockaddr*)&this->addr, &addrlen);
 		if(result == -1)

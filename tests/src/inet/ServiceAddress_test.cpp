@@ -1,8 +1,9 @@
 
 #include "inet/ServiceAddress.hpp"
+#include "inet/Socket.hpp"
 #include "gtest/gtest.h"
 
-TEST(ServiceAddress, constructor)
+TEST(ServiceAddressTest, constructor)
 {
 	// Good construction
 	ASSERT_NO_THROW({
@@ -15,26 +16,26 @@ TEST(ServiceAddress, constructor)
 			});
 }
 
-TEST(ServiceAddress, getAddressString)
+TEST(ServiceAddressTest, getAddressString)
 {
 	inet::ServiceAddress addr {"10.0.0.1:8080"};
 	ASSERT_STREQ(addr.getAddressString().data(), "10.0.0.1:8080");
 }
 
-TEST(ServiceAddress, getIPAddressString)
+TEST(ServiceAddressTest, getIPAddressString)
 {
 	inet::ServiceAddress addr {"0.0.0.0:25"};
 	ASSERT_STREQ(addr.getIPAddressString().data(), "0.0.0.0");
 }
 
-TEST(ServiceAddress, getPortString)
+TEST(ServiceAddressTest, getPortString)
 {
 	inet::ServiceAddress addr {"127.0.0.1:21"};
 	ASSERT_STREQ(addr.getPortString().data(), "21");
 	ASSERT_EQ(addr.getPort(), static_cast<unsigned int>(21));
 }
 
-TEST(ServiceAddress, sets)
+TEST(ServiceAddressTest, sets)
 {
 	inet::ServiceAddress addr {"0.0.0.0:0"};
 
@@ -52,4 +53,20 @@ TEST(ServiceAddress, sets)
 	EXPECT_STREQ(addr.getIPAddressString().data(), "127.0.0.1");
 
 	EXPECT_STREQ(addr.getAddressString().data(), "127.0.0.1:2400");
+}
+
+TEST(ServiceAddressTest, bind)
+{
+	inet::ServiceAddress addr {"0.0.0.0:0"};
+	inet::Socket sock {AF_INET, SOCK_STREAM, 0};
+	std::shared_ptr<inet::Socket> pSock;
+
+	//EXPECT_ANY_THROW({
+			//addr.bind(pSock);
+			//});
+	
+	//pSock = std::shared_ptr<inet::Socket>(&sock);
+	//EXPECT_NO_THROW({
+			//addr.bind(pSock);
+			//});
 }

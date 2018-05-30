@@ -36,8 +36,7 @@ namespace inet
 
 	void IPConnection::listen(void)
 	{
-		// Set the socket to listen
-		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
-		this->socket->listen();
+		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};
+		this->srcAddress->listen(this->socket);
 	}
 }

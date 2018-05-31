@@ -4,9 +4,9 @@
 TEST(DPServerTest, setServer)
 {
 	int argc = 2;
-	char* argv[] = {
-		(char*)"DPServer",
-		(char*)"-s"
+	char const* argv[] = {
+		"DPServer",
+		"-s"
 	};
 	DPServer dps{argc, argv};
 	dps.processArgs();
@@ -18,10 +18,10 @@ TEST(DPServerTest, setServer)
 TEST(DPServerTest, setClient)
 {
 	int argc = 3;
-	char* argv[] = {
-		(char*)"DPServer",
-		(char*)"--client",
-		(char*)"192.168.1.1"
+	char const* argv[] = {
+		"DPServer",
+		"--client",
+		"192.168.1.1"
 	};
 
 	DPServer dps(argc, argv);
@@ -34,9 +34,9 @@ TEST(DPServerTest, setClient)
 TEST(DPServerTest, setClientNoHost)
 {
 	int argc = 2;
-	char* argv[] = {
-		(char*)"DPServer",
-		(char*)"-c"
+	char const* argv[] = {
+		"DPServer",
+		"-c"
 	};
 
 	DPServer dps(argc, argv);
@@ -49,10 +49,10 @@ TEST(DPServerTest, setClientNoHost)
 TEST(DPServerTest, setServerAndClient)
 {
 	int argc = 3;
-	char* argv[] = {
-		(char*)"DPServer",
-		(char*)"--server",
-		(char*)"--client"
+	char const* argv[] = {
+		"DPServer",
+		"--server",
+		"--client"
 	};
 
 	DPServer dps(argc, argv);
@@ -65,12 +65,12 @@ TEST(DPServerTest, setServerAndClient)
 TEST(DPServerTest, setPort)
 {
 	int argc = 5;
-	char* argv[] = {
-		(char*)"DPServer",
-		(char*)"--client",
-		(char*)"192.168.8.8",
-		(char*)"--port",
-		(char*)"2300"
+	char const* argv[] = {
+		"DPServer",
+		"--client",
+		"192.168.8.8",
+		"--port",
+		"2300"
 	};
 
 	DPServer dps(argc, argv);

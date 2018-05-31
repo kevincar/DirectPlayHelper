@@ -3,18 +3,18 @@
 
 TEST(ArgParserTest, vectorize)
 {
-	char* argumentString[] = {
-		(char*)"--server",
-		(char*)"--client",
-		(char*)"192.168.1.1",
-		(char*)"--port",
-		(char*)"80",
-		(char*)"--name",
-		(char*)"dingus"
+	char const* argumentString[] = {
+		"--server",
+		"--client",
+		"192.168.1.1",
+		"--port",
+		"80",
+		"--name",
+		"dingus"
 	};
 	std::vector<std::string> result = ArgParser::vectorize(7, argumentString);
 
-	ASSERT_EQ(result.size(), 7);
+	ASSERT_EQ(static_cast<int>(result.size()), 7);
 
 	EXPECT_EQ(result[0], "--server");
 	EXPECT_EQ(result[1], "--client");

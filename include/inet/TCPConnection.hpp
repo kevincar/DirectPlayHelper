@@ -2,6 +2,7 @@
 #ifndef INET_TCP_CONNECTION_HPP
 #define INET_TCP_CONNECTION_HPP
 
+#include <thread>
 #include "inet/IPConnection.hpp"
 
 namespace inet
@@ -11,8 +12,10 @@ namespace inet
 		typedef void (&newConnectionHandler)(std::unique_ptr<TCPConnection>& newTCPConnection);
 		public:
 			TCPConnection(void);
-			void listenForIncomingConnections(newConnectionHandler ncHandler);
+			void listenForIncomingConnections(newConnectionHandler ncHandler, bool block = false);
 			bool send(void* data) const override;
+		private:
+			std::thread connectionHandlerThread;
 	};
 }
 

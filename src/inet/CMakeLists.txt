@@ -1,9 +1,14 @@
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_library(inet
 	Socket.cpp
 	ServiceAddress.cpp
 	IPConnection.cpp
 	TCPConnection.cpp
-	UDPConnection.cpp)
+	UDPConnection.cpp
+	MasterTCPConnection.cpp)
 
 target_include_directories(inet BEFORE
 	PUBLIC

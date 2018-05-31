@@ -4,11 +4,11 @@
 #include "DPServer.hpp"
 #include "ArgParser.hpp"
 
-DPServer::DPServer(int argc, char* argv[]) : nArgs(argc)
+DPServer::DPServer(int argc, char const* argv[]) : nArgs(argc)
 {
 	ArgParser argParser {argc, argv};
-	std::vector<std::string> args = argParser.getArgs();
-	this->args = args;
+	std::vector<std::string> parsedArgs = argParser.getArgs();
+	this->args = parsedArgs;
 }
 
 void DPServer::start(void)
@@ -24,7 +24,7 @@ void DPServer::processArgs(void)
 		return this->usage();
 	}
 
-	for(int i = 0; i < this->args.size(); i++) {
+	for(unsigned int i = 0; i < this->args.size(); i++) {
 		std::string curArg = this->args[i];
 		if( (curArg == "-s") || (curArg == "--server") )
 		{
@@ -79,22 +79,22 @@ void DPServer::processArgs(void)
 	return;
 }
 
-DPServer::APPSTATE DPServer::getAppState(void)
+DPServer::APPSTATE DPServer::getAppState(void) const
 {
 	return this->appState;
 }
 
-std::string DPServer::getHostIPAddress(void)
+std::string DPServer::getHostIPAddress(void) const
 {
 	return this->hostIPAddress;
 }
 
-int DPServer::getConnPort(void)
+int DPServer::getConnPort(void) const
 {
 	return this->connPort;
 }
 
-void DPServer::usage(void)
+void DPServer::usage(void) const
 {
 	std::cout << "Usage: DPServer <-s | -c> [options]" << "\n"
 			  << "\n"

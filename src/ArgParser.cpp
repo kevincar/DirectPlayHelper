@@ -1,13 +1,13 @@
 
 #include "ArgParser.hpp"
 
-ArgParser::ArgParser(int argc, char** argv) : nArgs(argc)
+ArgParser::ArgParser(int argc, char const** argv) : nArgs(argc)
 {
 	this->args = this->vectorize(argc, argv);
 	return;
 }
 
-std::vector<std::string> ArgParser::vectorize(int argc, char** argv)
+std::vector<std::string> ArgParser::vectorize(int argc, char const** argv)
 {
 	std::vector<std::string> result;
 
@@ -20,7 +20,7 @@ std::vector<std::string> ArgParser::vectorize(int argc, char** argv)
 	return result;
 }
 
-std::vector<std::string> ArgParser::getArgs(void)
+std::vector<std::string> ArgParser::getArgs(void) const
 {
 	return this->args;
 }

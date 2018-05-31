@@ -8,35 +8,35 @@
 class DPServer 
 {
 
-public:
+	public:
 
-	enum APPSTATE
-	{
-		NOT_SET,
-		SERVER,
-		CLIENT
-	};
+		enum APPSTATE
+		{
+			NOT_SET,
+			SERVER,
+			CLIENT
+		};
 
-	DPServer(int argc, char* argv[]);
+		DPServer(int argc, char const* argv[]);
 
-	void start(void);
-	void processArgs(void);
+		void start(void);
+		void processArgs(void);
 
-	APPSTATE getAppState(void);
-	std::string getHostIPAddress(void);
-	int getConnPort(void);
+		APPSTATE getAppState(void) const;
+		std::string getHostIPAddress(void) const;
+		int getConnPort(void) const;
 
-private:
-	int nArgs;
-	std::vector<std::string> args;
+	private:
+		int nArgs;
+		std::vector<std::string> args;
 
-	APPSTATE appState = NOT_SET;
-	std::string hostIPAddress = "";
-	int connPort = 0;
+		APPSTATE appState = NOT_SET;
+		std::string hostIPAddress = "";
+		int connPort = 0;
 
-	void usage(void);
+		void usage(void) const;
 
-	bool setAppState(APPSTATE as);
+		bool setAppState(APPSTATE as);
 
 };
 

@@ -9,11 +9,11 @@ class ArgParser
 {
 	public:
 
-		ArgParser(int argc, char** argv);
+		ArgParser(int argc, char const** argv);
 
-		static std::vector<std::string> vectorize(int argc, char** argv);
+		static std::vector<std::string> vectorize(int argc, char const** argv);
 
-		std::vector<std::string> getArgs(void);
+		std::vector<std::string> getArgs(void) const;
 
 	private:
 

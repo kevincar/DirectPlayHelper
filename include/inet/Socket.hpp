@@ -8,6 +8,7 @@ namespace inet
 	{
 		public:
 			Socket(int f, int t, int p);
+			Socket(int capture, int f, int t, int p);
 			virtual ~Socket();
 			
 			void listen(void);

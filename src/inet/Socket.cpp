@@ -21,6 +21,8 @@ namespace inet
 		}
 	}
 
+	Socket::Socket(int capture, int f, int t, int p) : socket(capture), family(f), type(t), protocol(p) {}
+
 	Socket::~Socket(void)
 	{
 		int result = close(this->socket);

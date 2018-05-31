@@ -7,12 +7,17 @@ TEST(SocketTest, constructor)
 	EXPECT_NO_THROW({
 			inet::Socket socket(AF_INET, SOCK_STREAM, 0);
 			});
-}
 
-TEST(SocketTest, constructorFail)
-{
 	EXPECT_ANY_THROW({
 			inet::Socket socket(999, 999, 999);
+			});
+}
+
+TEST(SocketTest, captureConstructor)
+{
+	int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+	EXPECT_NO_THROW({
+			inet::Socket socket (sock, AF_INET, SOCK_STREAM, 0);
 			});
 }
 

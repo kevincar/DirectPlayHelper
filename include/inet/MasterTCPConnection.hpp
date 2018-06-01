@@ -12,11 +12,13 @@ namespace inet
 		typedef bool (&newConnectionHandler)(std::shared_ptr<TCPConnection>& newTCPConnection);
 		public:
 			MasterTCPConnection(void);
-			void listenForIncomingConnections(newConnectionHandler ncHandler, bool block = false);
+			void listenForIncomingConnections(newConnectionHandler& ncHandler, bool newThread = false);
 			void acceptConnection(std::unique_ptr<TCPConnection>& newTCPConnection);
 		private:
 			std::vector<std::thread> connectionHandlerThreads;
 			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
+
+			void listen(newConnectionHandler& nch);
 	};
 }
 

@@ -18,6 +18,16 @@ namespace inet
 		this->setAddressString(AddressString);
 	}
 
+	ServiceAddress::ServiceAddress(sockaddr_in const& captureAddr, std::shared_ptr<Socket>& captureSocket)
+	{
+		if(captureSocket == nullptr)
+		{
+			throw "ServiceAddress::captureAddr null capture socket was passed!";
+		}
+		this->addr = std::move(captureAddr);
+		this->boundSocket = std::move(captureSocket);
+	}
+
 	std::string const ServiceAddress::getAddressString(void) const
 	{
 		return this->getIPAddressString() + ":" + this->getPortString();
@@ -75,16 +85,6 @@ namespace inet
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
 		this->addr.sin_port = htons(port);
-	}
-
-	void ServiceAddress::captureAddr(sockaddr_in const& a, std::shared_ptr<Socket>& captureSocket)
-	{
-		if(captureSocket == nullptr)
-		{
-			throw "ServiceAddress::captureAddr null capture socket was passed!";
-		}
-		this->addr = std::move(a);
-		this->boundSocket = std::move(captureSocket);
 	}
 
 	void ServiceAddress::bind(std::shared_ptr<Socket>& sock)

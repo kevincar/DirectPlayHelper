@@ -25,7 +25,7 @@ namespace inet
 			throw "ServiceAddress::captureAddr null capture socket was passed!";
 		}
 		this->addr = std::move(captureAddr);
-		this->boundSocket = std::move(captureSocket);
+		this->boundSocket = captureSocket;
 	}
 
 	std::string const ServiceAddress::getAddressString(void) const

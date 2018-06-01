@@ -13,6 +13,7 @@ namespace inet
 	{
 		public:
 			IPConnection(int type, int protocol);
+			IPConnection(int capture, int type, int protocol, sockaddr_in& capAddr);
 			virtual ~IPConnection() = default;
 			std::string const getAddressString(void) const;
 			std::string const getIPAddressString(void) const;
@@ -22,7 +23,7 @@ namespace inet
 			virtual bool send(void* data) const = 0;
 			void listen(void);
 
-		private:
+		protected:
 			mutable std::mutex socket_mutex;
 			mutable std::mutex srcAddr_mutex;
 			mutable std::mutex destAddr_mutex;

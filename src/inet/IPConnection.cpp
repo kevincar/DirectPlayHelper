@@ -11,6 +11,12 @@ namespace inet
 		this->socket = std::make_shared<Socket>(AF_INET, type, protocol);
 	}
 
+	IPConnection::IPConnection(int capture, int type, int protocol, sockaddr_in& capAddr)
+	{
+		this->socket = std::make_shared<Socket>(capture, AF_INET, type, protocol);
+
+	}
+
 	std::string const IPConnection::getAddressString(void) const
 	{
 		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};

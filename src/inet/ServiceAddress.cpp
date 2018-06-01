@@ -77,6 +77,16 @@ namespace inet
 		this->addr.sin_port = htons(port);
 	}
 
+	void ServiceAddress::captureAddr(sockaddr_in const& a, std::shared_ptr<Socket>& captureSocket)
+	{
+		if(captureSocket == nullptr)
+		{
+			throw "ServiceAddress::captureAddr null capture socket was passed!";
+		}
+		this->addr = std::move(a);
+		this->boundSocket = std::move(captureSocket);
+	}
+
 	void ServiceAddress::bind(std::shared_ptr<Socket>& sock)
 	{
 		// bind doesn't affect the addr, so no neet to lock

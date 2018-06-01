@@ -1,10 +1,17 @@
 
+#include <memory>
+#include "arpa/inet.h"
 #include "inet/ServiceAddress.hpp"
 #include "inet/Socket.hpp"
 #include "gtest/gtest.h"
 
 TEST(ServiceAddressTest, constructor)
 {
+	// Good blank construction
+	ASSERT_NO_THROW({
+			inet::ServiceAddress addr {};
+			});
+
 	// Good construction
 	ASSERT_NO_THROW({
 			inet::ServiceAddress addr{"192.168.1.100:80"};
@@ -53,6 +60,31 @@ TEST(ServiceAddressTest, sets)
 	EXPECT_STREQ(addr.getIPAddressString().data(), "127.0.0.1");
 
 	EXPECT_STREQ(addr.getAddressString().data(), "127.0.0.1:2400");
+}
+
+TEST(ServiceAddressTest, captureAddr)
+{
+	std::shared_ptr<inet::Socket> pSocket = std::make_shared<inet::Socket>(AF_INET, SOCK_STREAM, 0);
+	inet::ServiceAddress saddr;
+	sockaddr_in addr = {};
+	addr.sin_family = AF_INET;
+	std::string ipAddress = "10.0.0.2";
+	unsigned int port = 47624;
+	int inet_aton_result = ::inet_aton(ipAddress.data(), &addr.sin_addr);
+	addr.sin_port = htons(port);
+
+	ASSERT_NE(inet_aton_result, 0);
+
+	std::shared_ptr<inet::Socket> emptyPointer;
+	EXPECT_ANY_THROW({
+			saddr.captureAddr(addr, emptyPointer);
+			});
+
+	EXPECT_NO_THROW({
+			saddr.captureAddr(addr, pSocket);
+			});
+
+	EXPECT_STREQ(saddr.getAddressString().data(), "10.0.0.2:47624");
 }
 
 TEST(ServiceAddressTest, bind)

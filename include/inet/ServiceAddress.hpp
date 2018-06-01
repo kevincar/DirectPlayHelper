@@ -19,11 +19,11 @@ namespace inet
 			std::string const getIPAddressString(void) const;
 			std::string const getPortString(void) const;
 			unsigned int getPort(void) const;
-
 			void setAddressString(std::string const& address);
 			void setIPAddressString(std::string const& IPAddress);
 			void setPortString(std::string const& port);
 			void setPort(int port);
+			void captureAddr(sockaddr_in const& a, std::shared_ptr<Socket>& captureSocket);
 
 			void bind(std::shared_ptr<Socket>& sock);
 			void listen(std::shared_ptr<Socket>& sock);
@@ -33,7 +33,7 @@ namespace inet
 			std::shared_ptr<Socket> boundSocket;
 			mutable std::mutex sock_mutex;
 
-			void updateAddr(void);
+			void updateAddr(void); 
 			static const std::vector<const std::string> getIPandPort(const std::string AddressString);
 	};
 }

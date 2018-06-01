@@ -11,7 +11,7 @@ namespace inet
 	{
 		public:
 			TCPConnection(void);
-			TCPConnection(int captureRawSocket, sockaddr_in& captureAddr);
+			TCPConnection(int captureRawSocket, IPConnection& parentConnection, sockaddr_in& destAddr);
 			bool send(void* data) const override;
 	};
 }

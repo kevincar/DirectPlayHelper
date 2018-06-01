@@ -23,5 +23,6 @@ namespace inet
 		}
 
 		// Assemble the data into a new TCPConnection object
+		std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>(newSocket, *this, addr);
 	}
 }

@@ -4,11 +4,12 @@
 
 TEST(TCPConnectionTest, Constructor)
 {
-	EXPECT_NO_THROW({
+	ASSERT_NO_THROW({
 			inet::TCPConnection tcpc;
 			});
 
 	// Capture Constructor
+	inet::TCPConnection oldConnection;
 	int newSocket = ::socket(AF_INET, SOCK_STREAM, 0);
 	ASSERT_NE(newSocket, -1);
 
@@ -21,7 +22,7 @@ TEST(TCPConnectionTest, Constructor)
 	addr.sin_port = htons(port);
 	
 	EXPECT_NO_THROW({
-			inet::TCPConnection capturedTCP(newSocket, addr);
+			inet::TCPConnection capturedTCP(newSocket, oldConnection, addr);
 			});
 }
 

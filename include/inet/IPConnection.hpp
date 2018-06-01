@@ -13,7 +13,7 @@ namespace inet
 	{
 		public:
 			IPConnection(int type, int protocol);
-			IPConnection(int captureRawSocket, int type, int protocol, sockaddr_in& captureAddr);
+			IPConnection(int captureRawSocket, int type, int protocol, IPConnection& parentConnection, sockaddr_in& destAddr);
 			virtual ~IPConnection() = default;
 			std::string const getAddressString(void) const;
 			std::string const getIPAddressString(void) const;
@@ -30,6 +30,7 @@ namespace inet
 			std::shared_ptr<Socket> socket;
 			std::unique_ptr<ServiceAddress> srcAddress = std::make_unique<ServiceAddress>();
 			std::unique_ptr<ServiceAddress> destAddress = std::make_unique<ServiceAddress>();
+
 	};
 }
 

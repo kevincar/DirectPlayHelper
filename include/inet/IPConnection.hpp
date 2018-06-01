@@ -13,7 +13,7 @@ namespace inet
 	{
 		public:
 			IPConnection(int type, int protocol);
-			IPConnection(int capture, int type, int protocol, sockaddr_in& capAddr);
+			IPConnection(int captureRawSocket, int type, int protocol, sockaddr_in& captureAddr);
 			virtual ~IPConnection() = default;
 			std::string const getAddressString(void) const;
 			std::string const getIPAddressString(void) const;

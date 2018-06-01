@@ -1,4 +1,4 @@
-
+#include <arpa/inet.h>
 #include "inet/TCPConnection.hpp"
 #include "gtest/gtest.h"
 
@@ -6,6 +6,22 @@ TEST(TCPConnectionTest, Constructor)
 {
 	EXPECT_NO_THROW({
 			inet::TCPConnection tcpc;
+			});
+
+	// Capture Constructor
+	int newSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(newSocket, -1);
+
+	std::string ipAddress = "127.0.0.1";
+	unsigned int port = 8080;
+	sockaddr_in addr {};
+	addr.sin_family = AF_INET;
+	int inet_aton_result = ::inet_aton(ipAddress.data(), &addr.sin_addr);
+	ASSERT_NE(inet_aton_result, 0);
+	addr.sin_port = htons(port);
+	
+	EXPECT_NO_THROW({
+			inet::TCPConnection capturedTCP(newSocket, addr);
 			});
 }
 

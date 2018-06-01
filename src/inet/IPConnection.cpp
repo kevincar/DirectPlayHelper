@@ -11,10 +11,10 @@ namespace inet
 		this->socket = std::make_shared<Socket>(AF_INET, type, protocol);
 	}
 
-	IPConnection::IPConnection(int capture, int type, int protocol, sockaddr_in& capAddr)
+	IPConnection::IPConnection(int capture, int type, int protocol, sockaddr_in& captureAddr)
 	{
 		this->socket = std::make_shared<Socket>(capture, AF_INET, type, protocol);
-
+		this->srcAddress = std::make_unique<ServiceAddress>(captureAddr, this->socket);
 	}
 
 	std::string const IPConnection::getAddressString(void) const

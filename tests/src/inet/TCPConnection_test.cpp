@@ -48,3 +48,13 @@ TEST(TCPConnectionTest, listen)
 			tcpc.listen();
 			});
 }
+
+TEST(TCPConnectionTest, isDataReady)
+{
+	inet::TCPConnection tcpc;
+	bool res = false;
+	ASSERT_NO_THROW({
+			res = tcpc.isDataReady(0.15);
+			});
+	ASSERT_EQ(res, false);
+}

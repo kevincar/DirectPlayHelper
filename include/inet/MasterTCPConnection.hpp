@@ -9,16 +9,32 @@ namespace inet
 {
 	class MasterTCPConnection : public TCPConnection
 	{
-		typedef bool (&newConnectionHandler)(std::shared_ptr<TCPConnection>& newTCPConnection);
 		public:
+			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
+			typedef std::function<void (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
+			
 			MasterTCPConnection(void);
-			void listenForIncomingConnections(newConnectionHandler& ncHandler, bool newThread = false);
-			void acceptConnection(std::unique_ptr<TCPConnection>& newTCPConnection);
+			~MasterTCPConnection(void);
+			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
+			void stopListening(void);
+			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 		private:
+			std::thread listeningThread;
+			std::mutex listeningThread_mutex;
 			std::vector<std::thread> connectionHandlerThreads;
+			std::mutex chThreads_mutex;
 			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
+			std::mutex tcpc_mutex;
+			bool listening = false;
+			mutable std::mutex listening_mutex;
+			newConnectionAcceptHandlerFunc newConnectionAcceptHandler;
+			connectionProcessHandlerFunc connectionProcessHandler;
 
-			void listen(newConnectionHandler& nch);
+			bool isListening(void) const;
+			bool isListeningFinished(void) const;
+			void setListeningState(bool state);
+			bool checkForNewConnections(void) const;
+			void beginListening();
 	};
 }
 

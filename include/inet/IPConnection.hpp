@@ -20,8 +20,9 @@ namespace inet
 			std::string const getPortString(void) const;
 			std::string const getPort(void) const;
 			void setAddress(std::string const& address);
-			virtual bool send(void* data) const = 0;
 			void listen(void);
+			bool isDataReady(double timeout) const;
+			virtual bool send(void* data) const = 0;
 
 		protected:
 			mutable std::mutex socket_mutex;

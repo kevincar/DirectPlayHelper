@@ -97,10 +97,5 @@ namespace inet
 				this->acceptConnection(newConnection);
 			}
 		}
-
-		//std::unique_lock<std::mutex> lock {this->listeningFinished_mutex};
-		//this->listeningFinished = true;
-		//lock.unlock();
-		//this->listeningFinished_cv.notify_one();
 	}
 }

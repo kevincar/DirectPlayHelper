@@ -38,6 +38,21 @@ namespace inet
 		}
 	}
 
+	std::shared_ptr<TCPConnection> const MasterTCPConnection::answerIncomingConnection(void) const
+	{
+		sockaddr_in addr {};
+		unsigned int addrsize = sizeof(sockaddr_in);
+
+		int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
+		if(newSocket == -1)
+		{
+			std::cout << "MasterTCPConnection::listen Failed to accept incoming connection " << errno << std::endl;
+		}
+
+		// Assemble the data into a new TCPConnection object
+		return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
+	}
+
 	void MasterTCPConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
 	{
 		// Add the connection to our list of connections
@@ -65,12 +80,6 @@ namespace inet
 		this->listening = state;
 	}
 
-	bool MasterTCPConnection::checkForNewConnections(void) const
-	{
-		int ndfs = *this->socket.get() + 1;
-		return false;
-	}
-
 	void MasterTCPConnection::beginListening()
 	{
 		std::cout << "listening!" << std::endl;
@@ -79,18 +88,7 @@ namespace inet
 		// Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			sockaddr_in addr {};
-			unsigned int addrsize = sizeof(sockaddr_in);
-
-			int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
-			if(newSocket == -1)
-			{
-				std::cout << "MasterTCPConnection::listen Failed to accept incoming connection " << errno << std::endl;
-			}
-
-			// Assemble the data into a new TCPConnection object
-			std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>(newSocket, *this, addr);
-
+			std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
 			bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
 			if(acceptConnection)
 			{

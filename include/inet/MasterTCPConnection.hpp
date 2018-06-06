@@ -17,6 +17,7 @@ namespace inet
 			~MasterTCPConnection(void);
 			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
+			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 		private:
 			std::thread listeningThread;
@@ -33,7 +34,6 @@ namespace inet
 			bool isListening(void) const;
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
-			bool checkForNewConnections(void) const;
 			void beginListening();
 	};
 }

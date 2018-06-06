@@ -14,7 +14,7 @@ namespace inet
 		this->socket = std::make_shared<Socket>(AF_INET, type, protocol);
 	}
 
-	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection& parentConnection, sockaddr_in& destAddr)
+	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr)
 	{
 		this->socket = std::make_shared<Socket>(capture, AF_INET, type, protocol);
 		this->srcAddress = std::make_unique<ServiceAddress>(parentConnection.srcAddress->getAddressString());

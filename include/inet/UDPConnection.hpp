@@ -10,6 +10,7 @@ namespace inet
 	{
 		public:
 			UDPConnection(void);
+			void connect(std::unique_ptr<ServiceAddress>& addr) override;
 			bool send(void* data) const override;
 	};
 }

@@ -15,7 +15,7 @@ namespace inet
 			std::lock_guard<std::mutex> lock {this->destAddr_mutex};
 			this->destAddress = std::move(destAddress);
 
-			std:: lock_guard<std::mutex> sock_lock {this->socket};
+			std:: lock_guard<std::mutex> sock_lock {this->socket_mutex};
 			//int result = ::connect(*this->socket.get(), )
 		}
 	}

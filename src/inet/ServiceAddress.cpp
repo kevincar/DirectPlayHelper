@@ -124,10 +124,9 @@ namespace inet
 		this->updateAddr();
 	}
 
-	ServiceAddress::operator sockaddr* () const
+	ServiceAddress::operator sockaddr const* () const
 	{
-		std::lock_guard<std::mutex> lock {this->addr_mutex};
-		return (sockaddr_in const*)&this->addr;
+		return this->getAddr();
 	}
 
 	void ServiceAddress::updateAddr(void)
@@ -146,6 +145,12 @@ namespace inet
 		{
 			throw "ServiceAddress::bind failed to obtain the host name socket";
 		}
+	}
+
+	sockaddr const* ServiceAddress::getAddr(void) const
+	{
+		std::lock_guard<std::mutex> lock {this->addr_mutex};
+		return (sockaddr const*)&this->addr;
 	}
 
 	std::vector<std::string const> const ServiceAddress::getIPandPort(std::string const AddressString)

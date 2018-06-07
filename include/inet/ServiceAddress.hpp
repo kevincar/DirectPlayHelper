@@ -28,7 +28,7 @@ namespace inet
 			void bind(std::shared_ptr<Socket>& sock);
 			void listen(std::shared_ptr<Socket>& sock);
 
-			operator sockaddr*() const;
+			operator sockaddr const* () const;
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;
@@ -36,6 +36,7 @@ namespace inet
 			mutable std::mutex sock_mutex;
 
 			void updateAddr(void); 
+			sockaddr const* getAddr(void) const;
 			static const std::vector<const std::string> getIPandPort(const std::string AddressString);
 	};
 }

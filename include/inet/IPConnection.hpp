@@ -22,7 +22,7 @@ namespace inet
 			void setAddress(std::string const& address);
 			void listen(void);
 			bool isDataReady(double timeout) const;
-			virtual void connect(std::unique_ptr<ServiceAddress> const& destAddr) = 0;
+			virtual void connect(std::unique_ptr<ServiceAddress>& destAddr) = 0;
 			virtual bool send(void* data) const = 0;
 
 		protected:

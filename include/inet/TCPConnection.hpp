@@ -12,7 +12,7 @@ namespace inet
 		public:
 			TCPConnection(void);
 			TCPConnection(int captureRawSocket, IPConnection const& parentConnection, sockaddr_in& destAddr);
-			void connect(std::unique_ptr<ServiceAddress> const& destAddr) override;
+			void connect(std::unique_ptr<ServiceAddress>& destAddr) override;
 			bool send(void* data) const override;
 	};
 }

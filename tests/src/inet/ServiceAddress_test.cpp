@@ -83,10 +83,6 @@ TEST(ServiceAddressTest, sets)
 	EXPECT_STREQ(addr.getAddressString().data(), "127.0.0.1:2400");
 }
 
-TEST(ServiceAddressTest, captureAddr)
-{
-}
-
 TEST(ServiceAddressTest, bind)
 {
 	inet::ServiceAddress addr {"0.0.0.0:0"};
@@ -101,4 +97,12 @@ TEST(ServiceAddressTest, bind)
 	//EXPECT_NO_THROW({
 			//addr.bind(pSock);
 			//});
+}
+
+TEST(ServiceAddressTest, operator_sockaddr_const_ptr)
+{
+	inet::ServiceAddress sa {"192.168.1.100:1234"};
+	const sockaddr* addr = sa;
+	int port = ntohs(((sockaddr_in const*)addr)->sin_port);
+	EXPECT_EQ(port, 1234);
 }

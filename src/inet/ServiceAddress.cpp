@@ -18,14 +18,9 @@ namespace inet
 		this->setAddressString(AddressString);
 	}
 
-	ServiceAddress::ServiceAddress(sockaddr_in const& captureAddr, std::shared_ptr<Socket>& captureSocket)
+	ServiceAddress::ServiceAddress(sockaddr_in const& captureAddr)
 	{
-		if(captureSocket == nullptr)
-		{
-			throw "ServiceAddress::captureAddr null capture socket was passed!";
-		}
 		this->addr = std::move(captureAddr);
-		this->boundSocket = captureSocket;
 	}
 
 	std::string const ServiceAddress::getAddressString(void) const

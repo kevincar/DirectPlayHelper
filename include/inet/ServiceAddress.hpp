@@ -25,8 +25,8 @@ namespace inet
 			void setPortString(std::string const& port);
 			void setPort(int port);
 
-			void bind(std::shared_ptr<Socket>& sock);
-			void listen(std::shared_ptr<Socket>& sock);
+			//void bind(std::shared_ptr<Socket>& sock);
+			//void listen(std::shared_ptr<Socket>& sock);
 
 			operator sockaddr const* () const;
 		private:

@@ -32,8 +32,8 @@ namespace inet
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;
-			std::shared_ptr<Socket> boundSocket;
-			mutable std::mutex sock_mutex;
+			//std::shared_ptr<Socket> boundSocket;
+			//mutable std::mutex sock_mutex;
 
 			void updateAddr(void); 
 			sockaddr const* getAddr(void) const;

@@ -14,7 +14,7 @@ namespace inet
 		public:
 			ServiceAddress(void);
 			ServiceAddress(std::string const& AddressString);
-			ServiceAddress(sockaddr_in const& captureAddr, std::shared_ptr<Socket>& captureSocket);
+			ServiceAddress(sockaddr_in const& captureAddr);
 
 			std::string const getAddressString(void) const;
 			std::string const getIPAddressString(void) const;

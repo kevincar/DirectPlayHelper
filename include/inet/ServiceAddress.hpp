@@ -35,7 +35,7 @@ namespace inet
 			//std::shared_ptr<Socket> boundSocket;
 			//mutable std::mutex sock_mutex;
 
-			void updateAddr(void); 
+			//void updateAddr(void); 
 			sockaddr const* getAddr(void) const;
 			static const std::vector<const std::string> getIPandPort(const std::string AddressString);
 	};

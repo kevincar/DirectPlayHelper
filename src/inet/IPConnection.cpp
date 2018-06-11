@@ -41,7 +41,12 @@ namespace inet
 		
 		// Bind
 		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
-		this->srcAddress->bind(this->socket);
+		//this->srcAddress->bind(this->socket);
+		int result = ::bind(*this->socket.get(), *this->srcAddress.get(), sizeof(sockaddr_in));
+		if(result == -1)
+		{
+			throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
+		}
 	}
 
 	void IPConnection::listen(void)

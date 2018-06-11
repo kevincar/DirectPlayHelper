@@ -51,8 +51,16 @@ namespace inet
 
 	void IPConnection::listen(void)
 	{
-		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};
-		this->srcAddress->listen(this->socket);
+		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
+		this->socket->listen();
+
+		std::lock_guard<std::mutex> addr_lock {this->srcAddr_mutex};
+		unsigned int addrlen {sizeof(sockaddr_in)};
+		int result = ::getsockname(*this->socket.get(), *this->srcAddress.get(), &addrlen);
+		if(result == -1)
+		{
+			throw std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno);
+		}
 	}
 
 	bool IPConnection::isDataReady(double timeout) const

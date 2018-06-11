@@ -29,6 +29,7 @@ namespace inet
 			//void listen(std::shared_ptr<Socket>& sock);
 
 			operator sockaddr const* () const;
+			operator sockaddr * ();
 		private:
 			sockaddr_in addr {};
 			mutable std::mutex addr_mutex;

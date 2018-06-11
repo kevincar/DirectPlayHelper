@@ -124,6 +124,12 @@ namespace inet
 		return this->getAddr();
 	}
 
+	ServiceAddress::operator sockaddr * ()
+	{
+		std::lock_guard<std::mutex> lock {this->addr_mutex};
+		return (sockaddr*)&this->addr;
+	}
+
 	//void ServiceAddress::updateAddr(void)
 	//{
 		//std::lock_guard<std::mutex> addr_lock {this->addr_mutex};

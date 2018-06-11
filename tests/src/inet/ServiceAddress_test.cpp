@@ -23,7 +23,6 @@ TEST(ServiceAddressTest, constructor)
 			});
 
 	// Capture Construction
-	std::shared_ptr<inet::Socket> pSocket = std::make_shared<inet::Socket>(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in addr = {};
 	addr.sin_family = AF_INET;
 	std::string ipAddress = "10.0.0.2";
@@ -33,15 +32,8 @@ TEST(ServiceAddressTest, constructor)
 
 	ASSERT_NE(inet_aton_result, 0);
 
-	std::shared_ptr<inet::Socket> emptyPointer;
-	EXPECT_ANY_THROW({
-			inet::ServiceAddress saddr (addr, emptyPointer);
-			});
-
-	EXPECT_NO_THROW({
-			inet::ServiceAddress saddr (addr, pSocket);
-			EXPECT_STREQ(saddr.getAddressString().data(), "10.0.0.2:47624");
-			});
+	inet::ServiceAddress saddr (addr);
+	EXPECT_STREQ(saddr.getAddressString().data(), "10.0.0.2:47624");
 }
 
 TEST(ServiceAddressTest, getAddressString)

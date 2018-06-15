@@ -17,6 +17,7 @@ namespace inet
 	{
 		if(this->isListening()) return;
 		this->listen();
+		this->setListeningState(true);
 		std::lock_guard<std::mutex> lock {this->listeningThread_mutex};
 		this->newConnectionAcceptHandler = ncah;
 		this->connectionProcessHandler = cph;
@@ -82,18 +83,15 @@ namespace inet
 
 	void MasterTCPConnection::beginListening()
 	{
-		std::cout << "listening!" << std::endl;
-		this->setListeningState(true);
-
 		// Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
-			bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
-			if(acceptConnection)
-			{
-				this->acceptConnection(newConnection);
-			}
+			//std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
+			//bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
+			//if(acceptConnection)
+			//{
+				//this->acceptConnection(newConnection);
+			//}
 		}
 	}
 }

@@ -22,5 +22,5 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	inet::MasterTCPConnection master;
 
 	// Begin listening for incomming connections
-	//master.listenForIncomingConnections(ncah, cph);
+	master.listenForIncomingConnections(ncah, cph);
 }

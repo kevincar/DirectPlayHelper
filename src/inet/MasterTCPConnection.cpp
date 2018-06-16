@@ -86,6 +86,12 @@ namespace inet
 		// Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
+			if(this->isDataReady(5.0)) {
+				std::cout << "data ready" << std::endl;
+			}
+			else {
+				std::cout << "No data... continue" << std::endl;
+			}
 			//std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
 			//bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
 			//if(acceptConnection)

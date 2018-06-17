@@ -87,17 +87,13 @@ namespace inet
 		while(this->isListening())
 		{
 			if(this->isDataReady(5.0)) {
-				std::cout << "data ready" << std::endl;
+				std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
+				bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
+				if(acceptConnection)
+				{
+					this->acceptConnection(newConnection);
+				}
 			}
-			else {
-				std::cout << "No data... continue" << std::endl;
-			}
-			//std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
-			//bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
-			//if(acceptConnection)
-			//{
-				//this->acceptConnection(newConnection);
-			//}
 		}
 	}
 }

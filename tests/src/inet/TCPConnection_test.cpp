@@ -62,4 +62,6 @@ TEST(TCPConnectionTest, isDataReady)
 TEST(TCPConnectionTest, connect)
 {
 	inet::TCPConnection tcpc;
+	int result = tcpc.connect("192.168.1.1:2300");
+	ASSERT_EQ(result, 61);
 }

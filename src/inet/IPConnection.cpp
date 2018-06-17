@@ -88,8 +88,20 @@ namespace inet
 		return FD_ISSET(*this->socket.get(), &fs);
 	}
 
-	void IPConnection::connect(std::string addressString)
+	int IPConnection::connect(std::string addressString)
 	{
+		// Initiate the destAddress
+		std::lock_guard<std::mutex> destAddr_lock {this->destAddr_mutex};
+		this->destAddress = std::make_unique<ServiceAddress>(addressString);
 
+		// connect to the address
+		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
+		int result = ::connect(*this->socket.get(), *this->destAddress.get(), sizeof(sockaddr_in));
+		if(result == -1)
+		{
+			return errno;
+		}
+
+		return 0;
 	}
 }

@@ -58,3 +58,8 @@ TEST(TCPConnectionTest, isDataReady)
 			});
 	ASSERT_EQ(res, false);
 }
+
+TEST(TCPConnectionTest, connect)
+{
+	inet::TCPConnection tcpc;
+}

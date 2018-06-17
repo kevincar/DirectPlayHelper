@@ -32,7 +32,8 @@ namespace inet
 			std::shared_ptr<Socket> socket;
 			std::unique_ptr<ServiceAddress> srcAddress = std::make_unique<ServiceAddress>();
 			std::unique_ptr<ServiceAddress> destAddress = std::make_unique<ServiceAddress>();
-
+			
+			void updateSrcAddr(void);
 	};
 }
 

@@ -19,6 +19,7 @@ namespace inet
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
+			void shutdownConnection(std::shared_ptr<TCPConnection>& TCPConnection);
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;

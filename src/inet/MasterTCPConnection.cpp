@@ -64,8 +64,8 @@ namespace inet
 
 		// Start the connection process thread
 		{
-			std::lock_guard<std::mutex> lock {this->chThreads_mutex};
-			this->connectionHandlerThreads.emplace_back(std::thread([this, &newTCPConnection]{this->connectionProcessHandler(newTCPConnection);}));
+			//std::lock_guard<std::mutex> lock {this->chThreads_mutex};
+			//this->connectionHandlerThreads.emplace_back(std::thread([this, &newTCPConnection]{this->connectionProcessHandler(newTCPConnection);}));
 		}
 	}
 

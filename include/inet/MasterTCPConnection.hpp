@@ -23,8 +23,6 @@ namespace inet
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
-			std::vector<std::thread> connectionHandlerThreads;
-			std::mutex chThreads_mutex;
 			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
 			std::mutex tcpc_mutex;
 			bool listening = false;

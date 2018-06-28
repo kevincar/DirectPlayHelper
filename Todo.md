@@ -57,10 +57,15 @@ Below is the current todo list for the project. The legend is as follows:
 								- -[ ] We need a map for both connections and
 								  processHandler. The key should be a unique
 								  identifier that should exist in both
-								- -[ ] We need to research how to genereat
+								- -[x] We need to research how to genereat
 								  Unique ID's so that when a new
 								  connection/process Is added that we can
 								  assign it an ID
+									- Because the no two connections share the
+									  same file descriptor, we can use the
+									  number of the socket as the ID to which
+									  the connection and the processHandler
+									  are mapped
 	  - -[ ] Send
 	  - -[ ] Recv
 	  - -[ ] sendFrom

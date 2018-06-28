@@ -2,7 +2,7 @@
 #ifndef INET_MASTER_TCP_CONNECTION_HPP
 #define INET_MASTER_TCP_CONNECTION_HPP
 
-#include <vector>
+#include <map>
 #include "inet/TCPConnection.hpp"
 
 namespace inet
@@ -23,8 +23,10 @@ namespace inet
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
-			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
+			std::map<unsigned int, std::shared_ptr<TCPConnection>> TCPConnections;
 			std::mutex tcpc_mutex;
+			std::map<unsigned int, std::shared_ptr<connectionProcessHandlerFunc>> TCPProcesses;
+			std::mutex tcpp_mutex;
 			bool listening = false;
 			mutable std::mutex listening_mutex;
 			newConnectionAcceptHandlerFunc newConnectionAcceptHandler;

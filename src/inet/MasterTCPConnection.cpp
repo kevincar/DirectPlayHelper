@@ -58,8 +58,8 @@ namespace inet
 	{
 		// Add the connection to our list of connections
 		{
-			std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-			this->TCPConnections.emplace_back(newTCPConnection);
+			//std::lock_guard<std::mutex> lock {this->tcpc_mutex};
+			//this->TCPConnections.emplace_back(newTCPConnection);
 		}
 
 		// Start the connection process thread

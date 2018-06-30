@@ -32,7 +32,7 @@ Below is the current todo list for the project. The legend is as follows:
 					of child connection threads Create a stopConnection
 					function to stop a connection Destructor should look
 					through and call stopConnection on all
-				- -[ ] Remove connection maps, and make vectors again…
+				- -[x] Remove connection maps, and make vectors again…
 				- -[ ] checkAllConnectionsForData Function
 					- -[ ] Interface
 					- -[ ] Implementation

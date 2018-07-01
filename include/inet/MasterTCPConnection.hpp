@@ -34,6 +34,7 @@ namespace inet
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
 			void beginListening();
+			void checkAllConnectionsForData(void);
 	};
 }
 

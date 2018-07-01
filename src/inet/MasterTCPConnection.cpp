@@ -96,4 +96,13 @@ namespace inet
 			}
 		}
 	}
+
+	void MasterTCPConnection::checkAllConnectionsForData(void)
+	{
+		fd_set fdSet;
+		struct timeval tv;
+		int largestFD;
+
+		// Get largest socket file descriptor
+	}
 }

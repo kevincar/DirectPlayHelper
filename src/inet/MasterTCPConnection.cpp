@@ -97,12 +97,26 @@ namespace inet
 		}
 	}
 
-	void MasterTCPConnection::checkAllConnectionsForData(void)
+	void MasterTCPConnection::checkAllConnectionsForData(void) const
 	{
 		fd_set fdSet;
 		struct timeval tv;
 		int largestFD;
 
 		// Get largest socket file descriptor
+	}
+
+	unsigned int MasterTCPConnection::getLargestSocket(void) const
+	{
+		int currentSocket = *this->socket.get();
+		unsigned int result = static_cast<unsigned int>(currentSocket);
+
+		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
+		{
+			//currentSocket = pCurConn->socket;
+			// static_cast<int>(pCurConn) should return the socket file descriptor
+		}
+
+		return result;
 	}
 }

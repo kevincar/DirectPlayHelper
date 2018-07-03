@@ -65,3 +65,10 @@ TEST(TCPConnectionTest, connect)
 	int result = tcpc.connect("192.168.1.1:2300");
 	ASSERT_EQ(result == 61 || result == 60, true);
 }
+
+TEST(TCPConnectionTest, castInt)
+{
+	inet::TCPConnection tcpc;
+	int result = tcpc;
+	ASSERT_NE(result, -1);
+}

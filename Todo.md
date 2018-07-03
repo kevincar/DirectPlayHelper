@@ -33,10 +33,10 @@ Below is the current todo list for the project. The legend is as follows:
 					function to stop a connection Destructor should look
 					through and call stopConnection on all
 				- -[x] Remove connection maps, and make vectors again…
-				- -[ ] IPConnection::operator int()
+				- -[x] IPConnection::operator int()
 					- -[x] Interface
 					- -[x] Implementation
-					- -[ ] Test
+					- -[x] Test
 				- -[ ] getLargestSocket
 					- -[x] Interface
 					- -[ ] Implementation

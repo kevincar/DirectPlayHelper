@@ -35,7 +35,7 @@ Below is the current todo list for the project. The legend is as follows:
 				- -[x] Remove connection maps, and make vectors again…
 				- -[ ] IPConnection::operator int()
 					- -[x] Interface
-					- -[ ] Implementation
+					- -[x] Implementation
 					- -[ ] Test
 				- -[ ] getLargestSocket
 					- -[x] Interface

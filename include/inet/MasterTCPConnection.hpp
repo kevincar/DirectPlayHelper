@@ -35,7 +35,7 @@ namespace inet
 			void setListeningState(bool state);
 			void beginListening();
 			void checkAllConnectionsForData(void) const;
-			unsigned int getLargestSocket(void) const;
+			int getLargestSocket(void) const;
 	};
 }
 

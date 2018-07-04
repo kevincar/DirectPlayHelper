@@ -102,19 +102,18 @@ namespace inet
 		fd_set fdSet;
 		struct timeval tv;
 		int largestFD;
-
-		// Get largest socket file descriptor
 	}
 
-	unsigned int MasterTCPConnection::getLargestSocket(void) const
+	int MasterTCPConnection::getLargestSocket(void) const
 	{
 		int currentSocket = *this->socket.get();
-		unsigned int result = static_cast<unsigned int>(currentSocket);
+		int result = currentSocket;
 
 		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
 		{
-			//currentSocket = pCurConn->socket;
-			// static_cast<int>(pCurConn) should return the socket file descriptor
+			 currentSocket = *pCurConn;
+			 if(currentSocket > result)
+				 result = currentSocket;
 		}
 
 		return result;

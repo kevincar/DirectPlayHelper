@@ -37,9 +37,9 @@ Below is the current todo list for the project. The legend is as follows:
 					- -[x] Interface
 					- -[x] Implementation
 					- -[x] Test
-				- -[ ] getLargestSocket
+				- -[x] getLargestSocket
 					- -[x] Interface
-					- -[ ] Implementation
+					- -[x] Implementation
 				- -[ ] checkAllConnectionsForData Function
 					- -[x] Interface
 					- -[ ] Implementation

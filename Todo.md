@@ -40,11 +40,11 @@ Below is the current todo list for the project. The legend is as follows:
 				- -[x] getLargestSocket
 					- -[x] Interface
 					- -[x] Implementation
-				- -[ ] checkAllConnectionsForData Function
+				- -[x] checkAllConnectionsForData Function
 					- -[x] Interface
-					- -[ ] Implementation
+					- -[x] Implementation
 				- -[ ] listenForIncominConnections Function
-					- -[ ] Interface
+					- -[x] Interface
 					- -[ ] Implementation
 					- -[ ] Test
 				- Layout

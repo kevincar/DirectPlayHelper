@@ -103,16 +103,19 @@ namespace inet
 		struct timeval tv;
 		int largestFD = this->getLargestSocket();
 		bool result = false;
+		std::unique_lock<std::mutex> tcpc_lock{this->tcpc_mutex, std::defer_lock};
 
 		// Clear the set
 		FD_ZERO(&fdSet);
 
 		// Add all sockets to the set
 		FD_SET(*this, &fdSet);
+		tcpc_lock.lock();
 		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
 		{
 			FD_SET(*pCurConn, &fdSet);
 		}
+		tcpc_lock.unlock();
 
 		// Set timeout
 		int seconds = static_cast<int>(floor(timeout));
@@ -140,6 +143,7 @@ namespace inet
 			}
 		}
 
+		tcpc_lock.lock();
 		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
 		{
 			if(FD_ISSET(*pCurConn, &fdSet) == true)
@@ -148,6 +152,7 @@ namespace inet
 				this->connectionProcessHandler(pCurConn);
 			}
 		}
+		tcpc_lock.unlock();
 
 		return result;
 	}

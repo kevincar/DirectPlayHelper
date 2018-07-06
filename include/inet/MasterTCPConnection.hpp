@@ -15,11 +15,12 @@ namespace inet
 			
 			MasterTCPConnection(void);
 			~MasterTCPConnection(void);
+			int getNumConnections(void) const;
+			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
-			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
-			void shutdownConnection(std::shared_ptr<TCPConnection>& TCPConnection);
+
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;

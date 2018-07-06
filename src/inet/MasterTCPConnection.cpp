@@ -19,6 +19,20 @@ namespace inet
 		}
 	}
 
+	int MasterTCPConnection::getNumConnections(void) const
+	{
+		return static_cast<int>(this->TCPConnections.size());
+	}
+
+	void MasterTCPConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
+	{
+		// Add the connection to our list of connections
+		{
+			std::lock_guard<std::mutex> lock {this->tcpc_mutex};
+			this->TCPConnections.emplace_back(newTCPConnection);
+		}
+	}
+
 	void MasterTCPConnection::listenForIncomingConnections(MasterTCPConnection::newConnectionAcceptHandlerFunc const& ncah, MasterTCPConnection::connectionProcessHandlerFunc const& cph)
 	{
 		if(this->isListening()) return;
@@ -58,15 +72,6 @@ namespace inet
 		return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
 	}
 
-	void MasterTCPConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
-	{
-		// Add the connection to our list of connections
-		{
-			std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-			this->TCPConnections.emplace_back(newTCPConnection);
-		}
-	}
-
 	bool MasterTCPConnection::isListening(void) const
 	{
 		std::lock_guard<std::mutex> lock {this->listening_mutex};
@@ -100,7 +105,8 @@ namespace inet
 		FD_ZERO(&fdSet);
 
 		// Add all sockets to the set
-		FD_SET(*this, &fdSet);
+		int masterSocket = *this;
+		FD_SET(masterSocket, &fdSet);
 		tcpc_lock.lock();
 		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
 		{
@@ -123,7 +129,7 @@ namespace inet
 			throw "MasterTCPConnection::checkAllConnectionsForData - failed to select!";
 		}
 
-		if(FD_ISSET(*this, &fdSet) == true)
+		if(FD_ISSET(masterSocket, &fdSet) == true)
 		{
 			result = true;
 			std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();

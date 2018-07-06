@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 #include "inet/MasterTCPConnection.hpp"
 #include "gtest/gtest.h"
 
@@ -10,6 +11,16 @@ TEST(MasterTCPConnectionTest, constructor)
 	ASSERT_NO_THROW({
 			inet::MasterTCPConnection mtcpc;
 			});
+}
+
+TEST(MasterTCPConnectionTest, acceptConnection)
+{
+	inet::MasterTCPConnection mtcp;
+	std::shared_ptr<inet::TCPConnection> testConn = std::make_shared<inet::TCPConnection>();
+	
+	ASSERT_EQ(mtcp.getNumConnections(), 0);
+	mtcp.acceptConnection(testConn);
+	ASSERT_EQ(mtcp.getNumConnections(), 1);
 }
 
 TEST(MasterTCPConnectionTest, listenForIncomingConnections)
@@ -34,7 +45,7 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	std::mutex cvm;
 	std::string step {};
 	std::string IPAddressString {};
-	// steps: Client Ready, Server Started, Client Connecting, Server
+	// steps: Client Ready, Server Started, Client Connecting, Server Done
 
 	// Begin listening for incomming connections
 	std::thread serverThread {[&](){
@@ -52,7 +63,21 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		lk.lock();
 		cv.wait(lk, [&]{return step == "Client Connecting";});
 
+		// Wait 5 seconds for connection
+		std::chrono::seconds timeout{5};
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+		std::chrono::system_clock::time_point currentTime = std::chrono::system_clock::now();
+		std::chrono::seconds elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		while(elapsedTime < timeout)
+		{
+			if(master.getNumConnections() > 0) break;
+			currentTime = std::chrono::system_clock::now();
+			elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		}
+
+		ASSERT_EQ(master.getNumConnections(), 1);
 		step = "Server Done";
+		std::cout << step << std::endl;
 
 		lk.unlock();
 		cv.notify_one();
@@ -86,3 +111,4 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	clientThread.join();
 	serverThread.join();
 }
+

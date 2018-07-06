@@ -39,8 +39,6 @@ namespace inet
 		else
 		{
 			this->setListeningState(false);
-			//std::unique_lock<std::mutex> lock {this->listeningFinished_mutex};
-			//this->listeningFinished_cv.wait(lock, [=]{return this->isListeningFinished();});
 			this->listeningThread.join();
 		}
 	}
@@ -64,14 +62,8 @@ namespace inet
 	{
 		// Add the connection to our list of connections
 		{
-			//std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-			//this->TCPConnections.emplace_back(newTCPConnection);
-		}
-
-		// Start the connection process thread
-		{
-			//std::lock_guard<std::mutex> lock {this->chThreads_mutex};
-			//this->connectionHandlerThreads.emplace_back(std::thread([this, &newTCPConnection]{this->connectionProcessHandler(newTCPConnection);}));
+			std::lock_guard<std::mutex> lock {this->tcpc_mutex};
+			this->TCPConnections.emplace_back(newTCPConnection);
 		}
 	}
 
@@ -92,8 +84,7 @@ namespace inet
 		// Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			if(this->isDataReady(5.0)) {
-					}
+			this->checkAllConnectionsForData(5.0);
 		}
 	}
 

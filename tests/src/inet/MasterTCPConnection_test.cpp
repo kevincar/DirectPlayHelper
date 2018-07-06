@@ -17,7 +17,7 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	// Define the accept Handler
 	inet::MasterTCPConnection::newConnectionAcceptHandlerFunc ncah = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
 		std::cout << "new connection!" << std::endl;
-		return false;
+		return true;
 	};
 	
 	// Define the process Handler

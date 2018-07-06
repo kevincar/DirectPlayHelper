@@ -43,9 +43,16 @@ Below is the current todo list for the project. The legend is as follows:
 				- -[x] checkAllConnectionsForData Function
 					- -[x] Interface
 					- -[x] Implementation
+				- [ ] getNumConnections - We need this so that we can create
+				  a successful test case for listenForIncominConnections. The
+				  Server side should test to see if the number of connections
+				  is greater than 0
+				  	- [ ] Interface
+					- [ ] Implementation
+					- [ ] Test
 				- -[ ] listenForIncominConnections Function
 					- -[x] Interface
-					- -[ ] Implementation
+					- -[x] Implementation
 					- -[ ] Test
 				- Layout
 					- Basic steps

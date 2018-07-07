@@ -33,6 +33,22 @@ namespace inet
 		}
 	}
 
+	void MasterTCPConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
+	{
+		std::lock_guard<std::mutex> lock {this->tcpc_mutex};
+		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
+		{
+			if(*it == conn)
+			{
+				it = this->TCPConnections.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+	}
+
 	void MasterTCPConnection::listenForIncomingConnections(MasterTCPConnection::newConnectionAcceptHandlerFunc const& ncah, MasterTCPConnection::connectionProcessHandlerFunc const& cph)
 	{
 		if(this->isListening()) return;

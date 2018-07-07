@@ -17,6 +17,7 @@ namespace inet
 			~MasterTCPConnection(void);
 			int getNumConnections(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
+			void removeConnection(std::shared_ptr<TCPConnection>& conn);
 			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;

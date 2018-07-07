@@ -28,10 +28,11 @@ Below is the current todo list for the project. The legend is as follows:
 			- -[ ] Consider if we should make more than one thread, if so, how
 				many for server and clients, and what will their purpose be?
 				- -[ ] Design a single thread connection
-				- -[ ] MasterTCPConnection destructor needs to handle shutdown
-					of child connection threads Create a stopConnection
-					function to stop a connection Destructor should look
-					through and call stopConnection on all
+				- [ ] removeConnection - For removing previously accepted
+				  connections
+					- [ ] Interface
+					- [ ] Implementation
+					- [ ] Test
 				- -[x] Remove connection maps, and make vectors again…
 				- -[x] IPConnection::operator int()
 					- -[x] Interface

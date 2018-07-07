@@ -33,7 +33,7 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	
 	// Define the process Handler
 	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc){
-		std::cout << "Process new conenction!" << std::endl;
+		std::cout << "Process conenction: " << static_cast<int>(*nc) << std::endl;
 		if(nc){}
 	};
 
@@ -77,7 +77,6 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 
 		ASSERT_EQ(master.getNumConnections(), 1);
 		step = "Server Done";
-		std::cout << step << std::endl;
 
 		lk.unlock();
 		cv.notify_one();
@@ -104,11 +103,11 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		lk.unlock();
 		cv.notify_one();
 
-		//lk.lock();
-		//cv.wait(lk, [&]{return step == "Server Done";});
+		lk.lock();
+		cv.wait(lk, [&]{return step == "Server Done";});
 	}};
 	
-	clientThread.join();
 	serverThread.join();
+	clientThread.join();
 }
 

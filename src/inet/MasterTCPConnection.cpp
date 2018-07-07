@@ -129,7 +129,7 @@ namespace inet
 			throw "MasterTCPConnection::checkAllConnectionsForData - failed to select!";
 		}
 
-		if(FD_ISSET(masterSocket, &fdSet) == true)
+		if(FD_ISSET(masterSocket, &fdSet))
 		{
 			result = true;
 			std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
@@ -143,7 +143,7 @@ namespace inet
 		tcpc_lock.lock();
 		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
 		{
-			if(FD_ISSET(*pCurConn, &fdSet) == true)
+			if(FD_ISSET(*pCurConn, &fdSet))
 			{
 				result = true;
 				this->connectionProcessHandler(pCurConn);

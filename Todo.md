@@ -21,7 +21,7 @@ Below is the current todo list for the project. The legend is as follows:
 			everything in one thread… We'll need to make a branch for this
 			so we can revert changes
 			- [x] Create a branch called connection-redesign
-			- [ ] Design a single thread connection
+			- [x] Design a single thread connection
 				- [x] Remove connection maps, and make vectors again…
 				- [x] IPConnection::operator int()
 					- [x] Interface
@@ -33,26 +33,26 @@ Below is the current todo list for the project. The legend is as follows:
 				- [x] checkAllConnectionsForData Function
 					- [x] Interface
 					- [x] Implementation
-				- [ ] getNumConnections - We need this so that we can create
+				- [x] getNumConnections - We need this so that we can create
 				  a successful test case for listenForIncominConnections. The
 				  Server side should test to see if the number of connections
 				  is greater than 0
-				  	- [ ] Interface
-					- [ ] Implementation
-					- [ ] Test
-				- [ ] listenForIncominConnections Function
+				  	- [x] Interface
+					- [x] Implementation
+					- [x] Test
+				- [x] listenForIncominConnections Function
 					- [x] Interface
 					- [x] Implementation
-					- [ ] Test
-				- [ ] Reformat the connectionProcessHandlerFunc to return
+					- [x] Test
+				- [x] Reformat the connectionProcessHandlerFunc to return
 				  a boolean value such that the checkAllConnectionsForData
 				  function will then remove the connection when it returns
 				  false
-				- [ ] removeConnection - For removing previously accepted
+				- [x] removeConnection - For removing previously accepted
 				  connections
 					- [x] Interface
 					- [x] Implementation
-					- [ ] Test
+					- [x] Test
 				- Layout
 					- Basic steps
 						- Listen for a knock at the door or for incoming letters

@@ -11,7 +11,7 @@ namespace inet
 	{
 		public:
 			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
-			typedef std::function<void (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
+			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
 			
 			MasterTCPConnection(void);
 			~MasterTCPConnection(void);

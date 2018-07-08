@@ -28,13 +28,15 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	// Define the accept Handler
 	inet::MasterTCPConnection::newConnectionAcceptHandlerFunc ncah = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
 		std::cout << "new connection!" << std::endl;
+		if(nc) {}
 		return true;
 	};
 	
 	// Define the process Handler
-	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc){
+	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
 		std::cout << "Process conenction: " << static_cast<int>(*nc) << std::endl;
 		if(nc){}
+		return false;
 	};
 
 	// Create a new MasterTCPConnection
@@ -107,7 +109,7 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		cv.wait(lk, [&]{return step == "Server Done";});
 	}};
 	
-	serverThread.join();
 	clientThread.join();
+	serverThread.join();
 }
 

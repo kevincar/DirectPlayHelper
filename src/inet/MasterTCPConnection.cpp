@@ -157,13 +157,17 @@ namespace inet
 		}
 
 		tcpc_lock.lock();
-		for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
+		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
 		{
+			std::shared_ptr<TCPConnection> pCurConn = *it;
 			if(FD_ISSET(*pCurConn, &fdSet))
 			{
 				result = true;
-				this->connectionProcessHandler(pCurConn);
+				bool keepConn = this->connectionProcessHandler(pCurConn);
+				if(!keepConn) it = this->TCPConnections.erase(it);
+				else ++it;
 			}
+			else ++it;
 		}
 		tcpc_lock.unlock();
 

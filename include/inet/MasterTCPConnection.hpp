@@ -11,20 +11,20 @@ namespace inet
 	{
 		public:
 			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
-			typedef std::function<void (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
+			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
 			
 			MasterTCPConnection(void);
 			~MasterTCPConnection(void);
+			int getNumConnections(void) const;
+			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
+			void removeConnection(std::shared_ptr<TCPConnection>& conn);
 			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
-			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
-			void shutdownConnection(std::shared_ptr<TCPConnection>& TCPConnection);
+
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
-			std::vector<std::thread> connectionHandlerThreads;
-			std::mutex chThreads_mutex;
 			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
 			std::mutex tcpc_mutex;
 			bool listening = false;
@@ -36,6 +36,8 @@ namespace inet
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
 			void beginListening();
+			bool checkAllConnectionsForData(double timeout);
+			int getLargestSocket(void) const;
 	};
 }
 

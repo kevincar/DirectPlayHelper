@@ -25,6 +25,8 @@ namespace inet
 			int connect(std::string addressString);
 			virtual bool send(void* data) const = 0;
 
+			operator int const() const;
+
 		protected:
 			mutable std::mutex socket_mutex;
 			mutable std::mutex srcAddr_mutex;

@@ -101,6 +101,11 @@ namespace inet
 		return 0;
 	}
 
+	IPConnection::operator int const() const
+	{
+		return *this->socket.get();
+	}
+
 	void IPConnection::updateSrcAddr(void)
 	{
 		std::lock_guard<std::mutex> addr_lock {this->srcAddr_mutex};

@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 #include "inet/MasterTCPConnection.hpp"
 #include "gtest/gtest.h"
 
@@ -12,18 +13,30 @@ TEST(MasterTCPConnectionTest, constructor)
 			});
 }
 
+TEST(MasterTCPConnectionTest, acceptConnection)
+{
+	inet::MasterTCPConnection mtcp;
+	std::shared_ptr<inet::TCPConnection> testConn = std::make_shared<inet::TCPConnection>();
+	
+	ASSERT_EQ(mtcp.getNumConnections(), 0);
+	mtcp.acceptConnection(testConn);
+	ASSERT_EQ(mtcp.getNumConnections(), 1);
+}
+
 TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 {
 	// Define the accept Handler
 	inet::MasterTCPConnection::newConnectionAcceptHandlerFunc ncah = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
 		std::cout << "new connection!" << std::endl;
-		return false;
+		if(nc) {}
+		return true;
 	};
 	
 	// Define the process Handler
-	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc){
-		std::cout << "Process new conenction!" << std::endl;
+	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
+		std::cout << "Process conenction: " << static_cast<int>(*nc) << std::endl;
 		if(nc){}
+		return false;
 	};
 
 	// Create a new MasterTCPConnection
@@ -34,7 +47,7 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	std::mutex cvm;
 	std::string step {};
 	std::string IPAddressString {};
-	// steps: Client Ready, Server Started, Client Connecting, Server
+	// steps: Client Ready, Server Started, Client Connecting, Server Done
 
 	// Begin listening for incomming connections
 	std::thread serverThread {[&](){
@@ -52,6 +65,19 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		lk.lock();
 		cv.wait(lk, [&]{return step == "Client Connecting";});
 
+		// Wait 5 seconds for connection
+		std::chrono::seconds timeout{5};
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+		std::chrono::system_clock::time_point currentTime = std::chrono::system_clock::now();
+		std::chrono::seconds elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		while(elapsedTime < timeout)
+		{
+			if(master.getNumConnections() > 0) break;
+			currentTime = std::chrono::system_clock::now();
+			elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		}
+
+		ASSERT_EQ(master.getNumConnections(), 1);
 		step = "Server Done";
 
 		lk.unlock();
@@ -79,10 +105,11 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		lk.unlock();
 		cv.notify_one();
 
-		//lk.lock();
-		//cv.wait(lk, [&]{return step == "Server Done";});
+		lk.lock();
+		cv.wait(lk, [&]{return step == "Server Done";});
 	}};
 	
 	clientThread.join();
 	serverThread.join();
 }
+

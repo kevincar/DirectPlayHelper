@@ -101,6 +101,12 @@ namespace inet
 		return 0;
 	}
 
+	int IPConnection::send(std::shared_ptr<void const*> const& buffer, unsigned int data_len)
+	{
+		long result = ::send(*this, buffer.get(), data_len, 0);
+		return static_cast<int>(result);
+	}
+
 	IPConnection::operator int const() const
 	{
 		return *this->socket.get();

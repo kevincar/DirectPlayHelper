@@ -10,6 +10,15 @@ Below is the current todo list for the project. The legend is as follows:
 	- [x] Socket
 	- [x] ServiceAddress
 	- [x] IPConnection
+	  - [ ] Send
+	    - [x] Interface
+		- [x] Implementation
+		  - [ ] Think of a better way than using void*, Perhaps vector<char>?,
+			and the data must be appropriately packaged, this way we never
+			loose track of the length of the data. It is inherently stored in
+			the vector object
+		- [ ] Test
+	  - [ ] Recv
 	- [ ] TCPConnection
 	- [ ] UDPConnection
 	- [ ] MasterTCPConnection
@@ -63,8 +72,6 @@ Below is the current todo list for the project. The legend is as follows:
 						- If it's a letter
 							- Process the message
 
-	  - [ ] Send
-	  - [ ] Recv
 	  - [ ] sendFrom
 	  - [ ] recvFrom
 - [ ] DPServer Class

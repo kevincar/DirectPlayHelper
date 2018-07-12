@@ -8,7 +8,7 @@ namespace inet
 
 	TCPConnection::TCPConnection(int captureRawSocket, IPConnection const& parentConnection, sockaddr_in& destAddr) : IPConnection(captureRawSocket, SOCK_STREAM, 0, parentConnection, destAddr) {}
 
-	bool TCPConnection::send(void* data) const
+	bool TCPConnection::_send(void* data) const
 	{
 		if(data == nullptr)
 		{

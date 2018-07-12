@@ -10,7 +10,7 @@ namespace inet
 	{
 		public:
 			UDPConnection(void);
-			bool send(void* data) const override;
+			bool _send(void* data) const override;
 	};
 }
 

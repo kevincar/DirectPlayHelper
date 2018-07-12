@@ -33,9 +33,17 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	};
 	
 	// Define the process Handler
-	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [](std::shared_ptr<inet::TCPConnection>& nc) -> bool {
-		std::cout << "Process conenction: " << static_cast<int>(*nc) << std::endl;
-		if(nc){}
+	bool recieved_payload = false;
+	inet::MasterTCPConnection::connectionProcessHandlerFunc cph = [&](std::shared_ptr<inet::TCPConnection>& conn) -> bool {
+		std::cout << "Process conenction: " << static_cast<int>(*conn) << std::endl;
+		if(conn)
+		{
+			std::unique_ptr<char> payload {new char[255]{}};
+			int result = conn->recv(payload.get(), 255);
+			result = 0;
+			std::string payload_string {payload.get()};
+			recieved_payload = payload_string == "This is the data";
+		}
 		return false;
 	};
 
@@ -47,7 +55,9 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 	std::mutex cvm;
 	std::string step {};
 	std::string IPAddressString {};
-	// steps: Client Ready, Server Started, Client Connecting, Server Done
+	// steps: Client Ready, Server Started, Client Connecting, Server Received
+	// Connection, Client Sending Data, Server Recieved Data, Client Done,
+	// Server Done
 
 	// Begin listening for incomming connections
 	std::thread serverThread {[&](){
@@ -78,7 +88,26 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		}
 
 		ASSERT_EQ(master.getNumConnections(), 1);
-		step = "Server Done";
+		step = "Server Received Connection";
+
+		lk.unlock();
+		cv.notify_one();
+
+		lk.lock();
+		cv.wait(lk, [&]{return step == "Client Sending Data";});
+
+		// Wait 5 seconds for recipt
+		start = std::chrono::system_clock::now();
+		currentTime = std::chrono::system_clock::now();
+		elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		while(elapsedTime < timeout)
+		{
+			if(recieved_payload == true) break;
+			currentTime = std::chrono::system_clock::now();
+			elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - start);
+		}
+		ASSERT_EQ(recieved_payload, true);
+		step = "Server Received Data";
 
 		lk.unlock();
 		cv.notify_one();
@@ -106,7 +135,18 @@ TEST(MasterTCPConnectionTest, listenForIncomingConnections)
 		cv.notify_one();
 
 		lk.lock();
-		cv.wait(lk, [&]{return step == "Server Done";});
+		cv.wait(lk, [&]{return step == "Server Received Connection";});
+
+		std::string payload = "This is the data";
+		tcpc.send(payload.data(), static_cast<unsigned int>(payload.length()));
+		step = "Client Sending Data";
+
+		lk.unlock();
+		cv.notify_one();
+
+		lk.lock();
+		cv.wait(lk, [&]{return step == "Server Received Data";});
+		lk.unlock();
 	}};
 	
 	clientThread.join();

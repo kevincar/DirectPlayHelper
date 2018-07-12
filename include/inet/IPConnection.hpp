@@ -23,8 +23,9 @@ namespace inet
 			void listen(void);
 			bool isDataReady(double timeout) const;
 			int connect(std::string addressString);
-			int send(std::shared_ptr<void const*> const& data, unsigned int data_len);
-			virtual bool send(void* data) const = 0;
+			int send(void const* data, unsigned int const data_len);
+			int recv(void* buffer, unsigned int buffer_len);
+			virtual bool _send(void* data) const = 0;
 
 			operator int const() const;
 

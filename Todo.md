@@ -15,10 +15,13 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] Implementation
 		- [x] Test
 	  - [x] Recv
-	  - [ ] sendFrom
-	  - [ ] recvFrom
 	- [ ] TCPConnection
 	- [ ] UDPConnection
+	  - [ ] sendFrom
+		- [x] Interface
+		- [ ] Implementation
+		- [ ] Test
+	  - [ ] recvFrom
 	- [ ] MasterTCPConnection
 		- [x] Accept
 		- [x] Connect

@@ -17,9 +17,13 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] Recv
 	- [ ] TCPConnection
 	- [ ] UDPConnection
+	  - [ ] Before we can actually test these, we need something similar to
+		the MasterTCPConection but for UDP connections. Without making another
+		thread, we could simply add newly created UDPconnections to the
+		MasterTCPConnection loop. Continue thinking about this design
 	  - [ ] sendFrom
 		- [x] Interface
-		- [ ] Implementation
+		- [x] Implementation
 		- [ ] Test
 	  - [ ] recvFrom
 	- [ ] MasterTCPConnection

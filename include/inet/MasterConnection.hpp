@@ -1,20 +1,20 @@
 
-#ifndef INET_MASTER_TCP_CONNECTION_HPP
-#define INET_MASTER_TCP_CONNECTION_HPP
+#ifndef INET_MASTER_CONNECTION_HPP
+#define INET_MASTER_CONNECTION_HPP
 
 #include <vector>
 #include "inet/TCPConnection.hpp"
 
 namespace inet
 {
-	class MasterTCPConnection : public TCPConnection
+	class MasterConnection
 	{
 		public:
 			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
 			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
 			
-			MasterTCPConnection(void);
-			~MasterTCPConnection(void);
+			MasterConnection(void);
+			~MasterConnection(void);
 			int getNumConnections(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void removeConnection(std::shared_ptr<TCPConnection>& conn);
@@ -41,4 +41,4 @@ namespace inet
 	};
 }
 
-#endif /* INET_MASTER_TCP_CONNECTION_HPP */
+#endif /* INET_MASTER_CONNECTION_HPP */

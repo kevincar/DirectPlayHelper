@@ -21,6 +21,16 @@ Below is the current todo list for the project. The legend is as follows:
 		the MasterTCPConection but for UDP connections. Without making another
 		thread, we could simply add newly created UDPconnections to the
 		MasterTCPConnection loop. Continue thinking about this design
+	    - One possible option would be to redesign the MasterTCPConnection
+		  into a MasterConnection that manages both TCP connections and UDP
+		  connections. TCP connections could be added by using "Listeners".
+		  Each listener has an accompanying acceptFunction that new
+		  connections are validated agains before accepting them. This is for
+		  TCPConnections. UDPConnections can simply be added with an
+		  associating procedure function that processes incoming data.
+		  Ideally, we simply need to rename everything in the
+		  MasterTCPConnection class to MasterConnection, and then allow for
+		  adding UDPConnections and multiple procedure functions.
 	  - [ ] sendFrom
 		- [x] Interface
 		- [x] Implementation

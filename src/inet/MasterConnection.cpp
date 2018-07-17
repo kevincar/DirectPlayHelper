@@ -5,13 +5,13 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include "inet/MasterTCPConnection.hpp"
+#include "inet/MasterConnection.hpp"
 
 namespace inet
 {
-	MasterTCPConnection::MasterTCPConnection(void) : TCPConnection() {}
+	MasterConnection::MasterConnection(void) {}
 
-	MasterTCPConnection::~MasterTCPConnection(void)
+	MasterConnection::~MasterConnection(void)
 	{
 		if(this->isListening())
 		{
@@ -19,12 +19,12 @@ namespace inet
 		}
 	}
 
-	int MasterTCPConnection::getNumConnections(void) const
+	int MasterConnection::getNumConnections(void) const
 	{
 		return static_cast<int>(this->TCPConnections.size());
 	}
 
-	void MasterTCPConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
+	void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
 	{
 		// Add the connection to our list of connections
 		{
@@ -33,7 +33,7 @@ namespace inet
 		}
 	}
 
-	void MasterTCPConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
+	void MasterConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
 	{
 		std::lock_guard<std::mutex> lock {this->tcpc_mutex};
 		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
@@ -49,7 +49,7 @@ namespace inet
 		}
 	}
 
-	void MasterTCPConnection::listenForIncomingConnections(MasterTCPConnection::newConnectionAcceptHandlerFunc const& ncah, MasterTCPConnection::connectionProcessHandlerFunc const& cph)
+	void MasterConnection::listenForIncomingConnections(MasterConnection::newConnectionAcceptHandlerFunc const& ncah, MasterConnection::connectionProcessHandlerFunc const& cph)
 	{
 		if(this->isListening()) return;
 		this->listen();
@@ -60,7 +60,7 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	void MasterTCPConnection::stopListening(void)
+	void MasterConnection::stopListening(void)
 	{
 		if(std::this_thread::get_id() == this->listeningThread.get_id())
 		{
@@ -73,7 +73,7 @@ namespace inet
 		}
 	}
 
-	std::shared_ptr<TCPConnection> const MasterTCPConnection::answerIncomingConnection(void) const
+	std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
 	{
 		sockaddr_in addr {};
 		unsigned int addrsize = sizeof(sockaddr_in);
@@ -81,26 +81,26 @@ namespace inet
 		int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
 		if(newSocket == -1)
 		{
-			std::cout << "MasterTCPConnection::listen Failed to accept incoming connection " << errno << std::endl;
+			std::cout << "MasterConnection::listen Failed to accept incoming connection " << errno << std::endl;
 		}
 
 		// Assemble the data into a new TCPConnection object
 		return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
 	}
 
-	bool MasterTCPConnection::isListening(void) const
+	bool MasterConnection::isListening(void) const
 	{
 		std::lock_guard<std::mutex> lock {this->listening_mutex};
 		return this->listening;
 	}
 
-	void MasterTCPConnection::setListeningState(bool state)
+	void MasterConnection::setListeningState(bool state)
 	{
 		std::lock_guard<std::mutex> lock {this->listening_mutex};
 		this->listening = state;
 	}
 
-	void MasterTCPConnection::beginListening()
+	void MasterConnection::beginListening()
 	{
 		// Check for a new connection every 5 seconds
 		while(this->isListening())
@@ -109,7 +109,7 @@ namespace inet
 		}
 	}
 
-	bool MasterTCPConnection::checkAllConnectionsForData(double timeout)
+	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{
 		fd_set fdSet;
 		struct timeval tv;
@@ -142,7 +142,7 @@ namespace inet
 		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
 		if(retval == -1) {
-			throw "MasterTCPConnection::checkAllConnectionsForData - failed to select!";
+			throw "MasterConnection::checkAllConnectionsForData - failed to select!";
 		}
 
 		if(FD_ISSET(masterSocket, &fdSet))
@@ -174,7 +174,7 @@ namespace inet
 		return result;
 	}
 
-	int MasterTCPConnection::getLargestSocket(void) const
+	int MasterConnection::getLargestSocket(void) const
 	{
 		int currentSocket = *this;
 		int result = currentSocket;

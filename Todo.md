@@ -36,7 +36,7 @@ Below is the current todo list for the project. The legend is as follows:
 		their purpose. Instead the master UDP connection should simply handle
 		the data that comes in on them and send a response appropriately. At
 		least for our case.
-	  - [ ] Comment out bad code until we can replace it
+	  - [x] Comment out bad code until we can replace it
 	  - [ ] MasterConnection::AddMasterTCP() to add another TCP connection
 		that listens for incomming connection. Should take one parameter that
 		is std::shared_ptr<std::function> handle to the accept handler function

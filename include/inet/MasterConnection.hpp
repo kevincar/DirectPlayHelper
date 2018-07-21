@@ -2,7 +2,7 @@
 #ifndef INET_MASTER_CONNECTION_HPP
 #define INET_MASTER_CONNECTION_HPP
 
-#include <vector>
+#include <map>
 #include "inet/TCPConnection.hpp"
 
 namespace inet
@@ -10,27 +10,28 @@ namespace inet
 	class MasterConnection
 	{
 		public:
-			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
-			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> connectionProcessHandlerFunc;
+			//typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
+			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> processHandler;
 			
 			MasterConnection(void);
 			~MasterConnection(void);
-			int getNumConnections(void) const;
+			unsigned long getNumConnections(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void removeConnection(std::shared_ptr<TCPConnection>& conn);
-			void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
+			//void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
-			std::vector<std::shared_ptr<TCPConnection>> TCPConnections;
-			std::mutex tcpc_mutex;
+			std::map<unsigned int, std::shared_ptr<IPConnection>> connections;
+			mutable std::mutex conn_mutex;
+			std::map<unsigned int, std::shared_ptr<processHandler>> processHandlers;
+			std::mutex proc_mutex;
 			bool listening = false;
 			mutable std::mutex listening_mutex;
-			newConnectionAcceptHandlerFunc newConnectionAcceptHandler;
-			connectionProcessHandlerFunc connectionProcessHandler;
+			//newConnectionAcceptHandlerFunc newConnectionAcceptHandler;
 
 			bool isListening(void) const;
 			bool isListeningFinished(void) const;

@@ -13,102 +13,103 @@ namespace inet
 
 	MasterConnection::~MasterConnection(void)
 	{
-		if(this->isListening())
-		{
-			this->stopListening();
-		}
-	}
-
-	int MasterConnection::getNumConnections(void) const
-	{
-		return static_cast<int>(this->TCPConnections.size());
-	}
-
-	void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
-	{
-		// Add the connection to our list of connections
-		{
-			std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-			this->TCPConnections.emplace_back(newTCPConnection);
-		}
-	}
-
-	void MasterConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
-	{
-		std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
-		{
-			if(*it == conn)
-			{
-				it = this->TCPConnections.erase(it);
-			}
-			else
-			{
-				it++;
-			}
-		}
-	}
-
-	void MasterConnection::listenForIncomingConnections(MasterConnection::newConnectionAcceptHandlerFunc const& ncah, MasterConnection::connectionProcessHandlerFunc const& cph)
-	{
-		if(this->isListening()) return;
-		//this->listen();
-		//this->setListeningState(true);
-		//std::lock_guard<std::mutex> lock {this->listeningThread_mutex};
-		//this->newConnectionAcceptHandler = ncah;
-		//this->connectionProcessHandler = cph;
-		//this->listeningThread = std::thread([=]{this->beginListening();});
-	}
-
-	void MasterConnection::stopListening(void)
-	{
-		if(std::this_thread::get_id() == this->listeningThread.get_id())
-		{
-			this->setListeningState(false);
-		}
-		else
-		{
-			this->setListeningState(false);
-			this->listeningThread.join();
-		}
-	}
-
-	std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
-	{
-		//sockaddr_in addr {};
-		//unsigned int addrsize = sizeof(sockaddr_in);
-
-		//int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
-		//if(newSocket == -1)
+		//if(this->isListening())
 		//{
-			//std::cout << "MasterConnection::listen Failed to accept incoming connection " << errno << std::endl;
+			//this->stopListening();
 		//}
-
-		// Assemble the data into a new TCPConnection object
-		//return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
-		return std::make_shared<TCPConnection>();
 	}
 
-	bool MasterConnection::isListening(void) const
+	unsigned long MasterConnection::getNumConnections(void) const
 	{
-		std::lock_guard<std::mutex> lock {this->listening_mutex};
-		return this->listening;
+		std::lock_guard<std::mutex> lock {this->conn_mutex};
+		return this->connections.size();
 	}
 
-	void MasterConnection::setListeningState(bool state)
-	{
-		std::lock_guard<std::mutex> lock {this->listening_mutex};
-		this->listening = state;
-	}
+	//void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
+	//{
+		//// Add the connection to our list of connections
+		//{
+			//std::lock_guard<std::mutex> lock {this->conn_mutex};
+			//this->connections.emplace_back(newTCPConnection);
+		//}
+	//}
 
-	void MasterConnection::beginListening()
-	{
-		// Check for a new connection every 5 seconds
-		while(this->isListening())
-		{
-			this->checkAllConnectionsForData(5.0);
-		}
-	}
+	//void MasterConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
+	//{
+		//std::lock_guard<std::mutex> lock {this->tcpc_mutex};
+		//for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
+		//{
+			//if(*it == conn)
+			//{
+				//it = this->TCPConnections.erase(it);
+			//}
+			//else
+			//{
+				//it++;
+			//}
+		//}
+	//}
+
+	//void MasterConnection::listenForIncomingConnections(MasterConnection::newConnectionAcceptHandlerFunc const& ncah, MasterConnection::connectionProcessHandlerFunc const& cph)
+	//{
+		//if(this->isListening()) return;
+		////this->listen();
+		////this->setListeningState(true);
+		////std::lock_guard<std::mutex> lock {this->listeningThread_mutex};
+		////this->newConnectionAcceptHandler = ncah;
+		////this->connectionProcessHandler = cph;
+		////this->listeningThread = std::thread([=]{this->beginListening();});
+	//}
+
+	//void MasterConnection::stopListening(void)
+	//{
+		//if(std::this_thread::get_id() == this->listeningThread.get_id())
+		//{
+			//this->setListeningState(false);
+		//}
+		//else
+		//{
+			//this->setListeningState(false);
+			//this->listeningThread.join();
+		//}
+	//}
+
+	//std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
+	//{
+		////sockaddr_in addr {};
+		////unsigned int addrsize = sizeof(sockaddr_in);
+
+		////int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
+		////if(newSocket == -1)
+		////{
+			////std::cout << "MasterConnection::listen Failed to accept incoming connection " << errno << std::endl;
+		////}
+
+		//// Assemble the data into a new TCPConnection object
+		////return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
+		//return std::make_shared<TCPConnection>();
+	//}
+
+	//bool MasterConnection::isListening(void) const
+	//{
+		//std::lock_guard<std::mutex> lock {this->listening_mutex};
+		//return this->listening;
+	//}
+
+	//void MasterConnection::setListeningState(bool state)
+	//{
+		//std::lock_guard<std::mutex> lock {this->listening_mutex};
+		//this->listening = state;
+	//}
+
+	//void MasterConnection::beginListening()
+	//{
+		//// Check for a new connection every 5 seconds
+		//while(this->isListening())
+		//{
+			//this->checkAllConnectionsForData(5.0);
+		//}
+	//}
 
 	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{

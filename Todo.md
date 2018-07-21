@@ -16,8 +16,8 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] Test
 	  - [x] Recv
 	- [ ] MasterConnection
-	  - [ ] Rename MasterTCPConnection to MasterConnection
-	  - [ ] Remove the TCPConnection inheritance and make the class it's own
+	  - [x] Rename MasterTCPConnection to MasterConnection
+	  - [x] Remove the TCPConnection inheritance and make the class it's own
 	  - [ ] Rename and redefine TCPConnections to Connections as IPConnection
 		to support both TCP and UDP
 	  - [ ] Because we want to support multiple processHanders, we should have
@@ -37,6 +37,20 @@ Below is the current todo list for the project. The legend is as follows:
 		the data that comes in on them and send a response appropriately. At
 		least for our case.
 	  - [x] Comment out bad code until we can replace it
+	  - [ ] MasterConnection::MasterConnection - Constructor - Consider what
+		the class should start out with
+	  - [ ] What will the class need?
+	    - [ ] IPConnections map that maps ID's to connections
+		- [ ] processHandler map that maps ID's to processHandlers
+		  - Note, masterTCP processHandlers will be those that accept
+			incomping connections. Consider whether bool keeps the
+			TCPconnection alive or whether that means to accept the connection
+			or what?
+		- [ ] a map of listening states for all masterTCPs. ONLY if we need
+		  them. it is possible that the Listening state is only required for
+		  the running thread, in which case this needs to be redefined to
+		  `running` state. Do we actually need to keep track of the
+		  "listening" state of the masterTCP connections?
 	  - [ ] MasterConnection::AddMasterTCP() to add another TCP connection
 		that listens for incomming connection. Should take one parameter that
 		is std::shared_ptr<std::function> handle to the accept handler function

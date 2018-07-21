@@ -18,8 +18,20 @@ Below is the current todo list for the project. The legend is as follows:
 	- [ ] MasterConnection
 	  - [x] Rename MasterTCPConnection to MasterConnection
 	  - [x] Remove the TCPConnection inheritance and make the class it's own
-	  - [ ] Rename and redefine TCPConnections to Connections as IPConnection
+	  - [x] Rename and redefine TCPConnections to Connections as IPConnection
 		to support both TCP and UDP
+	  - [ ] MasterConnection::MasterConnection - should automatically start
+		it's connection checking loop even if there are no connections to
+		check.
+	  - [ ] TCP Support
+	    - [ ] MasterConnection::createMasterTCP - processHandlers for
+		  masterTCP returning false means don't add the connection, returning
+		  true means add the connection. Where as for other standard
+		  connection true will mean keep the connection, false will mean
+		  remove the connection
+		- [ ] MasterConnection::removeMasterTCP
+	  - [ ] UDP Support
+		- [ ] MasterConnection::addUDP
 	  - [ ] Because we want to support multiple processHanders, we should have
 		a map of Connections and processHandlers so that different connections
 		can be processed differently. But perhaps all TCP will be handled one

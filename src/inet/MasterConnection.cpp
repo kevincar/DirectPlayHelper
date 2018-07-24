@@ -9,14 +9,23 @@
 
 namespace inet
 {
-	MasterConnection::MasterConnection(void) {}
+	MasterConnection::MasterConnection(void)
+	{
+		this->startListening();
+	}
 
 	MasterConnection::~MasterConnection(void)
 	{
-		//if(this->isListening())
-		//{
-			//this->stopListening();
-		//}
+		if(this->isListening())
+		{
+			this->stopListening();
+		}
+	}
+
+	bool MasterConnection::isListening(void) const
+	{
+		std::lock_guard<std::mutex> lock {this->listening_mutex};
+		return this->listening;
 	}
 
 	unsigned long MasterConnection::getNumConnections(void) const
@@ -61,18 +70,18 @@ namespace inet
 		////this->listeningThread = std::thread([=]{this->beginListening();});
 	//}
 
-	//void MasterConnection::stopListening(void)
-	//{
-		//if(std::this_thread::get_id() == this->listeningThread.get_id())
-		//{
-			//this->setListeningState(false);
-		//}
-		//else
-		//{
-			//this->setListeningState(false);
-			//this->listeningThread.join();
-		//}
-	//}
+	void MasterConnection::stopListening(void)
+	{
+		if(std::this_thread::get_id() == this->listeningThread.get_id())
+		{
+			this->setListeningState(false);
+		}
+		else
+		{
+			this->setListeningState(false);
+			this->listeningThread.join();
+		}
+	}
 
 	//std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
 	//{
@@ -90,26 +99,30 @@ namespace inet
 		//return std::make_shared<TCPConnection>();
 	//}
 
-	//bool MasterConnection::isListening(void) const
-	//{
-		//std::lock_guard<std::mutex> lock {this->listening_mutex};
-		//return this->listening;
-	//}
 
-	//void MasterConnection::setListeningState(bool state)
-	//{
-		//std::lock_guard<std::mutex> lock {this->listening_mutex};
-		//this->listening = state;
-	//}
+	void MasterConnection::setListeningState(bool state)
+	{
+		std::lock_guard<std::mutex> lock {this->listening_mutex};
+		this->listening = state;
+	}
 
-	//void MasterConnection::beginListening()
-	//{
-		//// Check for a new connection every 5 seconds
-		//while(this->isListening())
-		//{
-			//this->checkAllConnectionsForData(5.0);
-		//}
-	//}
+	void MasterConnection::beginListening()
+	{
+		// Check for a new connection every 5 seconds
+		while(this->isListening())
+		{
+			this->checkAllConnectionsForData(5.0);
+		}
+	}
+
+	void MasterConnection::startListening()
+	{
+		if(this->isListening() == true) return;
+		this->setListeningState(true);
+
+		std::lock_guard<std::mutex> lock {this->listeningThread_mutex};
+		this->listeningThread = std::thread([=]{this->beginListening();});
+	}
 
 	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{

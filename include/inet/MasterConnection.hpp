@@ -15,6 +15,7 @@ namespace inet
 			
 			MasterConnection(void);
 			~MasterConnection(void);
+			bool isListening(void) const;
 			unsigned long getNumConnections(void) const;
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void removeConnection(std::shared_ptr<TCPConnection>& conn);
@@ -33,10 +34,10 @@ namespace inet
 			mutable std::mutex listening_mutex;
 			//newConnectionAcceptHandlerFunc newConnectionAcceptHandler;
 
-			bool isListening(void) const;
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
 			void beginListening();
+			void startListening();
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;
 	};

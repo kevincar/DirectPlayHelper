@@ -20,9 +20,11 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] Remove the TCPConnection inheritance and make the class it's own
 	  - [x] Rename and redefine TCPConnections to Connections as IPConnection
 		to support both TCP and UDP
-	  - [ ] MasterConnection::MasterConnection - should automatically start
+	  - [x] MasterConnection::MasterConnection - should automatically start
 		it's connection checking loop even if there are no connections to
 		check.
+	  - [ ] MasterConnection::checkAllConnectionsForData - get this up and
+		running even if no connections are present
 	  - [ ] TCP Support
 	    - [ ] MasterConnection::createMasterTCP - processHandlers for
 		  masterTCP returning false means don't add the connection, returning

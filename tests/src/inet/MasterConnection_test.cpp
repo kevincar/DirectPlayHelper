@@ -8,9 +8,15 @@
 
 TEST(MasterConnectionTest, constructor)
 {
+	// 1. MasterConnection should not throw any exceptions when constructing
 	ASSERT_NO_THROW({
-			inet::MasterConnection mtcpc;
+			inet::MasterConnection mc;
 			});
+
+	inet::MasterConnection mc;
+
+	// 2. MasterConnection should begin running
+	ASSERT_EQ(mc.isListening(), true);
 }
 
 //TEST(MasterConnectionTest, acceptConnection)

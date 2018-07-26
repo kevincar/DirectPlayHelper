@@ -126,24 +126,29 @@ namespace inet
 
 	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{
-		//fd_set fdSet;
-		//struct timeval tv;
-		//int largestFD = this->getLargestSocket();
+		fd_set fdSet;
+		struct timeval tv;
+		int largestFD = this->getLargestSocket();
 		bool result = false;
-		//std::unique_lock<std::mutex> tcpc_lock{this->tcpc_mutex, std::defer_lock};
+		std::unique_lock<std::mutex> conn_lock{this->conn_mutex, std::defer_lock};
 
-		//// Clear the set
-		//FD_ZERO(&fdSet);
+		// Only continue if there are connections to check
+		if(this->connections.size() < 1) 
+		{
+			return true;
+		}
 
-		//// Add all sockets to the set
-		//int masterSocket = *this;
-		//FD_SET(masterSocket, &fdSet);
-		//tcpc_lock.lock();
-		//for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
-		//{
-			//FD_SET(*pCurConn, &fdSet);
-		//}
-		//tcpc_lock.unlock();
+		// Clear the set
+		FD_ZERO(&fdSet);
+
+		// Add all sockets to the set
+		conn_lock.lock();
+		for(std::pair<unsigned int, std::shared_ptr<IPConnection>> connPair : this->connections)
+		{
+			std::shared_ptr<IPConnection> pCurConn = connPair.second;
+			FD_SET(*pCurConn, &fdSet);
+		}
+		conn_lock.unlock();
 
 		// Set timeout
 		int seconds = static_cast<int>(floor(timeout));
@@ -151,56 +156,50 @@ namespace inet
 		double remainder_us = remainder * 1e6;
 		int microseconds = static_cast<int>(floor(remainder_us));
 
-		//tv.tv_sec = seconds;
-		//tv.tv_usec = microseconds;
+		tv.tv_sec = seconds;
+		tv.tv_usec = microseconds;
 
-		//int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
+		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
-		//if(retval == -1) {
-			//throw "MasterConnection::checkAllConnectionsForData - failed to select!";
-		//}
+		if(retval == -1) {
+			throw "MasterConnection::checkAllConnectionsForData - failed to select!";
+		}
 
-		//if(FD_ISSET(masterSocket, &fdSet))
-		//{
-			//result = true;
-			//std::shared_ptr<TCPConnection> newConnection = this->answerIncomingConnection();
-			//bool acceptConnection = this->newConnectionAcceptHandler(newConnection);
-			//if(acceptConnection)
-			//{
-				//this->acceptConnection(newConnection);
-			//}
-		//}
-
-		//tcpc_lock.lock();
-		//for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
-		//{
-			//std::shared_ptr<TCPConnection> pCurConn = *it;
-			//if(FD_ISSET(*pCurConn, &fdSet))
-			//{
-				//result = true;
+		conn_lock.lock();
+		for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
+		{
+			std::pair<unsigned int, std::shared_ptr<IPConnection>> curPair = *it;
+			std::shared_ptr<IPConnection> pCurConn = curPair.second;
+			if(FD_ISSET(*pCurConn, &fdSet))
+			{
+				result = true;
+				bool keepConn = true;
 				//bool keepConn = this->connectionProcessHandler(pCurConn);
-				//if(!keepConn) it = this->TCPConnections.erase(it);
-				//else ++it;
-			//}
-			//else ++it;
-		//}
-		//tcpc_lock.unlock();
+				if(!keepConn) it = this->connections.erase(it);
+				else ++it;
+			}
+			else ++it;
+		}
+		conn_lock.unlock();
 
 		return result;
 	}
 
 	int MasterConnection::getLargestSocket(void) const
 	{
-		//int currentSocket = *this;
-		//int result = currentSocket;
+		int result = -1;
+		int currentSocket = result;
 
-		//for(std::shared_ptr<TCPConnection> pCurConn : this->TCPConnections)
-		//{
-			 //currentSocket = *pCurConn;
-			 //if(currentSocket > result)
-				 //result = currentSocket;
-		//}
-		int result = 0;
+		std::lock_guard<std::mutex> lock {this->conn_mutex};
+		for(std::pair<unsigned int, std::shared_ptr<IPConnection>> curConnPair : this->connections)
+		{
+			std::shared_ptr<IPConnection> pCurConn = curConnPair.second;
+			currentSocket = *pCurConn;
+			if(currentSocket > result)
+			{
+				result = currentSocket;
+			}
+		}
 
 		return result;
 	}

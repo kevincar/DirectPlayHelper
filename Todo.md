@@ -31,8 +31,12 @@ Below is the current todo list for the project. The legend is as follows:
 		  true means add the connection. Where as for other standard
 		  connection true will mean keep the connection, false will mean
 		  remove the connection
-		- [ ] MasterConnection::removeMasterTCP
+		- [x] MasterConnection::removeMasterTCP
 	  - [ ] UDP Support
+	    - [ ] MasterConnection::addConnection - this will be used to decrease
+		duplicated code between TCP and udp connection additions
+		- [ ] Simplify the MasterTCPConnection addition to utilize the new
+		addConnection function
 		- [ ] MasterConnection::addUDP
 	  - [ ] Because we want to support multiple processHanders, we should have
 		a map of Connections and processHandlers so that different connections

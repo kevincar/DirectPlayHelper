@@ -295,4 +295,20 @@ namespace inet
 
 		return result;
 	}
+
+	unsigned int MasterConnection::addConnection(std::shared_ptr<IPConnection>& pIP, std::shared_ptr<processHandler>& pPH)
+	{
+		// add the connection
+		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
+		unsigned int connID = static_cast<unsigned int>(this->connections.size());
+
+		// Add to the connections list
+		this->connections.emplace(std::make_pair(connID, pIP));
+
+		// Add to the processHandler list
+		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
+		this->processHandlers.emplace(std::make_pair(connID, pPH));
+
+		return connID;
+	}
 }

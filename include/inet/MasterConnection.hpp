@@ -47,6 +47,7 @@ namespace inet
 			void startListening();
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;
+			unsigned int addConnection(std::shared_ptr<IPConnection>& pIPconn, std::shared_ptr<processHandler>& pPH);
 	};
 }
 

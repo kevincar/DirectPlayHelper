@@ -12,13 +12,14 @@ namespace inet
 	{
 		public:
 			//typedef std::function<bool (std::shared_ptr<TCPConnection>&)> newConnectionAcceptHandlerFunc;
-			typedef std::function<bool (std::shared_ptr<TCPConnection>&)> processHandler;
+			typedef std::function<bool (std::shared_ptr<IPConnection>&)> processHandler;
 			
 			MasterConnection(void);
 			~MasterConnection(void);
 			bool isListening(void) const;
 			unsigned long getNumConnections(void) const;
-			bool createMasterTCP(std::shared_ptr<processHandler>& pPH);
+			unsigned int createMasterTCP(std::shared_ptr<processHandler>& pPH);
+			void removeMasterTCP(unsigned int connID);
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void removeConnection(std::shared_ptr<TCPConnection>& conn);
 			//void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);

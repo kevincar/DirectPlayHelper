@@ -107,6 +107,25 @@ namespace inet
 		}
 	}
 
+	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<processHandler>& pPH)
+	{
+		// Create a new UDPConnection
+		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
+
+		// add the connection
+		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
+		unsigned int connID = static_cast<unsigned int>(this->connections.size());
+
+		// Add to the connections list
+		this->connections.emplace(std::make_pair(connID, newConnection));
+
+		// Add to the processHandler list
+		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
+		this->processHandlers.emplace(std::make_pair(connID, pPH));
+
+		return connID;
+	}
+
 	//void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
 	//{
 		//// Add the connection to our list of connections

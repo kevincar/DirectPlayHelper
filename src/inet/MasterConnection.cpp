@@ -34,7 +34,7 @@ namespace inet
 		return this->connections.size();
 	}
 
-	bool MasterConnection::createMasterTCP(std::shared_ptr<processHandler>& pPH)
+	unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler>& pPH)
 	{
 		// Create a new TCPConnection
 		std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>();
@@ -54,7 +54,57 @@ namespace inet
 		std::lock_guard<std::mutex> masterindex_lock {this->masterTCPList_mutex};
 		this->masterTCPList.emplace_back(connID);
 
-		return true;
+		return connID;
+	}
+
+	void MasterConnection::removeMasterTCP(unsigned int connID)
+	{
+		// Remove from the masterTCPList
+		std::lock_guard<std::mutex> list_lock {this->masterTCPList_mutex};
+		for(std::vector<unsigned int>::iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
+		{
+			unsigned int curID = *it;
+			if(curID == connID)
+			{
+				it = this->masterTCPList.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		// Remove from the connection list
+		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
+		for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
+		{
+			std::pair<unsigned int, std::shared_ptr<IPConnection>> pairItem = *it;
+			unsigned int curConnID = pairItem.first;
+			if(curConnID == connID)
+			{
+				it = this->connections.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		// Remove the processHandler
+		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
+		for(std::map<unsigned int, std::shared_ptr<processHandler>>::iterator it = this->processHandlers.begin(); it != this->processHandlers.end(); )
+		{
+			std::pair<unsigned int, std::shared_ptr<processHandler>> pairItem = *it;
+			unsigned int curConnID = pairItem.first;
+			if(curConnID == connID)
+			{
+				it = this->processHandlers.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
 	}
 
 	//void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)

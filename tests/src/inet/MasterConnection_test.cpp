@@ -19,6 +19,29 @@ TEST(MasterConnectionTest, constructor)
 	ASSERT_EQ(mc.isListening(), true);
 }
 
+TEST(MasterConnectionTest, createAndRemoveMasterTCP)
+{
+	inet::MasterConnection mc;
+
+	// Create a dummy proc Handle
+	inet::MasterConnection::processHandler proc = [](std::shared_ptr<inet::IPConnection>& conn)->bool
+	{
+		if(conn) return true;
+		return true;
+	};
+
+	std::shared_ptr<inet::MasterConnection::processHandler> pProc {&proc};
+	unsigned int connID = mc.createMasterTCP(pProc);
+
+	ASSERT_EQ(connID>0, true);
+
+	// Remove it
+	mc.removeMasterTCP(connID);
+
+	unsigned long nConn = mc.getNumConnections();
+	ASSERT_EQ(nConn, static_cast<unsigned long>(0));
+}
+
 //TEST(MasterConnectionTest, acceptConnection)
 //{
 	//inet::MasterConnection mtcp;

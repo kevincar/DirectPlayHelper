@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include "inet/TCPConnection.hpp"
+#include "inet/UDPConnection.hpp"
 
 namespace inet
 {
@@ -20,6 +21,7 @@ namespace inet
 			unsigned long getNumConnections(void) const;
 			unsigned int createMasterTCP(std::shared_ptr<processHandler>& pPH);
 			void removeMasterTCP(unsigned int connID);
+			unsigned int createUDPConnection(std::shared_ptr<processHandler>& pPH);
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
 			void removeConnection(std::shared_ptr<TCPConnection>& conn);
 			//void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);

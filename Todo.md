@@ -23,10 +23,10 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::MasterConnection - should automatically start
 		it's connection checking loop even if there are no connections to
 		check.
-	  - [ ] MasterConnection::checkAllConnectionsForData - get this up and
+	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-	    - [ ] MasterConnection::createMasterTCP - processHandlers for
+	    - [x] MasterConnection::createMasterTCP - processHandlers for
 		  masterTCP returning false means don't add the connection, returning
 		  true means add the connection. Where as for other standard
 		  connection true will mean keep the connection, false will mean

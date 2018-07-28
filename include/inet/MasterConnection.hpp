@@ -23,7 +23,6 @@ namespace inet
 			unsigned int createUDPConnection(std::shared_ptr<processHandler>& pPH);
 			void removeUDPConnection(unsigned int connID);
 			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
-			//void listenForIncomingConnections(newConnectionAcceptHandlerFunc const& ncaHandler, connectionProcessHandlerFunc const& cpHandler);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 
@@ -34,11 +33,10 @@ namespace inet
 			mutable std::mutex conn_mutex;
 			std::map<unsigned int, std::shared_ptr<processHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
-			std::vector<unsigned int> masterTCPList;
+			std::map<unsigned int, std::vector<unsigned int>> masterTCPList;
 			mutable std::mutex masterTCPList_mutex;
 			bool listening = false;
 			mutable std::mutex listening_mutex;
-			//newConnectionAcceptHandlerFunc newConnectionAcceptHandler;
 
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);

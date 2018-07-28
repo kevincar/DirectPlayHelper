@@ -44,7 +44,7 @@ namespace inet
 		
 		// Add to the masterIndex
 		std::lock_guard<std::mutex> masterindex_lock {this->masterTCPList_mutex};
-		this->masterTCPList.emplace_back(connID);
+		this->masterTCPList.emplace(std::make_pair(connID, std::vector<unsigned int>{}));
 
 		return connID;
 	}
@@ -53,9 +53,9 @@ namespace inet
 	{
 		// Remove from the masterTCPList
 		std::lock_guard<std::mutex> list_lock {this->masterTCPList_mutex};
-		for(std::vector<unsigned int>::iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
+		for(std::map<unsigned int, std::vector<unsigned int>>::iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
 		{
-			unsigned int curID = *it;
+			unsigned int curID = it->first;
 			if(curID == connID)
 			{
 				it = this->masterTCPList.erase(it);
@@ -297,9 +297,9 @@ namespace inet
 	{
 		bool result = false;
 		std::lock_guard<std::mutex> list_lock {this->masterTCPList_mutex};
-		for(std::vector<unsigned int>::const_iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
+		for(std::map<unsigned int, std::vector<unsigned int>>::const_iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
 		{
-			unsigned int curConnID = *it;
+			unsigned int curConnID = it->first;
 			if(curConnID == connID)
 			{
 				result = true;

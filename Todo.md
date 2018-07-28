@@ -26,9 +26,13 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-		- [ ] MasterConnection::MasterChildList - this mapped list has
+		- [ ] MasterConnection::masterTCPList - this mapped list has
 		  masterTCP connection IDs as the key and a vector of child connection
 		  IDs as the value
+		  - [ ] Should be added to with calls to createMasterTCP and when new
+			connections are accepted
+		  - [ ] Should have stuff removed from it when masterTCPConnections
+			are removed or when child connections end
 		- [ ] MasterConnection::MasterChildProcHandlers - is a map member that
 		  maps the connectionID's of the masterTCP connection to the pointer
 		  of the processHandler that will be assigned to the master's children

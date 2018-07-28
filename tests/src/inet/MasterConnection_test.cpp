@@ -30,17 +30,17 @@ TEST(MasterConnectionTest, createAndRemoveMasterTCP)
 		return true;
 	});
 
-	unsigned int connID = mc.createMasterTCP(pProc);
+	//unsigned int connID = mc.createMasterTCP(pProc);
 
-	ASSERT_EQ(connID, static_cast<unsigned int>(0));
+	//ASSERT_EQ(connID, static_cast<unsigned int>(0));
 
-	// Remove it
-	ASSERT_NO_THROW({
-			mc.removeMasterTCP(connID);
-			});
+	//// Remove it
+	//ASSERT_NO_THROW({
+			//mc.removeMasterTCP(connID);
+			//});
 
-	unsigned long nConn = mc.getNumConnections();
-	ASSERT_EQ(nConn, static_cast<unsigned long>(0));
+	//unsigned long nConn = mc.getNumConnections();
+	//ASSERT_EQ(nConn, static_cast<unsigned long>(0));
 }
 
 //TEST(MasterConnectionTest, acceptConnection)

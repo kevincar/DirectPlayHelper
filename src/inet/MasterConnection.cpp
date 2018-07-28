@@ -34,13 +34,13 @@ namespace inet
 		return this->connections.size();
 	}
 
-	unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler>& pPH)
+	unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler>& pAcceptPH, std::shared_ptr<processHandler>& pChildPH)
 	{
 		// Create a new TCPConnection
 		std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>();
 
 		std::shared_ptr<IPConnection> pConn = std::static_pointer_cast<IPConnection>(newConnection);
-		unsigned int connID = this->addConnection(pConn, pPH);
+		unsigned int connID = this->addConnection(pConn, pAcceptPH);
 		
 		// Add to the masterIndex
 		std::lock_guard<std::mutex> masterindex_lock {this->masterTCPList_mutex};
@@ -66,82 +66,26 @@ namespace inet
 			}
 		}
 
-		// Remove from the connection list
-		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
-		for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
-		{
-			std::pair<unsigned int, std::shared_ptr<IPConnection>> pairItem = *it;
-			unsigned int curConnID = pairItem.first;
-			if(curConnID == connID)
-			{
-				it = this->connections.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-
-		// Remove the processHandler
-		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
-		for(std::map<unsigned int, std::shared_ptr<processHandler>>::iterator it = this->processHandlers.begin(); it != this->processHandlers.end(); )
-		{
-			std::pair<unsigned int, std::shared_ptr<processHandler>> pairItem = *it;
-			unsigned int curConnID = pairItem.first;
-			if(curConnID == connID)
-			{
-				it = this->processHandlers.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
+		this->removeConnection(connID);
 	}
 
 	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<processHandler>& pPH)
 	{
 		// Create a new UDPConnection
 		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
-
-		// add the connection
-		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
-		unsigned int connID = static_cast<unsigned int>(this->connections.size());
-
-		// Add to the connections list
-		this->connections.emplace(std::make_pair(connID, newConnection));
-
-		// Add to the processHandler list
-		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
-		this->processHandlers.emplace(std::make_pair(connID, pPH));
-
-		return connID;
+		std::shared_ptr<IPConnection> pConn = std::static_pointer_cast<IPConnection>(newConnection);
+		return this->addConnection(pConn, pPH);
 	}
 
-	//void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
-	//{
-		//// Add the connection to our list of connections
-		//{
-			//std::lock_guard<std::mutex> lock {this->conn_mutex};
-			//this->connections.emplace_back(newTCPConnection);
-		//}
-	//}
+	void MasterConnection::removeUDPConnection(unsigned int connID)
+	{
+		this->removeConnection(connID);
+	}
 
-	//void MasterConnection::removeConnection(std::shared_ptr<TCPConnection>& conn)
-	//{
-		//std::lock_guard<std::mutex> lock {this->tcpc_mutex};
-		//for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->TCPConnections.begin(); it != this->TCPConnections.end() ; )
-		//{
-			//if(*it == conn)
-			//{
-				//it = this->TCPConnections.erase(it);
-			//}
-			//else
-			//{
-				//it++;
-			//}
-		//}
-	//}
+	void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
+	{
+		//this->addConnection(newTCPConnection);
+	}
 
 	//void MasterConnection::listenForIncomingConnections(MasterConnection::newConnectionAcceptHandlerFunc const& ncah, MasterConnection::connectionProcessHandlerFunc const& cph)
 	//{
@@ -232,7 +176,6 @@ namespace inet
 			std::shared_ptr<IPConnection> pCurConn = connPair.second;
 			FD_SET(*pCurConn, &fdSet);
 		}
-		conn_lock.unlock();
 
 		// Set timeout
 		int seconds = static_cast<int>(floor(timeout));
@@ -249,14 +192,25 @@ namespace inet
 			throw "MasterConnection::checkAllConnectionsForData - failed to select!";
 		}
 
-		conn_lock.lock();
 		for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
 		{
 			std::pair<unsigned int, std::shared_ptr<IPConnection>> curPair = *it;
+			unsigned int connID = curPair.first;
 			std::shared_ptr<IPConnection> pCurConn = curPair.second;
 			if(FD_ISSET(*pCurConn, &fdSet))
 			{
 				result = true;
+				bool isMasterTCP = this->isConnMasterTCP(connID);
+				if(isMasterTCP)
+				{
+					std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
+					std::shared_ptr<processHandler> pPH = this->processHandlers[connID];
+					bool accepted = (*pPH)(pCurConn);
+					if(accepted)
+					{
+						// Accept the connection
+					}
+				}
 				bool keepConn = true;
 				//bool keepConn = this->connectionProcessHandler(pCurConn);
 				if(!keepConn) it = this->connections.erase(it);
@@ -302,5 +256,56 @@ namespace inet
 		this->processHandlers.emplace(std::make_pair(connID, pPH));
 
 		return connID;
+	}
+
+	void MasterConnection::removeConnection(unsigned int connID)
+	{
+		// Remove from the connection list
+		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};
+		for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
+		{
+			std::pair<unsigned int, std::shared_ptr<IPConnection>> pairItem = *it;
+			unsigned int curConnID = pairItem.first;
+			if(curConnID == connID)
+			{
+				it = this->connections.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		// Remove the processHandler
+		std::lock_guard<std::mutex> ph_lock {this->proc_mutex};
+		for(std::map<unsigned int, std::shared_ptr<processHandler>>::iterator it = this->processHandlers.begin(); it != this->processHandlers.end(); )
+		{
+			std::pair<unsigned int, std::shared_ptr<processHandler>> pairItem = *it;
+			unsigned int curConnID = pairItem.first;
+			if(curConnID == connID)
+			{
+				it = this->processHandlers.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+
+	bool MasterConnection::isConnMasterTCP(unsigned int connID) const
+	{
+		bool result = false;
+		std::lock_guard<std::mutex> list_lock {this->masterTCPList_mutex};
+		for(std::vector<unsigned int>::const_iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
+		{
+			unsigned int curConnID = *it;
+			if(curConnID == connID)
+			{
+				result = true;
+			}
+		}
+
+		return result;
 	}
 }

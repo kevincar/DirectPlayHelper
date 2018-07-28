@@ -26,18 +26,32 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-	    - [x] MasterConnection::createMasterTCP - processHandlers for
+		- [ ] MasterConnection::MasterChildList - this mapped list has
+		  masterTCP connection IDs as the key and a vector of child connection
+		  IDs as the value
+		- [ ] MasterConnection::MasterChildProcHandlers - is a map member that
+		  maps the connectionID's of the masterTCP connection to the pointer
+		  of the processHandler that will be assigned to the master's children
+	    - [ ] MasterConnection::createMasterTCP - processHandlers for
 		  masterTCP returning false means don't add the connection, returning
 		  true means add the connection. Where as for other standard
 		  connection true will mean keep the connection, false will mean
-		  remove the connection
+		  remove the connection. This function should take two
+		  processHandlers, one for it's on process, and another for all child
+		  processes. Also, we should consider how we can link child
+		  connections to parent connections.
+		- [x] MasterConnection::isMasterTCP - this is mainly for the
+		  checkAllConnectionsForData function. So that when it receives a true
+		  response, it accepts the connection
+		- [x] MasterConnection::acceptConnection - to accept connections from
+		  masterTCP sockets
 		- [x] MasterConnection::removeMasterTCP
-	  - [ ] UDP Support
-	    - [ ] MasterConnection::addConnection - this will be used to decrease
+	  - [x] UDP Support
+	    - [x] MasterConnection::addConnection - this will be used to decrease
 		duplicated code between TCP and udp connection additions
-		- [ ] Simplify the MasterTCPConnection addition to utilize the new
+		- [x] Simplify the MasterTCPConnection addition to utilize the new
 		addConnection function
-		- [ ] MasterConnection::addUDP
+		- [x] MasterConnection::addUDP
 	  - [ ] Because we want to support multiple processHanders, we should have
 		a map of Connections and processHandlers so that different connections
 		can be processed differently. But perhaps all TCP will be handled one

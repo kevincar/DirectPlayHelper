@@ -18,11 +18,11 @@ namespace inet
 			~MasterConnection(void);
 			bool isListening(void) const;
 			unsigned long getNumConnections(void) const;
-			unsigned int createMasterTCP(std::shared_ptr<processHandler>& pAcceptPH, std::shared_ptr<processHandler>& pChildPH);
+			unsigned int createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH);
 			void removeMasterTCP(unsigned int connID);
-			unsigned int createUDPConnection(std::shared_ptr<processHandler>& pPH);
+			unsigned int createUDPConnection(std::shared_ptr<processHandler> const& pPH);
 			void removeUDPConnection(unsigned int connID);
-			void acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection);
+			void acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection);
 			void stopListening(void);
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 
@@ -33,6 +33,8 @@ namespace inet
 			mutable std::mutex conn_mutex;
 			std::map<unsigned int, std::shared_ptr<processHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
+			std::map<unsigned int, std::shared_ptr<processHandler>> masterChildProcessHandlers;
+			mutable std::mutex mcproc_mutex;
 			std::map<unsigned int, std::vector<unsigned int>> masterTCPList;
 			mutable std::mutex masterTCPList_mutex;
 			bool listening = false;
@@ -44,7 +46,7 @@ namespace inet
 			void startListening();
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;
-			unsigned int addConnection(std::shared_ptr<IPConnection>& pIPconn, std::shared_ptr<processHandler>& pPH);
+			unsigned int addConnection(std::shared_ptr<IPConnection> const& pIPconn, std::shared_ptr<processHandler> const& pPH);
 			void removeConnection(unsigned int connID);
 			bool isConnMasterTCP(unsigned int connID) const;
 	};

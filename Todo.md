@@ -26,17 +26,17 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-		- [ ] MasterConnection::masterTCPList - this mapped list has
+		- [x] MasterConnection::masterTCPList - this mapped list has
 		  masterTCP connection IDs as the key and a vector of child connection
 		  IDs as the value
-		  - [ ] Should be added to with calls to createMasterTCP and when new
+		  - [x] Should be added to with calls to createMasterTCP and when new
 			connections are accepted
-		  - [ ] Should have stuff removed from it when masterTCPConnections
+		  - [x] Should have stuff removed from it when masterTCPConnections
 			are removed or when child connections end
-		- [ ] MasterConnection::MasterChildProcHandlers - is a map member that
+		- [x] MasterConnection::MasterChildProcHandlers - is a map member that
 		  maps the connectionID's of the masterTCP connection to the pointer
 		  of the processHandler that will be assigned to the master's children
-	    - [ ] MasterConnection::createMasterTCP - processHandlers for
+	    - [x] MasterConnection::createMasterTCP - processHandlers for
 		  masterTCP returning false means don't add the connection, returning
 		  true means add the connection. Where as for other standard
 		  connection true will mean keep the connection, false will mean
@@ -50,6 +50,12 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] MasterConnection::acceptConnection - to accept connections from
 		  masterTCP sockets
 		- [x] MasterConnection::removeMasterTCP
+		- [ ] MasterConnection::acceptConnection 
+		  - [x] should also include the connID of the master, so that the
+			child can be added to the masterList
+		  - [ ] TCPConnection.accept is never being call. We don't have an
+			instance of the connection to accept. figure out a way to
+			implement this with our current design!
 	  - [x] UDP Support
 	    - [x] MasterConnection::addConnection - this will be used to decrease
 		duplicated code between TCP and udp connection additions

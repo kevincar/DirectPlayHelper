@@ -34,17 +34,22 @@ namespace inet
 		return this->connections.size();
 	}
 
-	unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler>& pAcceptPH, std::shared_ptr<processHandler>& pChildPH)
+	unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH)
 	{
 		// Create a new TCPConnection
 		std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>();
 
+		// Add the new connection
 		std::shared_ptr<IPConnection> pConn = std::static_pointer_cast<IPConnection>(newConnection);
 		unsigned int connID = this->addConnection(pConn, pAcceptPH);
 		
-		// Add to the masterIndex
+		// Add to the masterIndex with no children
 		std::lock_guard<std::mutex> masterindex_lock {this->masterTCPList_mutex};
 		this->masterTCPList.emplace(std::make_pair(connID, std::vector<unsigned int>{}));
+
+		// Add the child process Handler to the masterChildProcessHandler map
+		std::lock_guard<std::mutex> mcproc_lock {this->mcproc_mutex};
+		this->masterChildProcessHandlers.emplace(std::make_pair(connID, pChildPH));
 
 		return connID;
 	}
@@ -66,10 +71,25 @@ namespace inet
 			}
 		}
 
+		// And from the masterChildProcessHandler Map
+		for(std::map<unsigned int, std::shared_ptr<processHandler>>::iterator it = this->masterChildProcessHandlers.begin(); it != this->masterChildProcessHandlers.end(); )
+		{
+			unsigned int curID = it->first;
+			if(curID == connID)
+			{
+				it = this->masterChildProcessHandlers.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		// Finally, remove the TCP connection that acts as master
 		this->removeConnection(connID);
 	}
 
-	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<processHandler>& pPH)
+	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<processHandler> const& pPH)
 	{
 		// Create a new UDPConnection
 		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
@@ -82,21 +102,20 @@ namespace inet
 		this->removeConnection(connID);
 	}
 
-	void MasterConnection::acceptConnection(std::shared_ptr<TCPConnection>& newTCPConnection)
+	void MasterConnection::acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection)
 	{
-		//this->addConnection(newTCPConnection);
-	}
+		// Obtain the process handler this connection will use as defined by
+		// the master
+		std::lock_guard<std::mutex> mcproc_lock {this->mcproc_mutex};
+		std::shared_ptr<processHandler> childPH = this->masterChildProcessHandlers[masterID];
 
-	//void MasterConnection::listenForIncomingConnections(MasterConnection::newConnectionAcceptHandlerFunc const& ncah, MasterConnection::connectionProcessHandlerFunc const& cph)
-	//{
-		//if(this->isListening()) return;
-		////this->listen();
-		////this->setListeningState(true);
-		////std::lock_guard<std::mutex> lock {this->listeningThread_mutex};
-		////this->newConnectionAcceptHandler = ncah;
-		////this->connectionProcessHandler = cph;
-		////this->listeningThread = std::thread([=]{this->beginListening();});
-	//}
+		// Add the connection with the appropriate processHandler
+		unsigned int connID = this->addConnection(newTCPConnection, childPH);
+
+		// Add the child connection ID to the masterChild List
+		std::lock_guard<std::mutex> masterTCPList_lock {this->masterTCPList_mutex};
+		this->masterTCPList[masterID].emplace_back(connID);
+	}
 
 	void MasterConnection::stopListening(void)
 	{
@@ -208,7 +227,7 @@ namespace inet
 					bool accepted = (*pPH)(pCurConn);
 					if(accepted)
 					{
-						// Accept the connection
+						//this->acceptConnection(connID, )
 					}
 				}
 				bool keepConn = true;
@@ -242,7 +261,7 @@ namespace inet
 		return result;
 	}
 
-	unsigned int MasterConnection::addConnection(std::shared_ptr<IPConnection>& pIP, std::shared_ptr<processHandler>& pPH)
+	unsigned int MasterConnection::addConnection(std::shared_ptr<IPConnection> const& pIP, std::shared_ptr<processHandler> const& pPH)
 	{
 		// add the connection
 		std::lock_guard<std::mutex> conn_lock {this->conn_mutex};

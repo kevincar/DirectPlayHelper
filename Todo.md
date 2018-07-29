@@ -56,6 +56,14 @@ Below is the current todo list for the project. The legend is as follows:
 		  - [ ] TCPConnection.accept is never being call. We don't have an
 			instance of the connection to accept. figure out a way to
 			implement this with our current design!
+			- [ ] The best way will be to reformat acceptConnection to simply
+			  take the masterID. Use that to obtain the TCPConnection
+			  instance, call the accept function on the master instance to
+			  obtain an instance of the child, and work the child from there
+			  - [ ] Apparently TCPConnections do not currently define accept.
+				Perhaps this should be added to the TCPConnection class.
+				Investigate the BSD function accept(2) do determine whether
+				accept has any baring on UDPConnections. 
 	  - [x] UDP Support
 	    - [x] MasterConnection::addConnection - this will be used to decrease
 		duplicated code between TCP and udp connection additions

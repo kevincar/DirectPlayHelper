@@ -15,6 +15,24 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] Implementation
 		- [x] Test
 	  - [x] Recv
+	- [ ] ServiceTCPConnection Class
+	  - [ ] Instance
+		- [ ] childConnections vector of childConnections
+		- [ ] processHandler function - the function to run when data is
+		  available on the childConnection
+		- [ ] acceptHandler <processHandler> function - the function ran when
+		  data is available on the parent ServiceTCPConnection to check if the
+		  incoming connection should be accepted
+		- [ ] constructor - should take two arguments of shared_ptrs to the
+		  process and accept handler functions that will define the behavior
+		  or the TCPService
+		- [ ] getConnections - should return a constant reference to the
+		  vector of childConnections including itself. This function will be
+		  used by the MasterConnection class to compile all connections so
+		  that the select(2) function can be called to simultaneously check
+		  for data on all connections.
+	  - [ ] Implementation
+	  - [ ] Testing
 	- [ ] MasterConnection
 	  - [x] Rename MasterTCPConnection to MasterConnection
 	  - [x] Remove the TCPConnection inheritance and make the class it's own
@@ -64,6 +82,18 @@ Below is the current todo list for the project. The legend is as follows:
 				Perhaps this should be added to the TCPConnection class.
 				Investigate the BSD function accept(2) do determine whether
 				accept has any baring on UDPConnections. 
+				- In reality, TCPConnections have two separate types. One type
+				  is to function as communication between two hosts. The other
+				  is to listen for incoming connections that establish the
+				  first type. Perhaps we should add another type of class call
+				  ServiceTCPConnection which acts as the listening
+				  TCPConnection. This class can then be responsibile for all
+				  TCPConnections that it creates via its accept function. The
+				  MasterConnection can then simply have a vector collection of
+				  UDPConnections and ServiceTCPConnections. We possibly
+				  shouldn't need to worry about connectionID's since we can
+				  simply use the file descriptor integers that unique define
+				  the connections anyway.
 	  - [x] UDP Support
 	    - [x] MasterConnection::addConnection - this will be used to decrease
 		duplicated code between TCP and udp connection additions

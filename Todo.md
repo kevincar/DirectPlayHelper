@@ -6,6 +6,13 @@ Below is the current todo list for the project. The legend is as follows:
 
 
 - [x] Hello World
+- [ ] Test out the following [Networking Libraries](https://stackoverflow.com/questions/118945/best-c-c-network-library) before continuing to make
+  your own.
+    - [ ] ASIO
+	- [ ] ACE
+	- [ ] C++ Networking Library
+	- [ ] POCO
+	- [ ] Qt
 - [ ] INET Library
 	- [x] Socket
 	- [x] ServiceAddress

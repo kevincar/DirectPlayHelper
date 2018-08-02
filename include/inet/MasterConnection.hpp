@@ -12,7 +12,7 @@ namespace inet
 	class MasterConnection
 	{
 		public:
-			typedef std::function<bool (std::shared_ptr<IPConnection>&)> processHandler;
+			typedef std::function<bool (std::shared_ptr<IPConnection> const&)> processHandler;
 			
 			MasterConnection(void);
 			~MasterConnection(void);

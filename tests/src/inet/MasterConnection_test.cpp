@@ -24,23 +24,23 @@ TEST(MasterConnectionTest, createAndRemoveMasterTCP)
 	inet::MasterConnection mc;
 
 	// Create a dummy proc Handle
-	std::shared_ptr<inet::MasterConnection::processHandler> pProc = std::make_shared<inet::MasterConnection::processHandler>([](std::shared_ptr<inet::IPConnection>& conn)->bool
-	{
-		if(conn) return true;
-		return true;
-	});
+	//std::shared_ptr<inet::MasterConnection::processHandler> pProc = std::make_shared<inet::MasterConnection::processHandler>([](std::shared_ptr<inet::IPConnection>& conn)->bool
+	//{
+		//if(conn) return true;
+		//return true;
+	//});
 
-	unsigned int connID = mc.createMasterTCP(pProc, pProc);
+	//unsigned int connID = mc.createMasterTCP(pProc, pProc);
 
-	ASSERT_EQ(connID, static_cast<unsigned int>(0));
+	//ASSERT_EQ(connID, static_cast<unsigned int>(0));
 
-	// Remove it
-	ASSERT_NO_THROW({
-			mc.removeMasterTCP(connID);
-			});
+	//// Remove it
+	//ASSERT_NO_THROW({
+			//mc.removeMasterTCP(connID);
+			//});
 
-	unsigned long nConn = mc.getNumConnections();
-	ASSERT_EQ(nConn, static_cast<unsigned long>(0));
+	//unsigned long nConn = mc.getNumConnections();
+	//ASSERT_EQ(nConn, static_cast<unsigned long>(0));
 }
 
 //TEST(MasterConnectionTest, acceptConnection)

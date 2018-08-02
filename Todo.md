@@ -6,14 +6,10 @@ Below is the current todo list for the project. The legend is as follows:
 
 
 - [x] Hello World
-- [ ] Test out the following [Networking Libraries](https://stackoverflow.com/questions/118945/best-c-c-network-library) before continuing to make
-  your own.
-    - [ ] ASIO
-	- [ ] ACE
-	- [ ] C++ Networking Library
-	- [ ] POCO
-	- [ ] Qt
-- [ ] INET Library
+- [x] Test out the following [Networking Libraries](https://stackoverflow.com/questions/118945/best-c-c-network-library) before continuing to make
+  your own. Nope. ASIO requres boost headers, I don't want that. ASE is too
+  complex. QT is proprietary.
+- [ ] INET Library and namespace
 	- [x] Socket
 	- [x] ServiceAddress
 	- [x] IPConnection
@@ -22,22 +18,22 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] Implementation
 		- [x] Test
 	  - [x] Recv
-	- [ ] ServiceTCPConnection Class
+	- [ ] TCPAcceptor Class
 	  - [ ] Instance
-		- [ ] childConnections vector of childConnections
-		- [ ] processHandler function - the function to run when data is
+		- [x] childConnections vector of childConnections
+		- [x] connectionHandler function - the function to run when data is
 		  available on the childConnection
-		- [ ] acceptHandler <processHandler> function - the function ran when
-		  data is available on the parent ServiceTCPConnection to check if the
+		- [x] acceptHandler <processHandler> function - the function ran when
+		  data is available on the parent TCPAcceptor to check if the
 		  incoming connection should be accepted
-		- [ ] constructor - should take two arguments of shared_ptrs to the
+		- [x] constructor - should take two arguments of shared_ptrs to the
 		  process and accept handler functions that will define the behavior
 		  or the TCPService
-		- [ ] getConnections - should return a constant reference to the
-		  vector of childConnections including itself. This function will be
-		  used by the MasterConnection class to compile all connections so
-		  that the select(2) function can be called to simultaneously check
-		  for data on all connections.
+		- [ ] getConnections - should return a constant reference to
+		  a shared_ptr of a vector of childConnections including itself. This
+		  function will be used by the MasterConnection class to compile all
+		  connections so that the select(2) function can be called to
+		  simultaneously check for data on all connections.
 	  - [ ] Implementation
 	  - [ ] Testing
 	- [ ] MasterConnection

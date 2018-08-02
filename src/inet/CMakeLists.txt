@@ -8,6 +8,7 @@ add_library(inet
 	IPConnection.cpp
 	TCPConnection.cpp
 	UDPConnection.cpp
+	TCPAcceptor.cpp
 	MasterConnection.cpp)
 
 target_include_directories(inet BEFORE

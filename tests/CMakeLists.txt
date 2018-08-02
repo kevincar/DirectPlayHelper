@@ -8,6 +8,7 @@ add_executable(DPServerTest
 	./src/inet/ServiceAddress_test.cpp
 	./src/inet/TCPConnection_test.cpp
 	./src/inet/UDPConnection_test.cpp
+	./src/inet/TCPAcceptor_test.cpp
 	./src/inet/MasterConnection_test.cpp)
 
 # Includes

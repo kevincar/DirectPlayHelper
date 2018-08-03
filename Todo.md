@@ -29,11 +29,11 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] constructor - should take two arguments of shared_ptrs to the
 		  process and accept handler functions that will define the behavior
 		  or the TCPService
-		- [ ] getConnections - should return a constant reference to
-		  a shared_ptr of a vector of childConnections including itself. This
-		  function will be used by the MasterConnection class to compile all
-		  connections so that the select(2) function can be called to
-		  simultaneously check for data on all connections.
+		- [ ] getConnections - should return a to a shared_ptr of a vector of
+		  childConnections including itself. This function will be used by the
+		  MasterConnection class to compile all connections so that the
+		  select(2) function can be called to simultaneously check for data on
+		  all connections.
 	  - [ ] Implementation
 	  - [ ] Testing
 	- [ ] MasterConnection

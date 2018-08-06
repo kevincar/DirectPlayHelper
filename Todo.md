@@ -18,8 +18,8 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] Implementation
 		- [x] Test
 	  - [x] Recv
-	- [ ] TCPAcceptor Class
-	  - [ ] Instance
+	- [x] TCPAcceptor Class
+	  - [x] Instance
 		- [x] childConnections vector of childConnections
 		- [x] connectionHandler function - the function to run when data is
 		  available on the childConnection
@@ -29,16 +29,16 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] constructor - should take two arguments of shared_ptrs to the
 		  process and accept handler functions that will define the behavior
 		  or the TCPService
-		- [ ] getConnections - should return a to a shared_ptr of a vector of
+		- [x] getConnections - should return a to a shared_ptr of a vector of
 		  childConnections including itself. This function will be used by the
 		  MasterConnection class to compile all connections so that the
 		  select(2) function can be called to simultaneously check for data on
 		  all connections.
-		  - [ ] inherit std::enable_shared_with_this so that TCPAcceptors can
+		  - [x] inherit std::enable_shared_with_this so that TCPAcceptors can
 			access shared pointers to themselves when returning a vector of
 			connections with getConnections
-	  - [ ] Implementation
-	  - [ ] Testing
+	  - [x] Implementation
+	  - [x] Testing
 	- [ ] MasterConnection
 	  - [x] Rename MasterTCPConnection to MasterConnection
 	  - [x] Remove the TCPConnection inheritance and make the class it's own

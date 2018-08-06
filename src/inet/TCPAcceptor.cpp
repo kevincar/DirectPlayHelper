@@ -25,4 +25,18 @@ namespace inet
 
 		return result;
 	}
+
+	std::shared_ptr<TCPConnection> TCPAcceptor::accept(void)
+	{
+		sockaddr_in peerAddr;
+		socklen_t addrSize = 0;
+		int capturedSocket = ::accept(static_cast<int>(*this), reinterpret_cast<sockaddr *>(&peerAddr), &addrSize);
+
+		if(capturedSocket <= -1)
+		{
+			throw "TCPAcceptor::accept - Failed to accept connection";
+		}
+
+		return std::make_shared<TCPConnection>(capturedSocket, *this, peerAddr);
+	}
 }

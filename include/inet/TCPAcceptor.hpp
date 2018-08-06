@@ -7,7 +7,7 @@
 
 namespace inet
 {
-	class TCPAcceptor : public TCPConnection
+	class TCPAcceptor : public std::enable_shared_from_this<TCPAcceptor>, public TCPConnection
 	{
 
 		public:

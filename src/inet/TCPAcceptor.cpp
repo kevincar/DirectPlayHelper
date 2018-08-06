@@ -13,6 +13,7 @@ namespace inet
 		typedef std::vector<pTCPConnection> pTCPConnections;
 
 		std::shared_ptr<pTCPConnections> result = std::make_shared<pTCPConnections>();
+		std::lock_guard<std::mutex> lock {this->child_mutex};
 		for(pTCPConnection curConnection : this->childConnections)
 		{
 			result->push_back(curConnection);
@@ -37,6 +38,8 @@ namespace inet
 			throw "TCPAcceptor::accept - Failed to accept connection";
 		}
 
-		return std::make_shared<TCPConnection>(capturedSocket, *this, peerAddr);
+		std::lock_guard<std::mutex> lock {this->child_mutex};
+		this->childConnections.emplace_back(std::make_shared<TCPConnection>(capturedSocket, *this, peerAddr));
+		return this->childConnections.at(this->childConnections.size()-1);
 	}
 }

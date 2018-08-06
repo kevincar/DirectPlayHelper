@@ -1,5 +1,7 @@
 
 #include <inet/TCPAcceptor.hpp>
+#include <memory>
+#include <iostream>
 
 namespace inet
 {
@@ -10,15 +12,17 @@ namespace inet
 		typedef std::shared_ptr<TCPConnection const> pTCPConnection;
 		typedef std::vector<pTCPConnection> pTCPConnections;
 
-		pTCPConnections result {};
+		std::shared_ptr<pTCPConnections> result = std::make_shared<pTCPConnections>();
 		for(pTCPConnection curConnection : this->childConnections)
 		{
-			result.push_back(curConnection);
+			result->push_back(curConnection);
 		}
 
-		pTCPConnection acceptorConnection {this};
-		result.push_back(acceptorConnection);
+		result->push_back(std::static_pointer_cast<TCPConnection const>(this->shared_from_this()));
 
-		return std::shared_ptr<pTCPConnections>{&result};
+		//std::cout << "TCPAcceptor socket:" << static_cast<unsigned int>(*this) << std::endl;
+		//std::cout << "TCPAcceptor socket:" << static_cast<unsigned int>(*(result->at(result->size()-1).get())) << std::endl;
+
+		return result;
 	}
 }

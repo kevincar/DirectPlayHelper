@@ -34,6 +34,9 @@ Below is the current todo list for the project. The legend is as follows:
 		  MasterConnection class to compile all connections so that the
 		  select(2) function can be called to simultaneously check for data on
 		  all connections.
+		  - [ ] inherit std::enable_shared_with_this so that TCPAcceptors can
+			access shared pointers to themselves when returning a vector of
+			connections with getConnections
 	  - [ ] Implementation
 	  - [ ] Testing
 	- [ ] MasterConnection

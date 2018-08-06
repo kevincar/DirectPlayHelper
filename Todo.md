@@ -50,56 +50,12 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-		- [x] MasterConnection::masterTCPList - this mapped list has
-		  masterTCP connection IDs as the key and a vector of child connection
-		  IDs as the value
-		  - [x] Should be added to with calls to createMasterTCP and when new
-			connections are accepted
-		  - [x] Should have stuff removed from it when masterTCPConnections
-			are removed or when child connections end
-		- [x] MasterConnection::MasterChildProcHandlers - is a map member that
-		  maps the connectionID's of the masterTCP connection to the pointer
-		  of the processHandler that will be assigned to the master's children
-	    - [x] MasterConnection::createMasterTCP - processHandlers for
-		  masterTCP returning false means don't add the connection, returning
-		  true means add the connection. Where as for other standard
-		  connection true will mean keep the connection, false will mean
-		  remove the connection. This function should take two
-		  processHandlers, one for it's on process, and another for all child
-		  processes. Also, we should consider how we can link child
-		  connections to parent connections.
-		- [x] MasterConnection::isMasterTCP - this is mainly for the
-		  checkAllConnectionsForData function. So that when it receives a true
-		  response, it accepts the connection
-		- [x] MasterConnection::acceptConnection - to accept connections from
-		  masterTCP sockets
-		- [x] MasterConnection::removeMasterTCP
-		- [ ] MasterConnection::acceptConnection 
-		  - [x] should also include the connID of the master, so that the
-			child can be added to the masterList
-		  - [ ] TCPConnection.accept is never being call. We don't have an
-			instance of the connection to accept. figure out a way to
-			implement this with our current design!
-			- [ ] The best way will be to reformat acceptConnection to simply
-			  take the masterID. Use that to obtain the TCPConnection
-			  instance, call the accept function on the master instance to
-			  obtain an instance of the child, and work the child from there
-			  - [ ] Apparently TCPConnections do not currently define accept.
-				Perhaps this should be added to the TCPConnection class.
-				Investigate the BSD function accept(2) do determine whether
-				accept has any baring on UDPConnections. 
-				- In reality, TCPConnections have two separate types. One type
-				  is to function as communication between two hosts. The other
-				  is to listen for incoming connections that establish the
-				  first type. Perhaps we should add another type of class call
-				  ServiceTCPConnection which acts as the listening
-				  TCPConnection. This class can then be responsibile for all
-				  TCPConnections that it creates via its accept function. The
-				  MasterConnection can then simply have a vector collection of
-				  UDPConnections and ServiceTCPConnections. We possibly
-				  shouldn't need to worry about connectionID's since we can
-				  simply use the file descriptor integers that unique define
-				  the connections anyway.
+		- [ ] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
+		  where new TCPAcceptors are pushed to by calling createTCPAcceptor
+		- [ ] MasterConnection::createTCPAcceptor - Creates a listening TCP
+		  server connection and adds this to the TCPAcceptor list
+		- [ ] MasterConnection::removeTCPAcceptor - Destroys a TCPAcceptor and
+		  it's child connections
 	  - [x] UDP Support
 	    - [x] MasterConnection::addConnection - this will be used to decrease
 		duplicated code between TCP and udp connection additions

@@ -31,20 +31,25 @@ namespace inet
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
 
-			std::vector<TCPAcceptor> acceptors;
+			bool listening = false;
+			mutable std::mutex listening_mutex;
+
+			std::vector<std::shared_ptr<TCPAcceptor>> acceptors;
 			std::mutex acceptor_mutex;
+
+			std::vector<UDPConnection> udpConnections;
+			std::mutex udp_mutex;
 
 			std::map<unsigned int, std::shared_ptr<ProcessHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
-			std::map<unsigned int, std::shared_ptr<ProcessHandler>> masterChildProcessHandlers;
-			mutable std::mutex mcproc_mutex;
-			bool listening = false;
-			mutable std::mutex listening_mutex;
 
 			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
 			void beginListening();
 			void startListening();
+
+			std::unique_ptr<std::vector<IPConnection const> const> getAllConnections(void) const;
+
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;
 			//unsigned int addConnection(std::shared_ptr<IPConnection> const& pIPconn, std::shared_ptr<processHandler> const& pPH);

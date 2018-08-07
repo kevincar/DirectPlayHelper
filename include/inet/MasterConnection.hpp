@@ -6,6 +6,7 @@
 #include <vector>
 #include "inet/TCPConnection.hpp"
 #include "inet/UDPConnection.hpp"
+#include "inet/TCPAcceptor.hpp"
 
 namespace inet
 {
@@ -18,7 +19,7 @@ namespace inet
 			~MasterConnection(void);
 			bool isListening(void) const;
 			unsigned long getNumConnections(void) const;
-			unsigned int createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH);
+			//unsigned int createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH);
 			void removeMasterTCP(unsigned int connID);
 			unsigned int createUDPConnection(std::shared_ptr<processHandler> const& pPH);
 			void removeUDPConnection(unsigned int connID);
@@ -29,14 +30,14 @@ namespace inet
 		private:
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;
-			std::map<unsigned int, std::shared_ptr<IPConnection>> connections;
-			mutable std::mutex conn_mutex;
+
+			std::vector<TCPAcceptor> acceptors;
+			std::mutex acceptor_mutex;
+
 			std::map<unsigned int, std::shared_ptr<processHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
 			std::map<unsigned int, std::shared_ptr<processHandler>> masterChildProcessHandlers;
 			mutable std::mutex mcproc_mutex;
-			std::map<unsigned int, std::vector<unsigned int>> masterTCPList;
-			mutable std::mutex masterTCPList_mutex;
 			bool listening = false;
 			mutable std::mutex listening_mutex;
 
@@ -46,7 +47,7 @@ namespace inet
 			void startListening();
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;
-			unsigned int addConnection(std::shared_ptr<IPConnection> const& pIPconn, std::shared_ptr<processHandler> const& pPH);
+			//unsigned int addConnection(std::shared_ptr<IPConnection> const& pIPconn, std::shared_ptr<processHandler> const& pPH);
 			void removeConnection(unsigned int connID);
 			bool isConnMasterTCP(unsigned int connID) const;
 	};

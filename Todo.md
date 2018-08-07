@@ -47,8 +47,11 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::MasterConnection - should automatically start
 		it's connection checking loop even if there are no connections to
 		check.
-	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
+	  - [ ] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
+		- [ ] MasterConnection::getAllConnections - should return a reference
+		  to a constant vector of IPConnections that are compiled from all the
+		  TCPAcceptors, their children, and any manually added UDPConnections
 	  - [ ] TCP Support
 		- [x] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
 		  where new TCPAcceptors are pushed to by calling createTCPAcceptor

@@ -171,6 +171,22 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
+	std::unique_ptr<std::vector<IPConnection const> const> MasterConnection::getAllConnections(void) const
+	{
+		// Make the pointer to be returned
+		std::unique_ptr<std::vector<IPConnection const> const> pConnections;
+
+		// TCPAcceptors
+		for(std::shared_ptr<TCPAcceptor> tcpAcceptor : this->acceptors)
+		{
+			// Self
+
+			// Children
+		}
+
+		return pConnections;
+	}
+
 	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{
 		fd_set fdSet;
@@ -178,7 +194,7 @@ namespace inet
 		int largestFD = this->getLargestSocket();
 		bool result = false;
 
-		//// Only continue if there are connections to check
+		// Only continue if there are connections to check
 		//if(this->connections.size() < 1) 
 		//{
 			//return true;

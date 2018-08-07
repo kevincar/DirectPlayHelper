@@ -50,7 +50,7 @@ Below is the current todo list for the project. The legend is as follows:
 	  - [x] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
 	  - [ ] TCP Support
-		- [ ] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
+		- [x] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
 		  where new TCPAcceptors are pushed to by calling createTCPAcceptor
 		- [ ] MasterConnection::createTCPAcceptor - Creates a listening TCP
 		  server connection and adds this to the TCPAcceptor list

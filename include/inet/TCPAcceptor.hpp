@@ -3,7 +3,7 @@
 #define INET_TCP_ACCEPTOR
 
 #include <vector>
-#include <inet/MasterConnection.hpp>
+#include "inet/TCPConnection.hpp"
 
 namespace inet
 {
@@ -11,9 +11,10 @@ namespace inet
 	{
 
 		public:
-			typedef std::function<std::shared_ptr<TCPConnection> (std::shared_ptr<TCPConnection> const& acceptor)> AcceptHandler;
+			typedef std::function<std::shared_ptr<TCPConnection> (TCPConnection const& acceptor)> AcceptHandler;
+			typedef std::function<bool (TCPConnection const& conn)> ProcessHandler;
 
-			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<MasterConnection::processHandler> const& ConnectionHandler);
+			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler);
 
 			std::shared_ptr<std::vector<std::shared_ptr<TCPConnection const>>> getConnections(void) const;
 			std::shared_ptr<TCPConnection> accept(void);
@@ -23,7 +24,7 @@ namespace inet
 			mutable std::mutex child_mutex;
 
 			std::shared_ptr<AcceptHandler> acceptHandler;
-			std::shared_ptr<MasterConnection::processHandler> connectionHandler;
+			std::shared_ptr<ProcessHandler> connectionHandler;
 	};
 }
 

@@ -52,6 +52,7 @@ Below is the current todo list for the project. The legend is as follows:
 		- [ ] MasterConnection::getAllConnections - should return a reference
 		  to a constant vector of IPConnections that are compiled from all the
 		  TCPAcceptors, their children, and any manually added UDPConnections
+		  - [ ] On hold until MasterConnection::createTCPAcceptor is finished
 	  - [ ] TCP Support
 		- [x] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
 		  where new TCPAcceptors are pushed to by calling createTCPAcceptor

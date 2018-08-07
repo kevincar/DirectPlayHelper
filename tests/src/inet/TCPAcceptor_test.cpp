@@ -34,7 +34,7 @@ TEST(TCPAcceptorTest, getConnections)
 	//inet::TCPAcceptor tcpa (acceptHandler, connectionHandler);
 	std::shared_ptr<inet::TCPAcceptor> tcpa = std::make_shared<inet::TCPAcceptor>(acceptHandler, connectionHandler);
 
-	std::shared_ptr<std::vector<std::shared_ptr<inet::TCPConnection const>>> pConnections = tcpa->getConnections();
+	std::shared_ptr<std::vector<inet::TCPConnection const*>> pConnections = tcpa->getConnections();
 
 	size_t nConnections = pConnections->size();
 

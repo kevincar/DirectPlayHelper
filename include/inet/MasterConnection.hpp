@@ -35,10 +35,10 @@ namespace inet
 			mutable std::mutex listening_mutex;
 
 			std::vector<std::shared_ptr<TCPAcceptor>> acceptors;
-			std::mutex acceptor_mutex;
+			mutable std::mutex acceptor_mutex;
 
 			std::vector<UDPConnection> udpConnections;
-			std::mutex udp_mutex;
+			mutable std::mutex udp_mutex;
 
 			std::map<unsigned int, std::shared_ptr<ProcessHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
@@ -48,7 +48,7 @@ namespace inet
 			void beginListening();
 			void startListening();
 
-			std::unique_ptr<std::vector<IPConnection const> const> getAllConnections(void) const;
+			std::unique_ptr<std::vector<IPConnection const*> const> getAllConnections(void) const;
 
 			bool checkAllConnectionsForData(double timeout);
 			int getLargestSocket(void) const;

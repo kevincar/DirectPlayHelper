@@ -19,6 +19,12 @@ TEST(MasterConnectionTest, constructor)
 	ASSERT_EQ(mc.isListening(), true);
 }
 
+TEST(MasterConnectionTest, getAllConnections)
+{
+	// before we can test all the connections we need to be able to create
+	// connecionts
+}
+
 TEST(MasterConnectionTest, createAndRemoveMasterTCP)
 {
 	inet::MasterConnection mc;

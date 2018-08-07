@@ -171,17 +171,29 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	std::unique_ptr<std::vector<IPConnection const> const> MasterConnection::getAllConnections(void) const
+	std::unique_ptr<std::vector<IPConnection const*> const> MasterConnection::getAllConnections(void) const
 	{
 		// Make the pointer to be returned
-		std::unique_ptr<std::vector<IPConnection const> const> pConnections;
+		std::unique_ptr<std::vector<IPConnection const*>> pConnections;
 
 		// TCPAcceptors
+		std::unique_lock<std::mutex> acceptor_lock {this->acceptor_mutex};
 		for(std::shared_ptr<TCPAcceptor> tcpAcceptor : this->acceptors)
 		{
-			// Self
+			std::unique_ptr<std::vector<TCPConnection const*>> conns = tcpAcceptor->getConnections();
+			for(TCPConnection const* pConn : *conns)
+			{
+				pConnections->push_back(pConn);
+			}
+		}
+		acceptor_lock.unlock();
 
-			// Children
+		// UDPConnections
+		std::unique_lock<std::mutex> udp_lock {this->udp_mutex};
+		for(std::vector<UDPConnection const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		{
+			UDPConnection const* curConn = &(*it);
+			pConnections->push_back(curConn);
 		}
 
 		return pConnections;

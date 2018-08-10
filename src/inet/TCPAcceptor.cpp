@@ -27,21 +27,35 @@ namespace inet
 		//return result;
 	//}
 	
-	std::unique_ptr<std::vector<TCPConnection const*>> TCPAcceptor::getConnections(void) const
+	std::vector<TCPConnection const*> const TCPAcceptor::getConnections(void) const
 	{
-		std::unique_ptr<std::vector<TCPConnection const*>> result = std::make_unique<std::vector<TCPConnection const*>>();
-
+		std::vector<TCPConnection const*> result;
 		std::lock_guard<std::mutex> lock {this->child_mutex};
-		for(std::shared_ptr<TCPConnection> curConnection : this->childConnections)
+
+		for(std::shared_ptr<TCPConnection> curConn : this->childConnections)
 		{
-			result->push_back(curConnection.get());
+			TCPConnection* pCurConn = &(*curConn);
+			result.push_back(pCurConn);
 		}
 
-		std::shared_ptr<TCPConnection const> selfConnection = this->shared_from_this();
-		result->push_back(selfConnection.get());
-		
 		return result;
 	}
+
+	//std::unique_ptr<std::vector<TCPConnection const*>> TCPAcceptor::getConnections(void) const
+	//{
+		//std::unique_ptr<std::vector<TCPConnection const*>> result = std::make_unique<std::vector<TCPConnection const*>>();
+
+		//std::lock_guard<std::mutex> lock {this->child_mutex};
+		//for(std::shared_ptr<TCPConnection> curConnection : this->childConnections)
+		//{
+			//result->push_back(curConnection.get());
+		//}
+
+		//std::shared_ptr<TCPConnection const> selfConnection = this->shared_from_this();
+		//result->push_back(selfConnection.get());
+		
+		//return result;
+	//}
 
 
 	std::shared_ptr<TCPConnection> TCPAcceptor::accept(void)

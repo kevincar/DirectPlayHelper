@@ -29,11 +29,8 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] constructor - should take two arguments of shared_ptrs to the
 		  process and accept handler functions that will define the behavior
 		  or the TCPService
-		- [x] getConnections - should return a to a shared_ptr of a vector of
-		  childConnections including itself. This function will be used by the
-		  MasterConnection class to compile all connections so that the
-		  select(2) function can be called to simultaneously check for data on
-		  all connections.
+		- [ ] getConnections - return to a vector of constant pointers to the
+		  TCPConnections.
 		  - [x] inherit std::enable_shared_with_this so that TCPAcceptors can
 			access shared pointers to themselves when returning a vector of
 			connections with getConnections
@@ -49,10 +46,9 @@ Below is the current todo list for the project. The legend is as follows:
 		check.
 	  - [ ] MasterConnection::checkAllConnectionsForData - get this up and
 		running even if no connections are present
-		- [ ] MasterConnection::getAllConnections - should return a reference
-		  to a constant vector of IPConnections that are compiled from all the
-		  TCPAcceptors, their children, and any manually added UDPConnections
-		  - [ ] On hold until MasterConnection::createTCPAcceptor is finished
+		- [ ] MasterConnection::getAllConnections - remove this function. We
+		  shouldn't make the code ambiguous. Just manulate the UDPConnection
+		  vector and the TCPAcceptor vector directly
 	  - [ ] TCP Support
 		- [x] MasterConnection::TCPAcceptors - a private vector of TCPAccptors
 		  where new TCPAcceptors are pushed to by calling createTCPAcceptor

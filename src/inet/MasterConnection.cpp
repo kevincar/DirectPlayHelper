@@ -171,33 +171,33 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	std::unique_ptr<std::vector<IPConnection const*> const> MasterConnection::getAllConnections(void) const
-	{
-		// Make the pointer to be returned
-		std::unique_ptr<std::vector<IPConnection const*>> pConnections;
+	//std::unique_ptr<std::vector<IPConnection const*> const> MasterConnection::getAllConnections(void) const
+	//{
+		//// Make the pointer to be returned
+		//std::unique_ptr<std::vector<IPConnection const*>> pConnections;
 
-		// TCPAcceptors
-		std::unique_lock<std::mutex> acceptor_lock {this->acceptor_mutex};
-		for(std::shared_ptr<TCPAcceptor> tcpAcceptor : this->acceptors)
-		{
-			std::unique_ptr<std::vector<TCPConnection const*>> conns = tcpAcceptor->getConnections();
-			for(TCPConnection const* pConn : *conns)
-			{
-				pConnections->push_back(pConn);
-			}
-		}
-		acceptor_lock.unlock();
+		//// TCPAcceptors
+		//std::unique_lock<std::mutex> acceptor_lock {this->acceptor_mutex};
+		//for(std::shared_ptr<TCPAcceptor> tcpAcceptor : this->acceptors)
+		//{
+			//std::unique_ptr<std::vector<TCPConnection const*>> conns = tcpAcceptor->getConnections();
+			//for(TCPConnection const* pConn : *conns)
+			//{
+				//pConnections->push_back(pConn);
+			//}
+		//}
+		//acceptor_lock.unlock();
 
-		// UDPConnections
-		std::unique_lock<std::mutex> udp_lock {this->udp_mutex};
-		for(std::vector<UDPConnection const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
-		{
-			UDPConnection const* curConn = &(*it);
-			pConnections->push_back(curConn);
-		}
+		//// UDPConnections
+		//std::unique_lock<std::mutex> udp_lock {this->udp_mutex};
+		//for(std::vector<UDPConnection const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		//{
+			//UDPConnection const* curConn = &(*it);
+			//pConnections->push_back(curConn);
+		//}
 
-		return pConnections;
-	}
+		//return pConnections;
+	//}
 
 	bool MasterConnection::checkAllConnectionsForData(double timeout)
 	{
@@ -205,25 +205,28 @@ namespace inet
 		struct timeval tv;
 		int largestFD = this->getLargestSocket();
 		bool result = false;
+		//std::unique_lock<std::mutex> acceptor_lock {this->acceptor_mutex, std::defer_lock};
+		//std::unique_lock<std::mutex> udp_lock {this->udp_mutex, std::defer_lock};
 
 		// Only continue if there are connections to check
-		//if(this->connections.size() < 1) 
+		//std::unique_ptr<std::vector<IPConnection const*> const> connections = this->getAllConnections();
+		//acceptor_lock.lock();
+		//udp_lock.lock();
+		//if(connections->size() < 1)
 		//{
 			//return true;
 		//}
 
-		//// Clear the set
+		// Clear the set
 		//FD_ZERO(&fdSet);
 
-		//// Add all sockets to the set
-		//conn_lock.lock();
-		//for(std::pair<unsigned int, std::shared_ptr<IPConnection>> connPair : this->connections)
+		// Add all sockets to the set
+		//for(IPConnection const* curConn : *connections)
 		//{
-			//std::shared_ptr<IPConnection> pCurConn = connPair.second;
-			//FD_SET(*pCurConn, &fdSet);
+			//FD_SET(*curConn, &fdSet);
 		//}
 
-		//// Set timeout
+		// Set timeout
 		//int seconds = static_cast<int>(floor(timeout));
 		//double remainder = timeout - seconds;
 		//double remainder_us = remainder * 1e6;
@@ -238,11 +241,9 @@ namespace inet
 			//throw "MasterConnection::checkAllConnectionsForData - failed to select!";
 		//}
 
-		//for(std::map<unsigned int, std::shared_ptr<IPConnection>>::iterator it = this->connections.begin(); it != this->connections.end(); )
+		//for(std::vector<IPConnection const*const>::iterator it = connections->begin(); it != connections->end(); )
 		//{
-			//std::pair<unsigned int, std::shared_ptr<IPConnection>> curPair = *it;
-			//unsigned int connID = curPair.first;
-			//std::shared_ptr<IPConnection> pCurConn = curPair.second;
+			//IPConnection const *const pCurConn = *it;
 			//if(FD_ISSET(*pCurConn, &fdSet))
 			//{
 				//result = true;
@@ -264,7 +265,8 @@ namespace inet
 			//}
 			//else ++it;
 		//}
-		//conn_lock.unlock();
+		//acceptor_lock.unlock();
+		//udp_lock.unlock();
 
 		return result;
 	}

@@ -11,14 +11,16 @@ namespace inet
 	{
 
 		public:
-			typedef std::function<std::shared_ptr<TCPConnection> (TCPConnection const& acceptor)> AcceptHandler;
+			typedef std::function<std::shared_ptr<TCPConnection const> (TCPAcceptor const& acceptor)> AcceptHandler;
 			typedef std::function<bool (TCPConnection const& conn)> ProcessHandler;
 
 			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler);
 
-			//std::shared_ptr<std::vector<std::shared_ptr<TCPConnection const>>> getConnections(void) const;
 			std::vector<TCPConnection const*> const getConnections(void) const;
 			std::shared_ptr<TCPConnection> accept(void);
+
+			AcceptHandler const* getAcceptHandler() const;
+			ProcessHandler const* getConnectionHandler() const;
 
 		protected:
 			std::vector<std::shared_ptr<TCPConnection>> childConnections;

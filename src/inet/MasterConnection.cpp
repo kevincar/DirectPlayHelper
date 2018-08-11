@@ -205,41 +205,101 @@ namespace inet
 		struct timeval tv;
 		int largestFD = this->getLargestSocket();
 		bool result = false;
-		//std::unique_lock<std::mutex> acceptor_lock {this->acceptor_mutex, std::defer_lock};
-		//std::unique_lock<std::mutex> udp_lock {this->udp_mutex, std::defer_lock};
+		unsigned int nConnections = 0;
+		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
+		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
 
 		// Only continue if there are connections to check
-		//std::unique_ptr<std::vector<IPConnection const*> const> connections = this->getAllConnections();
-		//acceptor_lock.lock();
-		//udp_lock.lock();
-		//if(connections->size() < 1)
-		//{
-			//return true;
-		//}
+		nConnections += this->udpConnections.size();
+		for(std::shared_ptr<TCPAcceptor> curAcceptor : this->acceptors)
+		{
+			nConnections += curAcceptor->getConnections().size();
+		}
+		if(nConnections < 1)
+		{
+			return true;
+		}
 
 		// Clear the set
-		//FD_ZERO(&fdSet);
+		FD_ZERO(&fdSet);
 
 		// Add all sockets to the set
-		//for(IPConnection const* curConn : *connections)
-		//{
-			//FD_SET(*curConn, &fdSet);
-		//}
+		for(std::shared_ptr<TCPAcceptor> curAcceptor : this->acceptors)
+		{
+			IPConnection const* curConn = &(*curAcceptor);
+			FD_SET(*curConn, &fdSet);
 
+			for(TCPConnection const* curChildConn : curAcceptor->getConnections())
+			{
+				IPConnection const* curChildIPConn = curChildConn;
+				FD_SET(*curChildIPConn, &fdSet);
+			}
+		}
+
+		for(std::vector<UDPConnection>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		{
+			UDPConnection const* curConn = &(*it);
+			FD_SET(*curConn, &fdSet);
+		}
+	
 		// Set timeout
-		//int seconds = static_cast<int>(floor(timeout));
-		//double remainder = timeout - seconds;
-		//double remainder_us = remainder * 1e6;
-		//int microseconds = static_cast<int>(floor(remainder_us));
+		int seconds = static_cast<int>(floor(timeout));
+		double remainder = timeout - seconds;
+		double remainder_us = remainder * 1e6;
+		int microseconds = static_cast<int>(floor(remainder_us));
 
-		//tv.tv_sec = seconds;
-		//tv.tv_usec = microseconds;
+		tv.tv_sec = seconds;
+		tv.tv_usec = microseconds;
 
-		//int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
+		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
-		//if(retval == -1) {
-			//throw "MasterConnection::checkAllConnectionsForData - failed to select!";
-		//}
+		if(retval == -1) {
+			throw "MasterConnection::checkAllConnectionsForData - failed to select!";
+		}
+
+		// TCPAcceptors and children
+		for(std::shared_ptr<TCPAcceptor> acceptor : this->acceptors)
+		{
+			IPConnection const* acceptorConnection = &(*acceptor);
+			if(FD_ISSET(*acceptorConnection, &fdSet))
+			{
+				// Process incoming connection
+				result = true;
+				TCPAcceptor::AcceptHandler const* acceptorFn = acceptor->getAcceptHandler();
+				(*acceptorFn)(*acceptor.get());
+			}
+
+			TCPAcceptor::ProcessHandler const* connectionHandler = acceptor->getConnectionHandler();
+			for(std::vector<TCPConnection const* const>::iterator it = acceptor->getConnections().begin(); it != acceptor->getConnections().end(); )
+			{
+				TCPConnection const* const childConnection = *it;
+				if(FD_ISSET(*childConnection, &fdSet))
+				{
+					// Process Child Connection
+					result = true;
+					bool keepConnection = (*connectionHandler)(*childConnection);
+					if(keepConnection)
+					{
+						++it;
+					}
+					else
+					{
+						//it = acceptor->getConnections().erase(it);
+					}
+				}
+			}
+		}
+
+		// UDP Connections
+		for(std::vector<UDPConnection>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		{
+			UDPConnection const* curConn = &(*it);
+			if(FD_ISSET(*curConn, &fdSet))
+			{
+				// Process UDP Connection
+				result = true;
+			}
+		}
 
 		//for(std::vector<IPConnection const*const>::iterator it = connections->begin(); it != connections->end(); )
 		//{

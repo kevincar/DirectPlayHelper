@@ -29,11 +29,12 @@ Below is the current todo list for the project. The legend is as follows:
 		- [x] constructor - should take two arguments of shared_ptrs to the
 		  process and accept handler functions that will define the behavior
 		  or the TCPService
-		- [ ] getConnections - return to a vector of constant pointers to the
-		  TCPConnections.
-		  - [x] inherit std::enable_shared_with_this so that TCPAcceptors can
-			access shared pointers to themselves when returning a vector of
-			connections with getConnections
+	     - [ ] Remove inheritance from shared_with_this. Instead we should
+		 consider the MasterConnection to be an implementation of the fdset
+		 type, that then passes itself to functions that the TCPAcceptor and
+		 UDPConnections manage on their own. Alternatively, we can send
+		 requests to remove connections, but this might be more costly in
+		 time/resource.
 	  - [x] Implementation
 	  - [x] Testing
 	- [ ] MasterConnection

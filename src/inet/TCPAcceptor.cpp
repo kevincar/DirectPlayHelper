@@ -21,6 +21,23 @@ namespace inet
 		return result;
 	}
 
+	void TCPAcceptor::removeConnection(int connectionSocket)
+	{
+		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->childConnections.begin(); it != this->childConnections.end(); )
+		{
+			std::shared_ptr<TCPConnection> curConnection = *it;
+			int curConnSocket = static_cast<int>(*curConnection);
+			if(curConnSocket == connectionSocket)
+			{
+				it = this->childConnections.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+	}
+
 	std::shared_ptr<TCPConnection> TCPAcceptor::accept(void)
 	{
 		sockaddr_in peerAddr;

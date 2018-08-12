@@ -7,7 +7,7 @@
 
 namespace inet
 {
-	class TCPAcceptor : public std::enable_shared_from_this<TCPAcceptor>, public TCPConnection
+	class TCPAcceptor : public TCPConnection
 	{
 
 		public:
@@ -17,6 +17,7 @@ namespace inet
 			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler);
 
 			std::vector<TCPConnection const*> const getConnections(void) const;
+			void removeConnection(int connectionSocket);
 			std::shared_ptr<TCPConnection> accept(void);
 
 			AcceptHandler const* getAcceptHandler() const;

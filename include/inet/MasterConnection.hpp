@@ -18,6 +18,7 @@ namespace inet
 			MasterConnection(void);
 			~MasterConnection(void);
 			bool isListening(void) const;
+			unsigned int getNumConnections(void) const;
 			unsigned int createTCPAcceptor(std::shared_ptr<TCPAcceptor::AcceptHandler> const pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const pChildPH);
 			void removeMasterTCP(unsigned int connID);
 			unsigned int createUDPConnection(std::shared_ptr<ProcessHandler> const& pPH);
@@ -36,7 +37,7 @@ namespace inet
 			std::vector<std::shared_ptr<TCPAcceptor>> acceptors;
 			mutable std::mutex acceptor_mutex;
 
-			std::vector<UDPConnection> udpConnections;
+			std::vector<std::shared_ptr<UDPConnection>> udpConnections;
 			mutable std::mutex udp_mutex;
 
 			std::map<unsigned int, std::shared_ptr<ProcessHandler>> processHandlers;

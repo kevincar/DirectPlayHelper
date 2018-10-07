@@ -28,6 +28,27 @@ namespace inet
 		return this->listening;
 	}
 
+	unsigned int MasterConnection::getNumConnections(void) const
+	{
+		unsigned int result = 0;
+
+		// TCPAcceptors
+		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
+		result += this->acceptors.size();
+
+		// TCPAcceptors - client connections
+		for(std::vector<std::shared_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
+		{
+			std::shared_ptr<TCPAcceptor> const acceptor = *it;
+			result += acceptor->getConnections().size();
+		}
+
+		// UDPConnections
+		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
+		result += this->udpConnections.size();
+
+		return result;
+	}
 
 	unsigned int MasterConnection::createTCPAcceptor(std::shared_ptr<TCPAcceptor::AcceptHandler> const pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const pChildPH)
 	{
@@ -72,13 +93,17 @@ namespace inet
 		//this->removeConnection(connID);
 	//}
 
-	//unsigned int MasterConnection::createUDPConnection(std::shared_ptr<processHandler> const& pPH)
-	//{
-		//// Create a new UDPConnection
-		//std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
-		//std::shared_ptr<IPConnection> pConn = std::static_pointer_cast<IPConnection>(newConnection);
-		//return this->addConnection(pConn, pPH);
-	//}
+	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<ProcessHandler> const& pPH)
+	{
+		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
+		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
+		this->udpConnections.push_back(newConnection);
+
+		std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
+		this->processHandlers.emplace(*newConnection.get(), pPH);
+
+		return 0;
+	}
 
 	//void MasterConnection::removeUDPConnection(unsigned int connID)
 	//{
@@ -219,10 +244,10 @@ namespace inet
 			}
 		}
 
-		for(std::vector<UDPConnection>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		for(std::vector<std::shared_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
-			UDPConnection const* curConn = &(*it);
-			FD_SET(*curConn, &fdSet);
+			std::shared_ptr<UDPConnection> curConnection = *it;
+			FD_SET(*curConnection.get(), &fdSet);
 		}
 	
 		// Set timeout
@@ -283,10 +308,10 @@ namespace inet
 		}
 
 		// UDP Connections
-		for(std::vector<UDPConnection>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		for(std::vector<std::shared_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
-			UDPConnection const* curConn = &(*it);
-			if(FD_ISSET(*curConn, &fdSet))
+			std::shared_ptr<UDPConnection> curConnection = *it;
+			if(FD_ISSET(*curConnection.get(), &fdSet))
 			{
 				// Process UDP Connection
 				result = true;

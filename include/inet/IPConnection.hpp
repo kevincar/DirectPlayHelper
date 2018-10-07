@@ -14,7 +14,9 @@ namespace inet
 		public:
 			IPConnection(int type, int protocol);
 			IPConnection(int captureRawSocket, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr);
+
 			virtual ~IPConnection() = default;
+
 			std::string const getAddressString(void) const;
 			std::string const getIPAddressString(void) const;
 			std::string const getPortString(void) const;

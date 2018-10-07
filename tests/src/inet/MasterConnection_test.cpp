@@ -19,6 +19,15 @@ TEST(MasterConnectionTest, constructor)
 	ASSERT_EQ(mc.isListening(), true);
 }
 
+TEST(MasterConnectionTest, getNumConnections)
+{
+	inet::MasterConnection mc;
+
+	ASSERT_EQ(mc.getNumConnections(), static_cast<unsigned int>(0));
+
+
+}
+
 TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 {
 	inet::MasterConnection mc;
@@ -38,15 +47,14 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 	mc.createTCPAcceptor(ah, ph);
 }
 
-//TEST(MasterConnectionTest, acceptConnection)
-//{
-	//inet::MasterConnection mtcp;
-	//std::shared_ptr<inet::TCPConnection> testConn = std::make_shared<inet::TCPConnection>();
-	
-	//ASSERT_EQ(mtcp.getNumConnections(), 0);
-	//mtcp.acceptConnection(testConn);
-	//ASSERT_EQ(mtcp.getNumConnections(), 1);
-//}
+TEST(MasterConnectionTest, createAndRemoveUDPConnection)
+{
+	inet::MasterConnection mc;
+
+	//std::shared_ptr<inet::MasterConnection::ProcessHandler> ph = std::make_shared<inet::MasterConnection::ProcessHandler([])
+
+	//mc.createUDPConnection();
+}
 
 //TEST(MasterConnectionTest, listenForIncomingConnections)
 //{

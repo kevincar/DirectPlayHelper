@@ -11,12 +11,12 @@ namespace inet
 	IPConnection::IPConnection(int type, int protocol)
 	{
 		std::lock_guard<std::mutex> lock {this->socket_mutex};
-		this->socket = std::make_shared<Socket>(AF_INET, type, protocol);
+		this->socket = std::make_unique<Socket>(AF_INET, type, protocol);
 	}
 
 	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr)
 	{
-		this->socket = std::make_shared<Socket>(capture, AF_INET, type, protocol);
+		this->socket = std::make_unique<Socket>(capture, AF_INET, type, protocol);
 		this->srcAddress = std::make_unique<ServiceAddress>(parentConnection.srcAddress->getAddressString());
 		this->destAddress = std::make_unique<ServiceAddress>(destAddr);
 	}

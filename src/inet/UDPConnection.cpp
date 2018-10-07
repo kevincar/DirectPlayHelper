@@ -12,14 +12,4 @@ namespace inet
 		long result = ::sendto(*this, data, data_len, 0, addr, sizeof(sockaddr_in));
 		return static_cast<int>(result);
 	}
-
-	bool UDPConnection::_send(void* data) const
-	{
-		std::cout << "Not yet implemented";
-		if(data == nullptr)
-		{
-			return false;
-		}
-		return true;
-	}
 }

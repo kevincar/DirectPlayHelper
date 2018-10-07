@@ -16,7 +16,7 @@ namespace inet
 
 			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler);
 
-			std::vector<TCPConnection const*> const getConnections(void) const;
+			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);
 			std::shared_ptr<TCPConnection> accept(void);
 

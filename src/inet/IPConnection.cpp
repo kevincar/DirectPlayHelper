@@ -8,15 +8,13 @@
 
 namespace inet
 {
-	IPConnection::IPConnection(int type, int protocol)
+	IPConnection::IPConnection(int type, int protocol) : socket(AF_INET, type, protocol)
 	{
 		std::lock_guard<std::mutex> lock {this->socket_mutex};
-		this->socket = std::make_unique<Socket>(AF_INET, type, protocol);
 	}
 
-	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr)
+	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr) : socket(capture, AF_INET, type, protocol)
 	{
-		this->socket = std::make_unique<Socket>(capture, AF_INET, type, protocol);
 		this->srcAddress = std::make_unique<ServiceAddress>(parentConnection.srcAddress->getAddressString());
 		this->destAddress = std::make_unique<ServiceAddress>(destAddr);
 	}
@@ -42,7 +40,7 @@ namespace inet
 		// Bind
 		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
 		//this->srcAddress->bind(this->socket);
-		int result = ::bind(*this->socket.get(), *this->srcAddress.get(), sizeof(sockaddr_in));
+		int result = ::bind(this->socket, *this->srcAddress.get(), sizeof(sockaddr_in));
 		if(result == -1)
 		{
 			throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
@@ -52,7 +50,7 @@ namespace inet
 	void IPConnection::listen(void)
 	{
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
-		this->socket->listen();
+		this->socket.listen();
 
 		this->updateSrcAddr();
 	}
@@ -63,7 +61,7 @@ namespace inet
 		FD_ZERO(&fs);
 
 		std::lock_guard<std::mutex> lock {this->socket_mutex};
-		FD_SET(*this->socket.get(), &fs);
+		FD_SET(this->socket, &fs);
 
 		timeout = std::abs(timeout);
 		double seconds = floor(timeout);
@@ -73,13 +71,13 @@ namespace inet
 		tv.tv_sec = static_cast<int>(seconds);
 		tv.tv_usec = static_cast<int>(microseconds);
 
-		int result = ::select(*this->socket.get()+1, &fs, nullptr, nullptr, &tv);
+		int result = ::select(this->socket+1, &fs, nullptr, nullptr, &tv);
 		if(result == -1)
 		{
 			throw std::string("IPConnection::isDataReady failed with errno: ") + std::to_string(errno);
 		}
 
-		return FD_ISSET(*this->socket.get(), &fs);
+		return FD_ISSET(this->socket, &fs);
 	}
 
 	int IPConnection::connect(std::string addressString)
@@ -90,7 +88,7 @@ namespace inet
 
 		// connect to the address
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
-		int result = ::connect(*this->socket.get(), *this->destAddress.get(), sizeof(sockaddr_in));
+		int result = ::connect(this->socket, *this->destAddress.get(), sizeof(sockaddr_in));
 		if(result == -1)
 		{
 			return errno;
@@ -115,14 +113,14 @@ namespace inet
 
 	IPConnection::operator int const() const
 	{
-		return *this->socket.get();
+		return static_cast<int>(this->socket);
 	}
 
 	void IPConnection::updateSrcAddr(void)
 	{
 		std::lock_guard<std::mutex> addr_lock {this->srcAddr_mutex};
 		unsigned int addrlen {sizeof(sockaddr_in)};
-		int result = ::getsockname(*this->socket.get(), *this->srcAddress.get(), &addrlen);
+		int result = ::getsockname(this->socket, *this->srcAddress.get(), &addrlen);
 		if(result == -1)
 		{
 			throw std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno);

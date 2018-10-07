@@ -28,25 +28,14 @@ namespace inet
 		return this->listening;
 	}
 
-	//unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH)
-	//{
-		//// Create a new TCPConnection
-		//std::shared_ptr<TCPConnection> newConnection = std::make_shared<TCPConnection>();
 
-		//// Add the new connection
-		//std::shared_ptr<IPConnection> pConn = std::static_pointer_cast<IPConnection>(newConnection);
-		//unsigned int connID = this->addConnection(pConn, pAcceptPH);
-		
-		//// Add to the masterIndex with no children
-		//std::lock_guard<std::mutex> masterindex_lock {this->masterTCPList_mutex};
-		//this->masterTCPList.emplace(std::make_pair(connID, std::vector<unsigned int>{}));
+	unsigned int MasterConnection::createTCPAcceptor(std::shared_ptr<TCPAcceptor::AcceptHandler> const pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const pChildPH)
+	{
 
-		//// Add the child process Handler to the masterChildProcessHandler map
-		//std::lock_guard<std::mutex> mcproc_lock {this->mcproc_mutex};
-		//this->masterChildProcessHandlers.emplace(std::make_pair(connID, pChildPH));
+		this->acceptors.emplace_back(std::make_shared<TCPAcceptor>(pAcceptPH, pChildPH));
 
-		//return connID;
-	//}
+		return 0;
+	}
 
 	//void MasterConnection::removeMasterTCP(unsigned int connID)
 	//{

@@ -35,7 +35,7 @@ namespace inet
 			mutable std::mutex socket_mutex;
 			mutable std::mutex srcAddr_mutex;
 			mutable std::mutex destAddr_mutex;
-			std::unique_ptr<Socket> socket;
+			Socket socket;
 			std::unique_ptr<ServiceAddress> srcAddress = std::make_unique<ServiceAddress>();
 			std::unique_ptr<ServiceAddress> destAddress = std::make_unique<ServiceAddress>();
 			

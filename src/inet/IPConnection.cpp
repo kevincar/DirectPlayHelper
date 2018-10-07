@@ -8,10 +8,7 @@
 
 namespace inet
 {
-	IPConnection::IPConnection(int type, int protocol) : socket(AF_INET, type, protocol)
-	{
-		std::lock_guard<std::mutex> lock {this->socket_mutex};
-	}
+	IPConnection::IPConnection(int type, int protocol) : socket(AF_INET, type, protocol) { }
 
 	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr) :
 		socket(capture, AF_INET, type, protocol),
@@ -98,13 +95,13 @@ namespace inet
 		return 0;
 	}
 
-	int IPConnection::send(void const* data, unsigned int const data_len)
+	int IPConnection::send(char const* data, unsigned int const data_len)
 	{
 		long result = ::send(*this, data, data_len, 0);
 		return static_cast<int>(result);
 	}
 
-	int IPConnection::recv(void* buffer, unsigned int buffer_len)
+	int IPConnection::recv(char* buffer, unsigned int buffer_len)
 	{
 		long result = ::recv(*this, buffer, buffer_len, 0);
 		return static_cast<int>(result);

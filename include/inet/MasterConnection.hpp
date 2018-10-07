@@ -18,7 +18,7 @@ namespace inet
 			MasterConnection(void);
 			~MasterConnection(void);
 			bool isListening(void) const;
-			unsigned int createTCPAcceptor(std::shared_ptr<TCPAcceptor::AcceptHandler> const& pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const& pChildPH);
+			unsigned int createTCPAcceptor(std::shared_ptr<TCPAcceptor::AcceptHandler> const pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const pChildPH);
 			void removeMasterTCP(unsigned int connID);
 			unsigned int createUDPConnection(std::shared_ptr<ProcessHandler> const& pPH);
 			void removeUDPConnection(unsigned int connID);

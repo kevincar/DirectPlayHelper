@@ -11,7 +11,7 @@ namespace inet
 	{
 
 		public:
-			typedef std::function<std::shared_ptr<TCPConnection const> ()> AcceptHandler;
+			typedef std::function<bool(TCPConnection const& conn)> AcceptHandler;
 			typedef std::function<bool (TCPConnection const& conn)> ProcessHandler;
 
 			TCPAcceptor(std::shared_ptr<AcceptHandler> const AcceptHandler, std::shared_ptr<ProcessHandler> const ConnectionHandler);

@@ -13,34 +13,33 @@ namespace inet
 		std::lock_guard<std::mutex> lock {this->socket_mutex};
 	}
 
-	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr) : socket(capture, AF_INET, type, protocol)
-	{
-		this->srcAddress = std::make_unique<ServiceAddress>(parentConnection.srcAddress->getAddressString());
-		this->destAddress = std::make_unique<ServiceAddress>(destAddr);
-	}
+	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr) :
+		socket(capture, AF_INET, type, protocol),
+		srcAddress(parentConnection.srcAddress.getAddressString()),
+		destAddress(destAddr) { }
 
 	std::string const IPConnection::getAddressString(void) const
 	{
 		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};
-		return this->srcAddress->getAddressString();
+		return this->srcAddress.getAddressString();
 	}
 
 	std::string const IPConnection::getIPAddressString(void) const
 	{
 		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};
-		return this->srcAddress->getIPAddressString();
+		return this->srcAddress.getIPAddressString();
 	}
 
 	void IPConnection::setAddress(std::string const& address)
 	{
 		// Set the address
 		std::lock_guard<std::mutex> srcAddr_lock {this->srcAddr_mutex};
-		this->srcAddress->setAddressString(address);
+		this->srcAddress.setAddressString(address);
 		
 		// Bind
 		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
 		//this->srcAddress->bind(this->socket);
-		int result = ::bind(this->socket, *this->srcAddress.get(), sizeof(sockaddr_in));
+		int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
 		if(result == -1)
 		{
 			throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
@@ -84,11 +83,11 @@ namespace inet
 	{
 		// Initiate the destAddress
 		std::lock_guard<std::mutex> destAddr_lock {this->destAddr_mutex};
-		this->destAddress = std::make_unique<ServiceAddress>(addressString);
+		this->destAddress.setAddressString(addressString);
 
 		// connect to the address
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
-		int result = ::connect(this->socket, *this->destAddress.get(), sizeof(sockaddr_in));
+		int result = ::connect(this->socket, this->destAddress, sizeof(sockaddr_in));
 		if(result == -1)
 		{
 			return errno;
@@ -120,7 +119,7 @@ namespace inet
 	{
 		std::lock_guard<std::mutex> addr_lock {this->srcAddr_mutex};
 		unsigned int addrlen {sizeof(sockaddr_in)};
-		int result = ::getsockname(this->socket, *this->srcAddress.get(), &addrlen);
+		int result = ::getsockname(this->socket, this->srcAddress, &addrlen);
 		if(result == -1)
 		{
 			throw std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno);

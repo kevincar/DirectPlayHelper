@@ -28,12 +28,6 @@ namespace inet
 		return this->listening;
 	}
 
-	//unsigned long MasterConnection::getNumConnections(void) const
-	//{
-		//std::lock_guard<std::mutex> lock {this->conn_mutex};
-		//return this->connections.size();
-	//}
-
 	//unsigned int MasterConnection::createMasterTCP(std::shared_ptr<processHandler> const& pAcceptPH, std::shared_ptr<processHandler> const& pChildPH)
 	//{
 		//// Create a new TCPConnection

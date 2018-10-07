@@ -270,7 +270,8 @@ namespace inet
 			}
 
 			TCPAcceptor::ProcessHandler const* connectionHandler = acceptor->getConnectionHandler();
-			for(std::vector<TCPConnection const* const>::iterator it = acceptor->getConnections().begin(); it != acceptor->getConnections().end(); )
+			std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
+			for(std::vector<TCPConnection const* const>::iterator it = acceptorConnections.begin(); it != acceptorConnections.end(); )
 			{
 				TCPConnection const* const childConnection = *it;
 				if(FD_ISSET(*childConnection, &fdSet))
@@ -284,7 +285,10 @@ namespace inet
 					}
 					else
 					{
-						//it = acceptor->getConnections().erase(it);
+						// Remove both the temporary
+						it = acceptorConnections.erase(it);
+						// and the real one
+						acceptor->removeConnection(*childConnection);
 					}
 				}
 			}

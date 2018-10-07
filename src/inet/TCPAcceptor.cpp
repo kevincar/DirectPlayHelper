@@ -7,7 +7,7 @@ namespace inet
 {
 	TCPAcceptor::TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler) : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
 
-	std::vector<TCPConnection const*> const TCPAcceptor::getConnections(void) const
+	std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const
 	{
 		std::vector<TCPConnection const*> result;
 		std::lock_guard<std::mutex> lock {this->child_mutex};

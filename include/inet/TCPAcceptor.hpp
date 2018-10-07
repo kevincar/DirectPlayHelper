@@ -14,7 +14,7 @@ namespace inet
 			typedef std::function<std::shared_ptr<TCPConnection const> (TCPAcceptor const& acceptor)> AcceptHandler;
 			typedef std::function<bool (TCPConnection const& conn)> ProcessHandler;
 
-			TCPAcceptor(std::shared_ptr<AcceptHandler> const& AcceptHandler, std::shared_ptr<ProcessHandler> const& ConnectionHandler);
+			TCPAcceptor(std::shared_ptr<AcceptHandler> const AcceptHandler, std::shared_ptr<ProcessHandler> const ConnectionHandler);
 
 			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);

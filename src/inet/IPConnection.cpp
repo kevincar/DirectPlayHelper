@@ -40,7 +40,7 @@ namespace inet
 			int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
 			if(result == -1)
 			{
-				throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
+				throw std::out_of_range(std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno));
 			}
 		}
 
@@ -78,7 +78,7 @@ namespace inet
 		int result = ::select(this->socket+1, &fs, nullptr, nullptr, &tv);
 		if(result == -1)
 		{
-			throw std::string("IPConnection::isDataReady failed with errno: ") + std::to_string(errno);
+			throw std::out_of_range(std::string("IPConnection::isDataReady failed with errno: ") + std::to_string(errno));
 		}
 
 		return FD_ISSET(this->socket, &fs);
@@ -127,7 +127,7 @@ namespace inet
 		int result = ::getsockname(this->socket, this->srcAddress, &addrlen);
 		if(result == -1)
 		{
-			throw std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno);
+			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno));
 		}
 	}
 }

@@ -8,9 +8,9 @@ TEST(SocketTest, constructor)
 			inet::Socket socket(AF_INET, SOCK_STREAM, 0);
 			});
 
-	EXPECT_ANY_THROW({
+	EXPECT_THROW({
 			inet::Socket socket(999, 999, 999);
-			});
+			}, std::out_of_range);
 }
 
 TEST(SocketTest, captureConstructor)

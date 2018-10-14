@@ -67,7 +67,7 @@ namespace inet
 		int result = ::inet_aton(IPAddress.data(), &this->addr.sin_addr);
 		if(result == 0)
 		{
-			throw IPAddress + std::string(" is an invalid IP Address");
+			throw std::out_of_range(IPAddress + std::string(" is an invalid IP Address"));
 		}
 	}
 
@@ -104,7 +104,7 @@ namespace inet
 		std::string::size_type const colonPosition = AddressString.find(":");
 		if(colonPosition == std::string::npos)
 		{
-			throw "ServiceAddress::getIPandPort " + AddressString + " is a bad address";
+			throw std::out_of_range("ServiceAddress::getIPandPort " + AddressString + " is a bad address");
 		}
 		std::string const IPAddress = AddressString.substr(0, colonPosition);
 		std::string const port = AddressString.substr(colonPosition+1);

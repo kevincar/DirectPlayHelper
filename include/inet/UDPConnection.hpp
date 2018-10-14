@@ -10,8 +10,8 @@ namespace inet
 	{
 		public:
 			UDPConnection(void);
-			int sendTo(void const* data, unsigned int const data_len, ServiceAddress const& addr) const;
-			int recvFrom(void* buffer, unsigned int const buffer_len, ServiceAddress& addr) const;
+			int sendTo(char const* data, unsigned int const data_len, ServiceAddress const& addr) const;
+			int recvFrom(char* buffer, unsigned int const buffer_len, ServiceAddress& addr) const;
 	};
 }
 

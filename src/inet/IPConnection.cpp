@@ -29,17 +29,25 @@ namespace inet
 
 	void IPConnection::setAddress(std::string const& address)
 	{
-		// Set the address
-		std::lock_guard<std::mutex> srcAddr_lock {this->srcAddr_mutex};
-		this->srcAddress.setAddressString(address);
-		
-		// Bind
-		std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
-		//this->srcAddress->bind(this->socket);
-		int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
-		if(result == -1)
 		{
-			throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
+			// Set the address
+			std::lock_guard<std::mutex> srcAddr_lock {this->srcAddr_mutex};
+			this->srcAddress.setAddressString(address);
+
+			// Bind
+			std::lock_guard<std::mutex> sock_lock {this->socket_mutex};
+			//this->srcAddress->bind(this->socket);
+			int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
+			if(result == -1)
+			{
+				throw std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno);
+			}
+		}
+
+		// using ADDR_ANY will result in a random assignment so update to be accurate
+		if(address == "0.0.0.0:0")
+		{
+			this->updateSrcAddr();
 		}
 	}
 

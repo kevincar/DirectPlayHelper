@@ -17,7 +17,8 @@ namespace inet
 
 		if(this->socket == -1)
 		{
-			throw std::out_of_range(std::string("Socket::Socket() Error opening socket: ") + (std::to_string(errno)));
+			int err = errno;
+			throw std::out_of_range(std::string("Socket::Socket() Error opening socket: ") + (std::to_string(err)));
 		}
 	}
 
@@ -41,7 +42,6 @@ namespace inet
 		{
 			int err = errno;
 			throw std::logic_error(std::string("Socket::listen failed: ") + std::to_string(err));
-			//throw std::string("Socket::listen failed: ") + std::to_string(errno);
 		}
 	}
 

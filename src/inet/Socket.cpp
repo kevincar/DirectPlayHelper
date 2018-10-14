@@ -17,7 +17,7 @@ namespace inet
 
 		if(this->socket == -1)
 		{
-			throw "Bad socket";
+			throw std::out_of_range(std::string("Socket::Socket() Error opening socket: ") + (std::to_string(errno)));
 		}
 	}
 
@@ -35,10 +35,13 @@ namespace inet
 
 	void Socket::listen(void)
 	{
+		// If socket is SOCK_DGRAM (UDP) simply bind
 		int result = ::listen(this->socket, SOMAXCONN);
 		if(result == -1)
 		{
-			throw std::string("Socket::listen failed: ") + std::to_string(errno);
+			int err = errno;
+			throw std::logic_error(std::string("Socket::listen failed: ") + std::to_string(err));
+			//throw std::string("Socket::listen failed: ") + std::to_string(errno);
 		}
 	}
 

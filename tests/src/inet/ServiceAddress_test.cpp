@@ -18,9 +18,9 @@ TEST(ServiceAddressTest, constructor)
 			});
 
 	// Bad Construction
-	ASSERT_ANY_THROW({
+	ASSERT_THROW({
 			inet::ServiceAddress addr{"18293.2"};
-			});
+			}, std::out_of_range);
 
 	// Capture Construction
 	sockaddr_in addr = {};

@@ -6,10 +6,10 @@ TEST(TCPAcceptorTest, constructor)
 {
 	ASSERT_NO_THROW({
 			// Acceptor
-			std::shared_ptr<inet::TCPAcceptor::AcceptHandler> acceptHandler = std::make_shared<inet::TCPAcceptor::AcceptHandler>([](inet::TCPConnection const& connection)->bool{
+			inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool{
 					if(connection) return true;
 					return true;
-					});
+					};
 
 			// processor
 			std::shared_ptr<inet::TCPAcceptor::ProcessHandler> connectionHandler = std::make_shared<inet::TCPAcceptor::ProcessHandler>([](inet::IPConnection const& connection)->bool{
@@ -24,10 +24,10 @@ TEST(TCPAcceptorTest, constructor)
 TEST(TCPAcceptorTest, getConnections)
 {
 	//Acceptor
-	std::shared_ptr<inet::TCPAcceptor::AcceptHandler> acceptHandler = std::make_shared<inet::TCPAcceptor::AcceptHandler>([](inet::TCPConnection const& connection)->bool{
+	inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool{
 			if(connection) return true;
 			return true;
-			});
+			};
 
 	// processor
 	std::shared_ptr<inet::TCPAcceptor::ProcessHandler> connectionHandler = std::make_shared<inet::TCPAcceptor::ProcessHandler>([](inet::IPConnection const& connection)->bool{

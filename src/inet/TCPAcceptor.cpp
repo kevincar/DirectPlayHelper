@@ -5,7 +5,7 @@
 
 namespace inet
 {
-	TCPAcceptor::TCPAcceptor(std::shared_ptr<AcceptHandler> const AcceptHandler, std::shared_ptr<ProcessHandler> const ConnectionHandler) : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
+	TCPAcceptor::TCPAcceptor(AcceptHandler const& AcceptHandler, std::shared_ptr<ProcessHandler> const ConnectionHandler) : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
 
 	std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const
 	{
@@ -54,9 +54,9 @@ namespace inet
 		return this->childConnections.at(this->childConnections.size()-1);
 	}
 
-	TCPAcceptor::AcceptHandler const* TCPAcceptor::getAcceptHandler(void) const
+	TCPAcceptor::AcceptHandler const TCPAcceptor::getAcceptHandler(void) const
 	{
-		return this->acceptHandler.get();
+		return this->acceptHandler;
 	}
 
 	TCPAcceptor::ProcessHandler const* TCPAcceptor::getConnectionHandler(void) const

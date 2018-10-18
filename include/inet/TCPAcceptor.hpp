@@ -14,22 +14,21 @@ namespace inet
 			typedef std::function<bool(TCPConnection const& conn)> AcceptHandler;
 			typedef std::function<bool (TCPConnection const& conn)> ProcessHandler;
 
-			TCPAcceptor(AcceptHandler const& AcceptHandler, std::shared_ptr<ProcessHandler> const ConnectionHandler);
+			TCPAcceptor(AcceptHandler const& AcceptHandler, ProcessHandler const& ConnectionHandler);
 
 			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);
 			std::shared_ptr<TCPConnection> accept(void);
 
 			AcceptHandler const getAcceptHandler() const;
-			ProcessHandler const* getConnectionHandler() const;
+			ProcessHandler const getConnectionHandler() const;
 
 		protected:
 			std::vector<std::shared_ptr<TCPConnection>> childConnections;
 			mutable std::mutex child_mutex;
 
-			//std::shared_ptr<AcceptHandler> acceptHandler;
 			AcceptHandler acceptHandler;
-			std::shared_ptr<ProcessHandler> connectionHandler;
+			ProcessHandler connectionHandler;
 	};
 }
 

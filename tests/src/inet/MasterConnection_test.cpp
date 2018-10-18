@@ -38,11 +38,11 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 		return true;
 	};
 
-	std::shared_ptr<inet::TCPAcceptor::ProcessHandler> ph = std::make_shared<inet::TCPAcceptor::ProcessHandler>([](inet::TCPConnection const& conn) -> bool {
+	inet::TCPAcceptor::ProcessHandler ph = [](inet::TCPConnection const& conn) -> bool {
 		if(conn)
 			return true;
 		return true;
-	});
+	};
 
 	mc.createTCPAcceptor(ah, ph);
 }

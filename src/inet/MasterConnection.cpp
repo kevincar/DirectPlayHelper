@@ -50,7 +50,7 @@ namespace inet
 		return result;
 	}
 
-	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, std::shared_ptr<TCPAcceptor::ProcessHandler> const pChildPH)
+	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
 
 		this->acceptors.emplace_back(std::make_shared<TCPAcceptor>(pAcceptPH, pChildPH));
@@ -282,7 +282,7 @@ namespace inet
 				}
 			}
 
-			TCPAcceptor::ProcessHandler const* connectionHandler = acceptor->getConnectionHandler();
+			TCPAcceptor::ProcessHandler const connectionHandler = acceptor->getConnectionHandler();
 			std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
 			for(std::vector<TCPConnection const* const>::iterator it = acceptorConnections.begin(); it != acceptorConnections.end(); )
 			{
@@ -291,7 +291,7 @@ namespace inet
 				{
 					// Process Child Connection
 					result = true;
-					bool keepConnection = (*connectionHandler)(*childConnection);
+					bool keepConnection = (connectionHandler)(*childConnection);
 					if(keepConnection)
 					{
 						++it;

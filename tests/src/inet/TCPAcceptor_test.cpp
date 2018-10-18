@@ -12,10 +12,10 @@ TEST(TCPAcceptorTest, constructor)
 					};
 
 			// processor
-			std::shared_ptr<inet::TCPAcceptor::ProcessHandler> connectionHandler = std::make_shared<inet::TCPAcceptor::ProcessHandler>([](inet::IPConnection const& connection)->bool{
+			inet::TCPAcceptor::ProcessHandler connectionHandler = [](inet::IPConnection const& connection)->bool{
 					if(connection) return true;
 					return true;
-					});
+					};
 
 			inet::TCPAcceptor tcpa (acceptHandler, connectionHandler);
 			});
@@ -30,10 +30,10 @@ TEST(TCPAcceptorTest, getConnections)
 			};
 
 	// processor
-	std::shared_ptr<inet::TCPAcceptor::ProcessHandler> connectionHandler = std::make_shared<inet::TCPAcceptor::ProcessHandler>([](inet::IPConnection const& connection)->bool{
+	inet::TCPAcceptor::ProcessHandler connectionHandler = [](inet::IPConnection const& connection)->bool{
 			if(connection) return true;
 			return true;
-			});
+			};
 
 	//inet::TCPAcceptor tcpa (acceptHandler, connectionHandler);
 	std::shared_ptr<inet::TCPAcceptor> tcpa = std::make_shared<inet::TCPAcceptor>(acceptHandler, connectionHandler);

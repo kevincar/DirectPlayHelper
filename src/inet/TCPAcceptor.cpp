@@ -12,7 +12,7 @@ namespace inet
 		std::vector<TCPConnection const*> result;
 		std::lock_guard<std::mutex> lock {this->child_mutex};
 
-		for(std::shared_ptr<TCPConnection> curConn : this->childConnections)
+		for(std::unique_ptr<TCPConnection> const& curConn : this->childConnections)
 		{
 			TCPConnection* pCurConn = &(*curConn);
 			result.push_back(pCurConn);
@@ -23,9 +23,9 @@ namespace inet
 
 	void TCPAcceptor::removeConnection(int connectionSocket)
 	{
-		for(std::vector<std::shared_ptr<TCPConnection>>::iterator it = this->childConnections.begin(); it != this->childConnections.end(); )
+		for(std::vector<std::unique_ptr<TCPConnection>>::iterator it = this->childConnections.begin(); it != this->childConnections.end(); )
 		{
-			std::shared_ptr<TCPConnection> curConnection = *it;
+			std::unique_ptr<TCPConnection> const& curConnection = *it;
 			int curConnSocket = static_cast<int>(*curConnection);
 			if(curConnSocket == connectionSocket)
 			{
@@ -38,7 +38,7 @@ namespace inet
 		}
 	}
 
-	std::shared_ptr<TCPConnection> TCPAcceptor::accept(void)
+	TCPConnection const& TCPAcceptor::accept(void)
 	{
 		sockaddr_in peerAddr;
 		socklen_t addrSize = 0;
@@ -50,8 +50,8 @@ namespace inet
 		}
 
 		std::lock_guard<std::mutex> lock {this->child_mutex};
-		this->childConnections.emplace_back(std::make_shared<TCPConnection>(capturedSocket, *this, peerAddr));
-		return this->childConnections.at(this->childConnections.size()-1);
+		this->childConnections.emplace_back(std::make_unique<TCPConnection>(capturedSocket, *this, peerAddr));
+		return *this->childConnections.at(this->childConnections.size()-1);
 	}
 
 	TCPAcceptor::AcceptHandler const TCPAcceptor::getAcceptHandler(void) const

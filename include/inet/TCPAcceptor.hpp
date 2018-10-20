@@ -18,13 +18,13 @@ namespace inet
 
 			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);
-			std::shared_ptr<TCPConnection> accept(void);
+			TCPConnection const& accept(void);
 
 			AcceptHandler const getAcceptHandler() const;
 			ProcessHandler const getConnectionHandler() const;
 
 		protected:
-			std::vector<std::shared_ptr<TCPConnection>> childConnections;
+			std::vector<std::unique_ptr<TCPConnection>> childConnections;
 			mutable std::mutex child_mutex;
 
 			AcceptHandler acceptHandler;

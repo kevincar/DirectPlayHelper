@@ -274,11 +274,11 @@ namespace inet
 				// Process incoming connection
 				result = true;
 				TCPAcceptor::AcceptHandler const acceptorFn = acceptor->getAcceptHandler();
-				std::shared_ptr<TCPConnection> newConn = acceptor->accept();
-				bool keep = (acceptorFn)(*newConn.get());
+				TCPConnection const& newConn = acceptor->accept();
+				bool keep = (acceptorFn)(newConn);
 				if(!keep)
 				{
-					acceptor->removeConnection(*newConn.get());
+					acceptor->removeConnection(newConn);
 				}
 			}
 

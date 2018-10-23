@@ -25,7 +25,7 @@ namespace inet
 			void listen(void);
 			bool isDataReady(double timeout) const;
 			int connect(std::string addressString);
-			int send(char const* data, unsigned int const data_len);
+			int send(char const* data, unsigned int const data_len) const;
 			int recv(char* buffer, unsigned int buffer_len);
 
 			operator int const() const;

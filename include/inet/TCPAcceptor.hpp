@@ -27,7 +27,9 @@ namespace inet
 			std::vector<std::unique_ptr<TCPConnection>> childConnections;
 			mutable std::mutex child_mutex;
 
+			std::mutex acceptHandler_mutex;
 			AcceptHandler acceptHandler;
+			std::mutex connectionHandler_mutex;
 			ProcessHandler connectionHandler;
 	};
 }

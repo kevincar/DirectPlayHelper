@@ -103,7 +103,7 @@ namespace inet
 		return 0;
 	}
 
-	int IPConnection::send(char const* data, unsigned int const data_len)
+	int IPConnection::send(char const* data, unsigned int const data_len) const
 	{
 		long result = ::send(*this, data, data_len, 0);
 		return static_cast<int>(result);

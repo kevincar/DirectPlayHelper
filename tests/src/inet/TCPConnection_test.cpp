@@ -51,12 +51,67 @@ TEST(TCPConnectionTest, listen)
 
 TEST(TCPConnectionTest, isDataReady)
 {
-	inet::TCPConnection tcpc;
-	bool res = false;
-	ASSERT_NO_THROW({
-			res = tcpc.isDataReady(0.15);
-			});
-	ASSERT_EQ(res, false);
+	std::mutex serverAddress_mutex;
+	std::string serverAddress {};
+
+	std::string status {};
+	std::mutex status_mutex;
+	std::condition_variable status_cv {};
+
+	std::function<void()> serverFunction = [&]{
+		std::unique_lock<std::mutex> statusLock {status_mutex, std::defer_lock};
+
+		// Start our server
+		inet::TCPConnection tcp_server {};
+		tcp_server.setAddress("0.0.0.0:0");
+		{
+			tcp_server.listen();
+			std::lock_guard<std::mutex> addressLock {serverAddress_mutex};
+			serverAddress = tcp_server.getAddressString();
+
+			statusLock.lock();
+			status = "Server Started";
+			statusLock.unlock();
+		}
+		status_cv.notify_one();
+
+		statusLock.lock();
+		status_cv.wait(statusLock, [&]{return status == "Client Connect Attempt";});
+
+		bool ready = tcp_server.isDataReady(2);
+		ASSERT_EQ(ready, true);
+
+		status = "Server Accept Attempt";
+
+		statusLock.unlock();
+		status_cv.notify_one();
+		return;
+	};
+
+	std::function<void()> clientFunction = [&]{
+		std::unique_lock<std::mutex> statusLock {status_mutex};
+		status_cv.wait(statusLock, [&]{return status == "Server Started";});
+
+		inet::TCPConnection tcp_client {};
+		int connect_result = 0;
+		// Try to connect
+		{
+			std::lock_guard<std::mutex> addressLock {serverAddress_mutex};
+			connect_result = tcp_client.connect(serverAddress);
+		}
+		status = "Client Connect Attempt";
+		statusLock.unlock();
+		status_cv.notify_one();
+
+
+		statusLock.lock();
+		status_cv.wait(statusLock, [&]{return status == "Server Accept Attempt";});
+	};
+
+	std::thread serverWorker{serverFunction};
+	std::thread clientWorker{clientFunction};
+	serverWorker.join();
+	clientWorker.join();
 }
 
 TEST(TCPConnectionTest, connect)

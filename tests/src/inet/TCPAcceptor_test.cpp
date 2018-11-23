@@ -46,71 +46,180 @@ TEST(TCPAcceptorTest, getConnections)
 	ASSERT_EQ(nConnections, static_cast<size_t>(0));
 }
 
-TEST(TCPAcceptorTest, accpet)
+TEST(TCPAcceptorTest, accpetProcessAndRemove)
 {
 	unsigned int acceptHandlerCount = 0;
+	unsigned int processHandlerCount = 0;
+	std::mutex addressMutex;
 	std::string serverAddress{};
+	std::mutex statusMutex;
 	std::string status{};
-	std::mutex m;
-	std::condition_variable cv;
+	std::condition_variable statusCV;
+	std::mutex doneMutex;
+	bool processDone = false;
 
 	// AcceptHandler
 	inet::TCPAcceptor::AcceptHandler acceptHandler = [&](inet::TCPConnection const& connection) -> bool
 	{
 		if(connection){}
 		acceptHandlerCount++;
+		//std::cout << "Server: Connection accepted" << std::endl;
 		return true;
 	};
 
 	// Process Handler Template
 	inet::TCPAcceptor::ProcessHandler processHandler = [&](inet::TCPConnection const& connection) -> bool
 	{
+		int const bufsize = 1024*4;
+		char buffer[bufsize] {};
+		int result = connection.recv(buffer, bufsize);
+		EXPECT_NE(result, -1);
+		if(result == 0)
+		{
+			//std::cout << "Server: Client connection closed." << std::endl;
+			return false;
+		}
+		std::string data {buffer};
+
 		if(connection){}
+		processHandlerCount++;
+
+		//std::cout << "Data: " << data << std::endl;
+
+		data = "Thank you.";
+		result = connection.send(data.c_str(), static_cast<unsigned int>(data.size()+1));
+		EXPECT_GE(result, 1);
+
 		return true;
 	};
 
 	std::thread server([&]{
-			std::unique_lock<std::mutex> lk{m};
+			std::unique_lock<std::mutex> statusLock {statusMutex, std::defer_lock};
 
 			// Set up server
+			//std::cout << "Server: Starting..." << std::endl;
 			inet::TCPAcceptor tcpa{acceptHandler, processHandler};
 			tcpa.setAddress("0.0.0.0:0");
-			serverAddress = tcpa.getAddressString();
-			status = "server started";
-			lk.unlock();
-			cv.notify_one();
+			{
+				std::lock_guard<std::mutex> addressLock{addressMutex};
+				serverAddress = tcpa.getAddressString();
+				tcpa.listen();
+				//std::cout << "Server: set address to " << serverAddress << std::endl;
+			}
 
-			inet::TCPConnection const& newConnection = tcpa.accept();
-			EXPECT_EQ(acceptHandlerCount, static_cast<unsigned>(1));
+			//std::cout << "Server: Starting acceptor..." << std::endl;
+			std::thread acceptor([&]{
+				bool isServerDone = false;
+				while(!isServerDone)
+				{
+					{
+						std::lock_guard<std::mutex> doneLock {doneMutex};
+						isServerDone = processDone;
+					}
 
-			std::string data = "Hello, World!";
-			newConnection.send(data.data(), static_cast<unsigned int>(data.size()));
+					if(isServerDone) continue;
 
-			lk.lock();
-			status = "data sent";
-			lk.unlock();
-			cv.notify_one();
+					//std::cout << "Acceptor: Checking for new connections" << std::endl;
+					if(tcpa.isDataReady(0.25))
+					{
+						//std::cout << "Acceptor: New connection incoming" << std::endl;
+						tcpa.accept();
+						ASSERT_EQ(acceptHandlerCount, static_cast<unsigned>(1));
+					}
+				}
+			});
+			//std::cout << "Server: acceptor started" << std::endl;
+
+			//std::cout << "Server: starting connection processor..." << std::endl;
+			std::thread connectionProcessing([&]
+			{
+				bool isServerDone = false;
+				while(!isServerDone)
+				{
+					{
+						std::lock_guard<std::mutex> doneLock {doneMutex};
+						isServerDone = processDone;
+					}
+
+					if(isServerDone) continue;
+
+					std::vector<inet::TCPConnection const*> connections = tcpa.getConnections();
+					for(unsigned long i = 0; i < connections.size(); i++)
+					{
+						//std::cout << "i: " << i << std::endl;
+						inet::TCPConnection const* curConn = connections.at(i);
+						//std::cout << "Proc: Checking connection for data" << std::endl;
+						if(curConn->isDataReady(1))
+						{
+							//std::cout << "Proc: connection has data" << std::endl;
+							bool keepConnection = tcpa.getConnectionHandler()(*curConn);
+							ASSERT_LE(processHandlerCount, static_cast<unsigned>(1));
+
+							if(!keepConnection)
+							{
+								// Remove Connection
+								tcpa.removeConnection(*curConn);
+								ASSERT_EQ(tcpa.getConnections().size(), static_cast<unsigned long>(0));
+								//std::cout << "Proc: Connection removed" << std::endl;
+
+								if(connections.size() == 1)
+								{
+									std::lock_guard<std::mutex> doneLock {doneMutex};
+									processDone = true;
+								}
+							}
+						}
+					}
+				}
+			});
+			//std::cout << "Server: Proc Started" << std::endl;
+			
+			statusLock.lock();
+			status = "Server Started.";
+			statusLock.unlock();
+			statusCV.notify_one();
+
+			statusLock.lock();
+			statusCV.wait(statusLock, [&]{return status == "Client Complete.";});
+			
+			acceptor.join();
+			connectionProcessing.join();
 
 			});
 
 	std::thread client([&]{
+			//std::cout << "Client: starting..." << std::endl;
 			inet::TCPConnection tcp{};
-			std::unique_lock<std::mutex> lk{m};
-			cv.wait(lk, [&]{return status == "server started";});
-			tcp.connect(serverAddress);
+			std::unique_lock<std::mutex> statusLock {statusMutex};
+			//std::cout << "Client: Waiting for server to start" << std::endl;
+			statusCV.wait(statusLock, [&]{return status == "Server Started.";});
+			statusLock.unlock();
+
+			{
+				std::lock_guard<std::mutex> addressLock {addressMutex};
+				//std::cout << "Client: connecting to " << serverAddress << std::endl;
+				int result = tcp.connect(serverAddress);
+				//std::cout << "Client: connected" << std::endl;
+				EXPECT_EQ(result, 0);
+			}
+
+			std::string sendData = "Test Data.";
+			int result = tcp.send(sendData.c_str(), static_cast<unsigned>(sendData.size()+1));
+			//std::cout << "sent data" << std::endl;
+			EXPECT_NE(result, -1);
 
 			const unsigned int bufSize = 255;
 			char buffer[bufSize];
 
-			lk.unlock();
-
-			lk.lock();
-			cv.wait(lk, [&]{return status == "data sent";});
 			tcp.recv(buffer, bufSize);
 			std::string data {buffer};
 
-			EXPECT_STREQ(data.data(), "Hello, World!");
+			ASSERT_STREQ(data.data(), "Thank you.");
 
+			statusLock.lock();
+			status = "Client Complete.";
+			statusLock.unlock();
+			statusCV.notify_one();
 			});
 	
 	server.join();

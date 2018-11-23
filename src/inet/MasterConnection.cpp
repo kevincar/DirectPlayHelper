@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -37,9 +36,9 @@ namespace inet
 		result += this->acceptors.size();
 
 		// TCPAcceptors - client connections
-		for(std::vector<std::shared_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
+		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
 		{
-			std::shared_ptr<TCPAcceptor> const acceptor = *it;
+			TCPAcceptor const* acceptor = &(*it->get());
 			result += acceptor->getConnections().size();
 		}
 
@@ -52,9 +51,8 @@ namespace inet
 
 	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
-
-		this->acceptors.emplace_back(std::make_shared<TCPAcceptor>(pAcceptPH, pChildPH));
-
+		//this->acceptors.emplace_back(pAcceptPH, pChildPH);
+		this->acceptors.push_back(std::make_unique<TCPAcceptor>(pAcceptPH, pChildPH));
 		return 0;
 	}
 
@@ -97,7 +95,7 @@ namespace inet
 	{
 		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
-		this->udpConnections.push_back(newConnection);
+		this->udpConnections.emplace_back();
 
 		std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
 		this->processHandlers.emplace(*newConnection.get(), pPH);
@@ -125,19 +123,6 @@ namespace inet
 		//this->masterTCPList[masterID].emplace_back(connID);
 	//}
 
-	void MasterConnection::stopListening(void)
-	{
-		if(std::this_thread::get_id() == this->listeningThread.get_id())
-		{
-			this->setListeningState(false);
-		}
-		else
-		{
-			this->setListeningState(false);
-			this->listeningThread.join();
-		}
-	}
-
 	//std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
 	//{
 		////sockaddr_in addr {};
@@ -154,6 +139,18 @@ namespace inet
 		//return std::make_shared<TCPConnection>();
 	//}
 
+	void MasterConnection::stopListening(void)
+	{
+		if(std::this_thread::get_id() == this->listeningThread.get_id())
+		{
+			this->setListeningState(false);
+		}
+		else
+		{
+			this->setListeningState(false);
+			this->listeningThread.join();
+		}
+	}
 
 	void MasterConnection::setListeningState(bool state)
 	{
@@ -214,15 +211,13 @@ namespace inet
 		int largestFD = this->getLargestSocket();
 		bool result = false;
 		unsigned int nConnections = 0;
+		
+		// Only continue if there are connections to check
+		nConnections = this->getNumConnections();
+
 		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
 
-		// Only continue if there are connections to check
-		nConnections += this->udpConnections.size();
-		for(std::shared_ptr<TCPAcceptor> curAcceptor : this->acceptors)
-		{
-			nConnections += curAcceptor->getConnections().size();
-		}
 		if(nConnections < 1)
 		{
 			return true;
@@ -232,9 +227,10 @@ namespace inet
 		FD_ZERO(&fdSet);
 
 		// Add all sockets to the set
-		for(std::shared_ptr<TCPAcceptor> curAcceptor : this->acceptors)
+		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
-			IPConnection const* curConn = &(*curAcceptor);
+			TCPAcceptor const* curAcceptor = &(*it->get());
+			IPConnection const* curConn = curAcceptor;
 			FD_SET(*curConn, &fdSet);
 
 			for(TCPConnection const* curChildConn : curAcceptor->getConnections())
@@ -244,10 +240,10 @@ namespace inet
 			}
 		}
 
-		for(std::vector<std::shared_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
-			std::shared_ptr<UDPConnection> curConnection = *it;
-			FD_SET(*curConnection.get(), &fdSet);
+			UDPConnection const* curConnection = &(*it->get());
+			FD_SET(*curConnection, &fdSet);
 		}
 	
 		// Set timeout
@@ -266,9 +262,10 @@ namespace inet
 		}
 
 		// TCPAcceptors and children
-		for(std::shared_ptr<TCPAcceptor> acceptor : this->acceptors)
+		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
-			IPConnection const* acceptorConnection = &(*acceptor);
+			TCPAcceptor* acceptor = &(*it->get());
+			IPConnection const* acceptorConnection = acceptor;
 			if(FD_ISSET(*acceptorConnection, &fdSet))
 			{
 				// Process incoming connection
@@ -284,9 +281,9 @@ namespace inet
 
 			TCPAcceptor::ProcessHandler const connectionHandler = acceptor->getConnectionHandler();
 			std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
-			for(std::vector<TCPConnection const* const>::iterator it = acceptorConnections.begin(); it != acceptorConnections.end(); )
+			for(std::vector<TCPConnection const* const>::iterator connit = acceptorConnections.begin(); connit != acceptorConnections.end(); )
 			{
-				TCPConnection const* const childConnection = *it;
+				TCPConnection const* const childConnection = *connit;
 				if(FD_ISSET(*childConnection, &fdSet))
 				{
 					// Process Child Connection
@@ -294,12 +291,12 @@ namespace inet
 					bool keepConnection = (connectionHandler)(*childConnection);
 					if(keepConnection)
 					{
-						++it;
+						++connit;
 					}
 					else
 					{
 						// Remove both the temporary
-						it = acceptorConnections.erase(it);
+						connit = acceptorConnections.erase(connit);
 						// and the real one
 						acceptor->removeConnection(*childConnection);
 					}
@@ -308,10 +305,10 @@ namespace inet
 		}
 
 		// UDP Connections
-		for(std::vector<std::shared_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
-			std::shared_ptr<UDPConnection> curConnection = *it;
-			if(FD_ISSET(*curConnection.get(), &fdSet))
+			UDPConnection const* curConnection = &(*it->get());
+			if(FD_ISSET(*curConnection, &fdSet))
 			{
 				// Process UDP Connection
 				result = true;

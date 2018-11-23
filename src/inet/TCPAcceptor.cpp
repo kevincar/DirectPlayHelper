@@ -23,6 +23,7 @@ namespace inet
 
 	void TCPAcceptor::removeConnection(int connectionSocket)
 	{
+		std::lock_guard<std::mutex> childLock {this->child_mutex};
 		for(std::vector<std::unique_ptr<TCPConnection>>::iterator it = this->childConnections.begin(); it != this->childConnections.end(); )
 		{
 			std::unique_ptr<TCPConnection> const& curConnection = *it;

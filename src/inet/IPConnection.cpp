@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/time.h>
@@ -98,6 +99,7 @@ namespace inet
 			return errno;
 		}
 
+
 		this->updateSrcAddr();
 
 		return 0;
@@ -109,7 +111,7 @@ namespace inet
 		return static_cast<int>(result);
 	}
 
-	int IPConnection::recv(char* buffer, unsigned int buffer_len)
+	int IPConnection::recv(char* buffer, unsigned int buffer_len) const
 	{
 		long result = ::recv(*this, buffer, buffer_len, 0);
 		return static_cast<int>(result);

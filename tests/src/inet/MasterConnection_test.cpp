@@ -24,8 +24,6 @@ TEST(MasterConnectionTest, getNumConnections)
 	inet::MasterConnection mc;
 
 	ASSERT_EQ(mc.getNumConnections(), static_cast<unsigned int>(0));
-
-
 }
 
 TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)

@@ -57,7 +57,6 @@ namespace inet
 			mutable std::mutex proc_mutex;
 
 			void stopListening(void);
-			bool isListeningFinished(void) const;
 			void setListeningState(bool state);
 			void beginListening();
 			void startListening();

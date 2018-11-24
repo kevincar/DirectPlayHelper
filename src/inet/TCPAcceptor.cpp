@@ -54,11 +54,11 @@ namespace inet
 
 		std::unique_ptr<TCPConnection> pNewConn = std::make_unique<TCPConnection>(capturedSocket, *this, peerAddr);
 
-		std::lock_guard<std::mutex> lock {this->acceptHandler_mutex};
+		std::lock_guard<std::mutex> acceptLock {this->acceptHandler_mutex};
 		bool accepted = this->acceptHandler(*pNewConn);
 		if(accepted)
 		{
-			std::lock_guard<std::mutex> lock {this->child_mutex};
+			std::lock_guard<std::mutex> childLock {this->child_mutex};
 			this->childConnections.push_back(std::move(pNewConn));
 			return *this->childConnections.at(this->childConnections.size()-1);
 		}

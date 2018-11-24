@@ -43,6 +43,9 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 	};
 
 	mc.createTCPAcceptor(ah, ph);
+
+	ASSERT_EQ(mc.getNumTCPAcceptors(), 1u);
+
 }
 
 TEST(MasterConnectionTest, createAndRemoveUDPConnection)

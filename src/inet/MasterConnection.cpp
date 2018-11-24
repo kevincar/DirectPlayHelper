@@ -27,6 +27,16 @@ namespace inet
 		return this->listening;
 	}
 
+	unsigned int MasterConnection::getNumTCPAcceptors(void) const
+	{
+		unsigned int result = 0;
+
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		result = static_cast<unsigned int>(this->acceptors.size());
+
+		return result;
+	}
+
 	unsigned int MasterConnection::getNumConnections(void) const
 	{
 		unsigned int result = 0;
@@ -51,54 +61,58 @@ namespace inet
 
 	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
-		//this->acceptors.emplace_back(pAcceptPH, pChildPH);
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		this->acceptors.push_back(std::make_unique<TCPAcceptor>(pAcceptPH, pChildPH));
 		return 0;
 	}
 
-	//void MasterConnection::removeMasterTCP(unsigned int connID)
-	//{
-		//// Remove from the masterTCPList
-		//std::lock_guard<std::mutex> list_lock {this->masterTCPList_mutex};
-		//for(std::map<unsigned int, std::vector<unsigned int>>::iterator it = this->masterTCPList.begin(); it != this->masterTCPList.end(); )
-		//{
-			//unsigned int curID = it->first;
-			//if(curID == connID)
-			//{
-				//it = this->masterTCPList.erase(it);
-			//}
-			//else
-			//{
-				//++it;
-			//}
-		//}
-
-		//// And from the masterChildProcessHandler Map
-		//for(std::map<unsigned int, std::shared_ptr<processHandler>>::iterator it = this->masterChildProcessHandlers.begin(); it != this->masterChildProcessHandlers.end(); )
-		//{
-			//unsigned int curID = it->first;
-			//if(curID == connID)
-			//{
-				//it = this->masterChildProcessHandlers.erase(it);
-			//}
-			//else
-			//{
-				//++it;
-			//}
-		//}
-
-		//// Finally, remove the TCP connection that acts as master
-		//this->removeConnection(connID);
-	//}
-
-	unsigned int MasterConnection::createUDPConnection(std::shared_ptr<ProcessHandler> const& pPH)
+	std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const
 	{
-		std::shared_ptr<UDPConnection> newConnection = std::make_shared<UDPConnection>();
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		std::vector<TCPAcceptor const*> result {};
+
+		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
+		{
+			TCPAcceptor const* curAcceptor = &(*it->get());
+			result.push_back(curAcceptor);
+		}
+
+		return result;
+	}
+
+	void MasterConnection::removeTCPAcceptor(int acceptorID)
+	{
+		// Is there an easy way to shut down the acceptor?
+		// I suppose we'll simply try it and see how it goes
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+
+		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
+		{
+			TCPAcceptor const* curAcceptor = &(*it->get());
+			int curAcceptorID = *curAcceptor;
+			if(acceptorID == curAcceptorID)
+			{
+				it = this->acceptors.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+
+	unsigned int MasterConnection::createUDPConnection(std::unique_ptr<ProcessHandler>& pPH)
+	{
+		std::unique_ptr<UDPConnection> newConnection = std::make_unique<UDPConnection>();
+
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
-		this->udpConnections.emplace_back();
+		UDPConnection const* pConn = newConnection.get();
+		unsigned int connectionID = static_cast<unsigned int>(*pConn);
+		this->udpConnections.push_back(std::move(newConnection));
 
 		std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
-		this->processHandlers.emplace(*newConnection.get(), pPH);
+		std::unique_ptr<ProcessHandler> ph = std::move(pPH);
+		this->processHandlers.emplace(connectionID, std::move(ph));
 
 		return 0;
 	}
@@ -141,6 +155,7 @@ namespace inet
 
 	void MasterConnection::stopListening(void)
 	{
+		std::lock_guard<std::mutex> listenThreadLock {this->listeningThread_mutex};
 		if(std::this_thread::get_id() == this->listeningThread.get_id())
 		{
 			this->setListeningState(false);

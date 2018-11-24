@@ -22,15 +22,17 @@ namespace inet
 			bool isListening(void) const;
 
 			// General Connection Control
+			unsigned int getNumTCPAcceptors(void) const;
 			unsigned int getNumConnections(void) const;
 
 			// TCP Connection Control
 			unsigned int createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH);
-			unsigned int removeTCPAcceptor(unsigned int acceptConnID);
+			std::vector<TCPAcceptor const*> getAcceptors(void) const;
+			void removeTCPAcceptor(int acceptConnID);
 			void acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection);
 
 			// UDP Connection Control
-			unsigned int createUDPConnection(std::shared_ptr<ProcessHandler> const& pPH);
+			unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>& pPH);
 			void removeUDPConnection(unsigned int connID);
 
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
@@ -51,7 +53,7 @@ namespace inet
 			std::vector<std::unique_ptr<UDPConnection>> udpConnections;
 			mutable std::mutex udp_mutex;
 
-			std::map<unsigned int, std::shared_ptr<ProcessHandler>> processHandlers;
+			std::map<unsigned int, std::unique_ptr<ProcessHandler>> processHandlers;
 			mutable std::mutex proc_mutex;
 
 			void stopListening(void);

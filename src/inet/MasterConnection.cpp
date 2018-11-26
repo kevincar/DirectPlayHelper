@@ -350,18 +350,19 @@ namespace inet
 	int MasterConnection::getLargestSocket(void) const
 	{
 		int result = -1;
-		int currentSocket = result;
+		int largestTCPSocket = this->getLargestTCPSocket();
 
-		//std::lock_guard<std::mutex> lock {this->conn_mutex};
-		//for(std::pair<unsigned int, std::shared_ptr<IPConnection>> curConnPair : this->connections)
-		//{
-			//std::shared_ptr<IPConnection> pCurConn = curConnPair.second;
-			//currentSocket = *pCurConn;
-			//if(currentSocket > result)
-			//{
-				//result = currentSocket;
-			//}
-		//}
+		if(largestTCPSocket > result)
+		{
+			result = largestTCPSocket;
+		}
+
+		int largestUDPSocket = this->getLargestUDPSocket();
+
+		if(largestUDPSocket > result)
+		{
+			result = largestUDPSocket;
+		}
 
 		return result;
 	}
@@ -370,6 +371,7 @@ namespace inet
 	{
 		int result = -1;
 
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
 			TCPAcceptor const* curAcceptor = it->get();
@@ -377,6 +379,24 @@ namespace inet
 			if(curAcceptorLargestSocket > result)
 			{
 				result = curAcceptorLargestSocket;
+			}
+		}
+
+		return result;
+	}
+
+	int MasterConnection::getLargestUDPSocket(void) const
+	{
+		int result = -1;
+
+		std::lock_guard<std::mutex> udpConnLock {this->udp_mutex};
+		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		{
+			UDPConnection const* curConn = it->get();
+			int curConnSocket = *curConn;
+			if(curConnSocket > result)
+			{
+				result = curConnSocket;
 			}
 		}
 

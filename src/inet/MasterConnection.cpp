@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -178,7 +179,7 @@ namespace inet
 		 //Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			this->checkAllConnectionsForData(5.0);
+			this->checkAndProcessConnections(5.0);
 		}
 	}
 
@@ -191,17 +192,16 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	bool MasterConnection::checkAllConnectionsForData(double timeout)
+	bool MasterConnection::checkAndProcessConnections(double timeout)
 	{
 		fd_set fdSet;
-		struct timeval tv;
-		int largestFD = this->getLargestSocket();
 		bool result = false;
 		unsigned int nConnections = 0;
 		
 		// Only continue if there are connections to check
 		nConnections = this->getNumConnections();
 
+		std::cout << "MOM" << std::endl;
 		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
 
@@ -210,43 +210,7 @@ namespace inet
 			return true;
 		}
 
-		// Clear the set
-		FD_ZERO(&fdSet);
-
-		// Add all sockets to the set
-		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
-		{
-			TCPAcceptor const* curAcceptor = &(*it->get());
-			IPConnection const* curConn = curAcceptor;
-			FD_SET(*curConn, &fdSet);
-
-			for(TCPConnection const* curChildConn : curAcceptor->getConnections())
-			{
-				IPConnection const* curChildIPConn = curChildConn;
-				FD_SET(*curChildIPConn, &fdSet);
-			}
-		}
-
-		for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
-		{
-			UDPConnection const* curConnection = &(*it->get());
-			FD_SET(*curConnection, &fdSet);
-		}
-	
-		// Set timeout
-		int seconds = static_cast<int>(floor(timeout));
-		double remainder = timeout - seconds;
-		double remainder_us = remainder * 1e6;
-		int microseconds = static_cast<int>(floor(remainder_us));
-
-		tv.tv_sec = seconds;
-		tv.tv_usec = microseconds;
-
-		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
-
-		if(retval == -1) {
-			throw "MasterConnection::checkAllConnectionsForData - failed to select!";
-		}
+		this->loadFdSetConnections(fdSet);
 
 		// TCPAcceptors and children
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
@@ -332,6 +296,57 @@ namespace inet
 		return result;
 	}
 
+	bool MasterConnection::loadFdSetConnections(fd_set& fdSet) const
+	{
+		// Clear the set
+		FD_ZERO(&fdSet);
+
+		// Add all sockets to the set
+		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
+		{
+			TCPAcceptor const* curAcceptor = &(*it->get());
+			IPConnection const* curConn = curAcceptor;
+			FD_SET(*curConn, &fdSet);
+
+			for(TCPConnection const* curChildConn : curAcceptor->getConnections())
+			{
+				IPConnection const* curChildIPConn = curChildConn;
+				FD_SET(*curChildIPConn, &fdSet);
+			}
+		}
+
+		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		{
+			UDPConnection const* curConnection = &(*it->get());
+			FD_SET(*curConnection, &fdSet);
+		}
+	
+		return true;
+	}
+
+	void MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
+	{
+		struct timeval tv;
+		int largestFD = this->getLargestSocket();
+
+		// Set timeout
+		int seconds = static_cast<int>(floor(timeout));
+		double remainder = timeout - seconds;
+		double remainder_us = remainder * 1e6;
+		int microseconds = static_cast<int>(floor(remainder_us));
+
+		tv.tv_sec = seconds;
+		tv.tv_usec = microseconds;
+
+		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
+
+		if(retval == -1) {
+			throw "MasterConnection::checkAndProcessConnections - failed to select!";
+		}
+
+		return;
+	}
+
 	int MasterConnection::getLargestSocket(void) const
 	{
 		int result = -1;
@@ -347,6 +362,23 @@ namespace inet
 				//result = currentSocket;
 			//}
 		//}
+
+		return result;
+	}
+
+	int MasterConnection::getLargestTCPSocket(void) const
+	{
+		int result = -1;
+
+		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
+		{
+			TCPAcceptor const* curAcceptor = it->get();
+			int curAcceptorLargestSocket = curAcceptor->getLargestSocket();
+			if(curAcceptorLargestSocket > result)
+			{
+				result = curAcceptorLargestSocket;
+			}
+		}
 
 		return result;
 	}

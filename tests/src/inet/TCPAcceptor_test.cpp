@@ -2,23 +2,46 @@
 #include "gtest/gtest.h"
 #include "inet/TCPAcceptor.hpp"
 
+
 TEST(TCPAcceptorTest, constructor)
 {
 	ASSERT_NO_THROW({
 			// Acceptor
 			inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool{
-					if(connection) return true;
-					return true;
-					};
+			if(connection) return true;
+			return true;
+			};
 
 			// processor
 			inet::TCPAcceptor::ProcessHandler connectionHandler = [](inet::IPConnection const& connection)->bool{
-					if(connection) return true;
-					return true;
-					};
+			if(connection) return true;
+			return true;
+			};
 
 			inet::TCPAcceptor tcpa (acceptHandler, connectionHandler);
 			});
+}
+
+TEST(TCPAcceptorTest, getLargestSocket)
+{
+	// Acceptor
+	inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool{
+		if(connection) return true;
+		return true;
+	};
+
+	// processor
+	inet::TCPAcceptor::ProcessHandler connectionHandler = [](inet::IPConnection const& connection)->bool{
+		if(connection) return true;
+		return true;
+	};
+
+	inet::TCPAcceptor tcpa {acceptHandler, connectionHandler};
+	int largestSocket = -1;
+
+	largestSocket = tcpa.getLargestSocket();
+
+	EXPECT_NE(largestSocket, -1);
 }
 
 TEST(TCPAcceptorTest, getConnections)

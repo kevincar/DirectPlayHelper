@@ -7,6 +7,23 @@ namespace inet
 {
 	TCPAcceptor::TCPAcceptor(AcceptHandler const& AcceptHandler, ProcessHandler const& ConnectionHandler) : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
 
+	int TCPAcceptor::getLargestSocket(void) const
+	{
+		int result = *this;
+		std::vector<TCPConnection const*> connections = this->getConnections();
+
+		for(TCPConnection const* curConn : connections)
+		{
+			int curConnSocket = *curConn;
+			if(curConnSocket > result)
+			{
+				result = curConnSocket;
+			}
+		}
+
+		return result;
+	}
+
 	std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const
 	{
 		std::vector<TCPConnection const*> result;

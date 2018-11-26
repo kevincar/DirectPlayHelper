@@ -16,6 +16,8 @@ namespace inet
 
 			TCPAcceptor(AcceptHandler const& AcceptHandler, ProcessHandler const& ConnectionHandler);
 
+			int getLargestSocket(void) const;
+
 			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);
 			TCPConnection const& accept(void);

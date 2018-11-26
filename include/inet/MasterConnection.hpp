@@ -63,8 +63,14 @@ namespace inet
 
 			std::unique_ptr<std::vector<IPConnection const*> const> getAllConnections(void) const;
 
-			bool checkAllConnectionsForData(double timeout);
+			// Connection Processing
+			bool checkAndProcessConnections(double timeout);
+			bool loadFdSetConnections(fd_set&) const;
+			void waitForFdSetConnections(fd_set&, double timeout) const;
+
 			int getLargestSocket(void) const;
+			int getLargestTCPSocket(void) const;
+
 			void removeConnection(unsigned int connID);
 			bool isConnMasterTCP(unsigned int connID) const;
 	};

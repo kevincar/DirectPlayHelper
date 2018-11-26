@@ -70,6 +70,7 @@ namespace inet
 
 			int getLargestSocket(void) const;
 			int getLargestTCPSocket(void) const;
+			int getLargestUDPSocket(void) const;
 
 			void removeConnection(unsigned int connID);
 			bool isConnMasterTCP(unsigned int connID) const;

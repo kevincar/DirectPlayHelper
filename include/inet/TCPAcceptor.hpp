@@ -21,6 +21,7 @@ namespace inet
 			std::vector<TCPConnection const*> getConnections(void) const;
 			void removeConnection(int connectionSocket);
 			TCPConnection const& accept(void);
+			void checkAndProcessConnections(fd_set& fdSet) const;
 
 			AcceptHandler const getAcceptHandler() const;
 			ProcessHandler const getConnectionHandler() const;

@@ -15,6 +15,7 @@ add_executable(DPServerTest
 target_include_directories(DPServerTest BEFORE
 	PUBLIC
 		../include
+		./include
 		${CMAKE_CURRENT_SOURCE_DIR}/gtest/googletest-release-1.8.0/googletest/include
 		${G3LOG_INCLUDE_DIRS})
 

@@ -213,6 +213,8 @@ namespace inet
 		this->loadFdSetConnections(fdSet);
 		this->waitForFdSetConnections(fdSet, timeout);
 
+		// HERE - Pass on to child processes (Separate out the code)
+
 		// TCPAcceptors and children
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{

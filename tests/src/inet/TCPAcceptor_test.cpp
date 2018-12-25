@@ -2,7 +2,6 @@
 #include "gtest/gtest.h"
 #include "inet/TCPAcceptor.hpp"
 
-
 TEST(TCPAcceptorTest, constructor)
 {
 	ASSERT_NO_THROW({
@@ -247,4 +246,10 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove)
 	
 	server.join();
 	client.join();
+}
+
+TEST(TCPAcceptorTest, checkAndProcessConnections)
+{
+	// Server
+	// Client
 }

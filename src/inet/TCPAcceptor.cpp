@@ -83,6 +83,37 @@ namespace inet
 		return *pNewConn;
 	}
 
+	void TCPAcceptor::checkAndProcessConnections(fd_set const& fdSet)
+	{
+		// Select must have been called previously
+
+		// Check and Process Self
+		if(FD_ISSET(*this, &fdSet) == true)
+		{
+			bool accepted = false;
+			TCPConnection const& newConnection = this->accept();
+
+			std::lock_guard<std::mutex> acceptLock{this->acceptHandler_mutex};
+			{
+				accepted = this->acceptHandler(newConnection);
+			}
+		}
+		
+		// Check and Process Children
+		std::lock_guard<std::mutex> childLock {this->child_mutex};
+		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
+		{
+			if(FD_ISSET(*conn, &fdSet) == true)
+			{
+				std::lock_guard<std::mutex> procLock {this->connectionHandler_mutex};
+				{
+					this->connectionHandler(*conn);
+				}
+			}
+		}
+		return;
+	}
+
 	TCPAcceptor::AcceptHandler const TCPAcceptor::getAcceptHandler(void) const
 	{
 		return this->acceptHandler;

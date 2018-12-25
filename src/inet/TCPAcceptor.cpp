@@ -83,6 +83,20 @@ namespace inet
 		return *pNewConn;
 	}
 
+	void TCPAcceptor::loadFdSetConnections(fd_set& fdSet)
+	{
+		// Self first
+		FD_SET(*this, &fdSet);
+
+		// Now child connections
+		std::lock_guard<std::mutex> childLock {this->child_mutex};
+		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
+		{
+			FD_SET(*conn, &fdSet);
+		}
+		return;
+	}
+
 	void TCPAcceptor::checkAndProcessConnections(fd_set const& fdSet)
 	{
 		// Select must have been called previously

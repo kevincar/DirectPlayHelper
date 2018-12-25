@@ -1,6 +1,55 @@
 
 #include "gtest/gtest.h"
 #include "inet/TCPAcceptor.hpp"
+#include "inet/TCPAcceptor_test.hpp"
+
+// ==================================================================
+
+std::unique_ptr<std::thread> startTestServer(std::string& serverAddress)
+{
+	bool done = false;
+	inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool
+	{
+		if(connection){}
+		return true;
+	};
+
+	inet::TCPAcceptor::ProcessHandler processHandler = [](inet::IPConnection const&& connection)->bool
+	{
+		if(connection) {}
+		return true;
+	}
+
+	return std::make_unique<std::thread>([&]
+	{
+		// Start up the server
+		inet::TCPAcceptor tcpa(acceptHandler, processHandler);
+		tcpa.setAddress("0.0.0.0:0");
+		serverAddress = tcpa.getAddressString();
+		tcpa.listen();
+
+		// This proccessor thread is responsible for checking for incoming data
+		std::thread processor([&]
+		{
+			// continue while not done
+			bool isServerDone = false;
+			while(!isServerDone)
+			{
+				fd_set fdSet;
+
+				// load the fd_set with connections
+				// call select
+				// check connections
+			}
+		});
+
+		processor.join();
+
+		return;
+	});
+}
+
+// ==================================================================
 
 TEST(TCPAcceptorTest, constructor)
 {

@@ -211,6 +211,7 @@ namespace inet
 		}
 
 		this->loadFdSetConnections(fdSet);
+		this->waitForFdSetConnections(fdSet, timeout);
 
 		// TCPAcceptors and children
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
@@ -344,6 +345,11 @@ namespace inet
 			throw "MasterConnection::checkAndProcessConnections - failed to select!";
 		}
 
+		return;
+	}
+
+	void checkAndProcessTCPConnections(fd_set& fdSet)
+	{
 		return;
 	}
 

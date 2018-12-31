@@ -9,6 +9,7 @@
 std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mutex& serverAddressMutex, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV)
 {
 	//std::cout << "Server: Starting thread..." << std::endl;
+	LOG(DEBUG) << "Server: Starting thread...";
 	return std::make_unique<std::thread>([&]
 	{
 		bool done = false;

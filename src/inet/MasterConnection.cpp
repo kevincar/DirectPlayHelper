@@ -332,6 +332,17 @@ namespace inet
 		return true;
 	}
 
+	bool MasterConnection::loadFdSetTCPConnections(fd_set& fdSet) const
+	{
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
+		{
+			acceptor->loadFdSetConnections(fdSet);
+		}
+
+		return true;
+	}
+
 	int MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
 	{
 		struct timeval tv;

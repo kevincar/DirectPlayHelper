@@ -86,13 +86,15 @@ namespace inet
 	void TCPAcceptor::loadFdSetConnections(fd_set& fdSet)
 	{
 		// Self first
-		FD_SET(*this, &fdSet);
+		//std::cout << "Server: loading fd " << static_cast<int>(*this) << std::endl;
+		FD_SET(static_cast<int const>(*this), &fdSet);
 
 		// Now child connections
 		std::lock_guard<std::mutex> childLock {this->child_mutex};
 		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
 		{
-			FD_SET(*conn, &fdSet);
+			std::cout << "Server: loading child fd " << static_cast<int>(*conn) << std::endl;
+			FD_SET(static_cast<int const>(*conn), &fdSet);
 		}
 		return;
 	}
@@ -102,14 +104,18 @@ namespace inet
 		// Select must have been called previously
 
 		// Check and Process Self
-		if(FD_ISSET(*this, &fdSet) == true)
+		//std::cout << "Server: checking fd " << static_cast<int>(*this) << std::endl;
+		if(FD_ISSET(static_cast<int const>(*this), &fdSet) == true)
 		{
+			std::cout << "Server: data set on fd " << static_cast<int>(*this) << std::endl;
 			bool accepted = false;
 			TCPConnection const& newConnection = this->accept();
 
 			std::lock_guard<std::mutex> acceptLock{this->acceptHandler_mutex};
 			{
 				accepted = this->acceptHandler(newConnection);
+				
+				// TODO: false acceptions should remove the connection
 			}
 		}
 		
@@ -117,11 +123,12 @@ namespace inet
 		std::lock_guard<std::mutex> childLock {this->child_mutex};
 		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
 		{
-			if(FD_ISSET(*conn, &fdSet) == true)
+			std::cout << "Server: checking fd " << static_cast<int>(*conn) << std::endl;
+			if(FD_ISSET(static_cast<int const>(*conn), &fdSet) == true)
 			{
 				std::lock_guard<std::mutex> procLock {this->connectionHandler_mutex};
 				{
-					this->connectionHandler(*conn);
+					bool keepConnection = this->connectionHandler(*conn);
 				}
 			}
 		}

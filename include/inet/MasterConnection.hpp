@@ -66,7 +66,7 @@ namespace inet
 			// Connection Processing
 			bool checkAndProcessConnections(double timeout);
 			bool loadFdSetConnections(fd_set&) const;
-			void waitForFdSetConnections(fd_set&, double timeout) const;
+			int waitForFdSetConnections(fd_set&, double timeout) const;
 			void checkAndProcessTCPConnections(fd_set& fdSet);
 
 			int getLargestSocket(void) const;

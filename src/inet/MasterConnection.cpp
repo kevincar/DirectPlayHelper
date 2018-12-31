@@ -201,7 +201,6 @@ namespace inet
 		// Only continue if there are connections to check
 		nConnections = this->getNumConnections();
 
-		std::cout << "MOM" << std::endl;
 		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
 
@@ -327,7 +326,7 @@ namespace inet
 		return true;
 	}
 
-	void MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
+	int MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
 	{
 		struct timeval tv;
 		int largestFD = this->getLargestSocket();
@@ -341,13 +340,13 @@ namespace inet
 		tv.tv_sec = seconds;
 		tv.tv_usec = microseconds;
 
-		int retval = select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
+		int retval = ::select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
 		if(retval == -1) {
 			throw "MasterConnection::checkAndProcessConnections - failed to select!";
 		}
 
-		return;
+		return retval;
 	}
 
 	void checkAndProcessTCPConnections(fd_set& fdSet)

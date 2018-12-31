@@ -4,6 +4,7 @@
 
 #include <thread>
 
-std::unique_ptr<std::thread> startTestServer(void);
+std::unique_ptr<std::thread> startTestServer(std::string& serviceAddress, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV);
+std::unique_ptr<std::thread> startTestClient(std::string& serviceAddress, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV);
 
 #endif /* INET_TCP_ACCEPTOR_TEST */

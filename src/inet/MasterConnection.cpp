@@ -210,7 +210,13 @@ namespace inet
 		}
 
 		this->loadFdSetConnections(fdSet);
-		this->waitForFdSetConnections(fdSet, timeout);
+		int connectionsWaiting = this->waitForFdSetConnections(fdSet, timeout);
+
+		// Only continue if there are connections waiting
+		if(connectionsWaiting < 1)
+		{
+			return false;
+		}
 
 		// HERE - Pass on to child processes (Separate out the code)
 
@@ -343,14 +349,19 @@ namespace inet
 		int retval = ::select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
 		if(retval == -1) {
-			throw "MasterConnection::checkAndProcessConnections - failed to select!";
+			throw std::logic_error(std::string("MasterConnection::waitForFdSetConnections - failed to select! ERR CODE: ") + std::to_string(errno));
 		}
 
 		return retval;
 	}
 
-	void checkAndProcessTCPConnections(fd_set& fdSet)
+	void MasterConnection::checkAndProcessTCPConnections(fd_set& fdSet)
 	{
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
+		{
+			acceptor->checkAndProcessConnections(fdSet);
+		}
 		return;
 	}
 

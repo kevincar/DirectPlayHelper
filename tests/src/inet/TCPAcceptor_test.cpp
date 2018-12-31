@@ -1,34 +1,58 @@
 
 #include "gtest/gtest.h"
+#include <g3log/g3log.hpp>
 #include "inet/TCPAcceptor.hpp"
 #include "inet/TCPAcceptor_test.hpp"
 
 // ==================================================================
 
-std::unique_ptr<std::thread> startTestServer(std::string& serverAddress)
+std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mutex& serverAddressMutex, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV)
 {
-	bool done = false;
-	inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool
-	{
-		if(connection){}
-		return true;
-	};
-
-	inet::TCPAcceptor::ProcessHandler processHandler = [](inet::IPConnection const&& connection)->bool
-	{
-		if(connection) {}
-		return true;
-	}
-
+	//std::cout << "Server: Starting thread..." << std::endl;
 	return std::make_unique<std::thread>([&]
 	{
+		bool done = false;
+		inet::TCPAcceptor::AcceptHandler acceptHandler = [](inet::TCPConnection const& connection)->bool
+		{
+			if(connection)
+			{
+				std::cout << "Server: new connection from: " << connection.getAddressString() << std::endl;
+			}
+			return true;
+		};
+	
+		inet::TCPAcceptor::ProcessHandler processHandler = [](inet::IPConnection const& connection)->bool
+		{
+			if(connection)
+			{
+				int const bufsize = 1024*4;
+				char buffer[bufsize] {};
+				int result = connection.recv(buffer, bufsize);
+				EXPECT_NE(result, -1);
+				if(result == 0)
+				{
+					return false;
+				}
+
+				std::cout << "Server: Received data: " << std::string(buffer) << std::endl;
+			}
+			return true;
+		};
+
 		// Start up the server
+		std::cout << "Server: initializing..." << std::endl;
 		inet::TCPAcceptor tcpa(acceptHandler, processHandler);
+		std::cout << "Server: main listening fd is " << static_cast<int>(tcpa) << std::endl;
 		tcpa.setAddress("0.0.0.0:0");
-		serverAddress = tcpa.getAddressString();
-		tcpa.listen();
+		{
+			std::lock_guard<std::mutex> serverAddressLock {serverAddressMutex};
+			serverAddress = tcpa.getAddressString();
+			tcpa.listen();
+			std::cout << "Server: server started with address as " << serverAddress << std::endl;
+		}
 
 		// This proccessor thread is responsible for checking for incoming data
+		std::cout << "Server: starting processor thread..." << std::endl;
 		std::thread processor([&]
 		{
 			// continue while not done
@@ -36,14 +60,65 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress)
 			while(!isServerDone)
 			{
 				fd_set fdSet;
+				FD_ZERO(&fdSet);
 
 				// load the fd_set with connections
+				tcpa.loadFdSetConnections(fdSet);
+				//if(tcpa.isDataReady(2))
+				//{
+					//std::cout << "hot dog" << std::endl;
+				//}
+
 				// call select
+				int const largestSocket = tcpa.getLargestSocket();
+				//std::cout << "Server: largest socket = " << largestSocket << std::endl;
+				struct timeval tv;
+				tv.tv_sec = 10;
+				tv.tv_usec = 0;
+				int result = ::select(largestSocket + 1, &fdSet, NULL, NULL, &tv);
+				ASSERT_NE(result, -1);
+
 				// check connections
+				tcpa.checkAndProcessConnections(fdSet);
+				//isServerDone = true;
+				//std::cout << "Server: completed..." << std::endl;
 			}
 		});
 
 		processor.join();
+
+		std::unique_lock<std::mutex> statusLock {statusMutex};
+		statusCV.wait(statusLock, [&]{return status == "done";});
+
+		return;
+	});
+}
+
+std::unique_ptr<std::thread> startTestClient(std::string& serverAddress, std::mutex& serverAddressMutex, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV)
+{
+	return std::make_unique<std::thread>([&]
+	{
+		// Start the client
+		bool connected = false;
+		std::cout << "Client: initializing client..." << std::endl;
+		inet::TCPConnection tcpc{};
+		std::cout << "Client: client fd = " << static_cast<unsigned>(tcpc) << std::endl;
+		while(!connected)
+		{
+			std::lock_guard<std::mutex> serverAddressLock {serverAddressMutex};
+			std::cout << "Client: Attempting to connect to " << serverAddress << std::endl;
+			int result = tcpc.connect(serverAddress);
+			if(result == 0)
+			{
+				connected = true;
+			}
+		}
+
+		// Send Data
+		std::string sendData = "Test Data.";
+		int result = tcpc.send(sendData.c_str(), static_cast<unsigned>(sendData.size()+1));
+		std::cout << "Client: test data sent." << std::endl;
+		EXPECT_NE(result, -1);
 
 		return;
 	});
@@ -297,8 +372,39 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove)
 	client.join();
 }
 
+TEST(TCPAcceptorTest, loadFdSetConnections)
+{
+	// Setup handlers
+	inet::TCPAcceptor::AcceptHandler acceptHandler = [&](inet::TCPConnection const& connection) -> bool {return true;};
+	inet::TCPAcceptor::ProcessHandler processHandler = [&](inet::TCPConnection const& connection) -> bool {return true;};
+
+	inet::TCPAcceptor tcpa(acceptHandler, processHandler);
+
+	fd_set fdSet;
+	FD_ZERO(&fdSet);
+	tcpa.loadFdSetConnections(fdSet);
+	
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 500;
+	int result = ::select(tcpa.getLargestSocket()+1, &fdSet, NULL, NULL, &tv);
+	ASSERT_NE(result, -1);
+}
+
 TEST(TCPAcceptorTest, checkAndProcessConnections)
 {
+	std::string status;
+	std::mutex statusMutex;
+	std::condition_variable statusCV;
+
 	// Server
+	std::string serverAddress {"0.0.0.0:0"};
+	std::mutex serverAddressMutex;
+	std::unique_ptr<std::thread> serverThread = startTestServer(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+
 	// Client
+	std::unique_ptr<std::thread> clientThread = startTestClient(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+	
+	serverThread->join();
+	clientThread->join();
 }

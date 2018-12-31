@@ -93,7 +93,6 @@ namespace inet
 		std::lock_guard<std::mutex> childLock {this->child_mutex};
 		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
 		{
-			std::cout << "Server: loading child fd " << static_cast<int>(*conn) << std::endl;
 			FD_SET(static_cast<int const>(*conn), &fdSet);
 		}
 		return;
@@ -105,9 +104,8 @@ namespace inet
 
 		// Check and Process Self
 		//std::cout << "Server: checking fd " << static_cast<int>(*this) << std::endl;
-		if(FD_ISSET(static_cast<int const>(*this), &fdSet) == true)
+		if(FD_ISSET(static_cast<int const>(*this), &fdSet) != false)
 		{
-			std::cout << "Server: data set on fd " << static_cast<int>(*this) << std::endl;
 			bool accepted = false;
 			TCPConnection const& newConnection = this->accept();
 
@@ -123,8 +121,7 @@ namespace inet
 		std::lock_guard<std::mutex> childLock {this->child_mutex};
 		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
 		{
-			std::cout << "Server: checking fd " << static_cast<int>(*conn) << std::endl;
-			if(FD_ISSET(static_cast<int const>(*conn), &fdSet) == true)
+			if(FD_ISSET(static_cast<int const>(*conn), &fdSet) != false)
 			{
 				std::lock_guard<std::mutex> procLock {this->connectionHandler_mutex};
 				{

@@ -310,24 +310,8 @@ namespace inet
 		FD_ZERO(&fdSet);
 
 		// Add all sockets to the set
-		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
-		{
-			TCPAcceptor const* curAcceptor = &(*it->get());
-			IPConnection const* curConn = curAcceptor;
-			FD_SET(*curConn, &fdSet);
-
-			for(TCPConnection const* curChildConn : curAcceptor->getConnections())
-			{
-				IPConnection const* curChildIPConn = curChildConn;
-				FD_SET(*curChildIPConn, &fdSet);
-			}
-		}
-
-		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
-		{
-			UDPConnection const* curConnection = &(*it->get());
-			FD_SET(*curConnection, &fdSet);
-		}
+		this->loadFdSetTCPConnections(fdSet);
+		this->loadFdSetUDPConnections(fdSet);
 	
 		return true;
 	}

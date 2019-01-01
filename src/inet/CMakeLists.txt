@@ -13,4 +13,5 @@ add_library(inet
 
 target_include_directories(inet BEFORE
 	PUBLIC
-		../../include)
+		../../include
+		${G3LOG_INCLUDE_DIRS})

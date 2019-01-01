@@ -1,3 +1,5 @@
+#define G3_DYNAMIC_LOGGING
+
 #include <g3log/g3log.hpp>
 #include <g3log/logworker.hpp>
 #include "../include/CustomSink.hpp"
@@ -9,6 +11,7 @@ int main(int argc, char* argv[])
 	std::unique_ptr<g3::LogWorker> logWorker{g3::LogWorker::createLogWorker()};
 	logWorker->addSink(std::make_unique<CustomSink>(), &CustomSink::ReceiveLogMessage);
 	g3::initializeLogging(logWorker.get());
+	g3::log_levels::setHighest(WARNING);
 	
 	// Begin testing
 	::testing::InitGoogleTest(&argc, argv);

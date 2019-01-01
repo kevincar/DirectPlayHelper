@@ -15,7 +15,7 @@ namespace inet
 		public:
 			typedef std::function<bool (IPConnection const&)> ProcessHandler;
 			
-			MasterConnection(void);
+			MasterConnection(double const t = 5.0);
 			~MasterConnection(void);
 
 			// Listening Control
@@ -23,6 +23,8 @@ namespace inet
 
 			// General Connection Control
 			unsigned int getNumTCPAcceptors(void) const;
+			unsigned int getNumTCPConnections(void) const;
+			unsigned int getNumUDPConnections(void) const;
 			unsigned int getNumConnections(void) const;
 
 			// TCP Connection Control
@@ -38,6 +40,8 @@ namespace inet
 			std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 
 		private:
+			double timeout = 5.0;
+
 			// Thread Management
 			std::thread listeningThread;
 			std::mutex listeningThread_mutex;

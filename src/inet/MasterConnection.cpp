@@ -343,6 +343,17 @@ namespace inet
 		return true;
 	}
 
+	bool MasterConnection::loadFdSetUDPConnections(fd_set& fdSet) const
+	{
+		std::lock_guard<std::mutex> udpConnectionLock {this->udp_mutex};
+		for(std::unique_ptr<UDPConnection> const& udpConnection : this->udpConnections)
+		{
+			int fd = static_cast<int>(*udpConnection);
+			FD_SET(fd, &fdSet);
+		}
+		return true;
+	}
+
 	int MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
 	{
 		struct timeval tv;

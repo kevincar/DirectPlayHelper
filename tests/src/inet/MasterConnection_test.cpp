@@ -45,9 +45,7 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 
 	mc.createTCPAcceptor(ah, ph);
 
-	LOG(DEBUG) << "Before...?";
 	unsigned numAcceptors = mc.getNumTCPAcceptors();
-	LOG(DEBUG) << "HERE?";
 
 	ASSERT_EQ(numAcceptors, 1u);
 }

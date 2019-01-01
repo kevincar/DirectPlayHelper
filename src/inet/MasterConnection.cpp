@@ -5,11 +5,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <g3log/g3log.hpp>
 #include "inet/MasterConnection.hpp"
 
 namespace inet
 {
-	MasterConnection::MasterConnection(void)
+	MasterConnection::MasterConnection(double const t) : timeout(t)
 	{
 		this->startListening();
 	}
@@ -32,8 +33,49 @@ namespace inet
 	{
 		unsigned int result = 0;
 
+		LOG(DEBUG) << "LOCK TETS: setting lock";
+
+		if(this->acceptor_mutex.try_lock())
+		{
+			LOG(DEBUG) << "LOCK TEST: not locked";
+			this->acceptor_mutex.unlock();
+		}
+		else
+		{
+			LOG(DEBUG) << "LOCK TEST: Locked before we could get it" << std::endl;
+		}
+
 		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		result = static_cast<unsigned int>(this->acceptors.size());
+
+		return result;
+	}
+
+	unsigned int MasterConnection::getNumTCPConnections(void) const
+	{
+		unsigned int result = 0;
+
+		result += this->getNumTCPAcceptors();
+		
+		// TCPAcceptor connections
+		{
+			std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
+			for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
+			{
+				std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
+				result += acceptorConnections.size();
+			}
+		}
+
+		return result;
+	}
+
+	unsigned int MasterConnection::getNumUDPConnections(void) const
+	{
+		unsigned int result = 0;
+
+		std::lock_guard<std::mutex> udp_lock { this->udp_mutex };
+		result += this->udpConnections.size();
 
 		return result;
 	}
@@ -42,28 +84,47 @@ namespace inet
 	{
 		unsigned int result = 0;
 
-		// TCPAcceptors
-		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
-		result += this->acceptors.size();
+		LOG(DEBUG) << "getting numTCPConnections";
+		result += this->getNumTCPConnections();
 
-		// TCPAcceptors - client connections
-		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
-		{
-			TCPAcceptor const* acceptor = &(*it->get());
-			result += acceptor->getConnections().size();
-		}
-
-		// UDPConnections
-		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
-		result += this->udpConnections.size();
+		LOG(DEBUG) << "getting numUDPConnections";
+		result += this->getNumUDPConnections();
 
 		return result;
 	}
 
 	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
-		this->acceptors.push_back(std::make_unique<TCPAcceptor>(pAcceptPH, pChildPH));
+		LOG(DEBUG) << "LOCK TESTS: setting lock";
+
+		if(this->acceptor_mutex.try_lock())
+		{
+			LOG(DEBUG) << "LOCK TEST 1: not locked";
+			this->acceptor_mutex.unlock();
+		}
+		else
+		{
+			LOG(DEBUG) << "LOCK TEST 1: Locked before we could get it" << std::endl;
+		}
+
+		{
+			std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+			//this->acceptors.emplace_back(std::make_unique<TCPAcceptor>(pAcceptPH, pChildPH));
+			TCPAcceptor* acceptor = new TCPAcceptor(pAcceptPH, pChildPH);
+			std::unique_ptr<TCPAcceptor> pAcceptor {std::move(acceptor)};
+			this->acceptors.push_back(std::move(pAcceptor));
+		}
+
+		if(this->acceptor_mutex.try_lock())
+		{
+			LOG(DEBUG) << "LOCK TEST 2: not locked";
+			this->acceptor_mutex.unlock();
+		}
+		else
+		{
+			LOG(DEBUG) << "LOCK TEST 2: Locked before we could get it" << std::endl;
+		}
+
 		return 0;
 	}
 
@@ -179,7 +240,7 @@ namespace inet
 		 //Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			this->checkAndProcessConnections(5.0);
+			this->checkAndProcessConnections(this->timeout);
 		}
 	}
 
@@ -199,107 +260,35 @@ namespace inet
 		unsigned int nConnections = 0;
 		
 		// Only continue if there are connections to check
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - getting number of connections";
 		nConnections = this->getNumConnections();
-
-		std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
-		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
 
 		if(nConnections < 1)
 		{
+			LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - No connections to check";
 			return true;
 		}
 
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - loading fd_set connections";
 		this->loadFdSetConnections(fdSet);
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - calling select...";
 		int connectionsWaiting = this->waitForFdSetConnections(fdSet, timeout);
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - select finished";
 
 		// Only continue if there are connections waiting
 		if(connectionsWaiting < 1)
 		{
+			LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - no connections waiting with data";
 			return false;
 		}
 
-		// HERE - Pass on to child processes (Separate out the code)
+		// TCPAcceptors
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and processing TCP Connections";
+		this->checkAndProcessTCPConnections(fdSet);
 
-		// TCPAcceptors and children
-		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
-		{
-			TCPAcceptor* acceptor = &(*it->get());
-			IPConnection const* acceptorConnection = acceptor;
-			if(FD_ISSET(*acceptorConnection, &fdSet))
-			{
-				// Process incoming connection
-				result = true;
-				TCPAcceptor::AcceptHandler const acceptorFn = acceptor->getAcceptHandler();
-				TCPConnection const& newConn = acceptor->accept();
-				bool keep = (acceptorFn)(newConn);
-				if(!keep)
-				{
-					acceptor->removeConnection(newConn);
-				}
-			}
-
-			TCPAcceptor::ProcessHandler const connectionHandler = acceptor->getConnectionHandler();
-			std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
-			for(std::vector<TCPConnection const* const>::iterator connit = acceptorConnections.begin(); connit != acceptorConnections.end(); )
-			{
-				TCPConnection const* const childConnection = *connit;
-				if(FD_ISSET(*childConnection, &fdSet))
-				{
-					// Process Child Connection
-					result = true;
-					bool keepConnection = (connectionHandler)(*childConnection);
-					if(keepConnection)
-					{
-						++connit;
-					}
-					else
-					{
-						// Remove both the temporary
-						connit = acceptorConnections.erase(connit);
-						// and the real one
-						acceptor->removeConnection(*childConnection);
-					}
-				}
-			}
-		}
-
-		// UDP Connections
-		for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
-		{
-			UDPConnection const* curConnection = &(*it->get());
-			if(FD_ISSET(*curConnection, &fdSet))
-			{
-				// Process UDP Connection
-				result = true;
-			}
-		}
-
-		//for(std::vector<IPConnection const*const>::iterator it = connections->begin(); it != connections->end(); )
-		//{
-			//IPConnection const *const pCurConn = *it;
-			//if(FD_ISSET(*pCurConn, &fdSet))
-			//{
-				//result = true;
-				//bool isMasterTCP = this->isConnMasterTCP(connID);
-				//if(isMasterTCP)
-				//{
-					//std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
-					//std::shared_ptr<processHandler> pPH = this->processHandlers[connID];
-					//bool accepted = (*pPH)(pCurConn);
-					//if(accepted)
-					//{
-						////this->acceptConnection(connID, )
-					//}
-				//}
-				//bool keepConn = true;
-				////bool keepConn = this->connectionProcessHandler(pCurConn);
-				//if(!keepConn) it = this->connections.erase(it);
-				//else ++it;
-			//}
-			//else ++it;
-		//}
-		//acceptor_lock.unlock();
-		//udp_lock.unlock();
+		// UDPConnections
+		LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and processing UDP Connections";
+		this->checkAndProcessUDPConnections(fdSet);
 
 		return result;
 	}

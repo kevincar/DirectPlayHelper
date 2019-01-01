@@ -70,6 +70,7 @@ namespace inet
 			bool loadFdSetUDPConnections(fd_set&) const;
 			int waitForFdSetConnections(fd_set&, double timeout) const;
 			void checkAndProcessTCPConnections(fd_set& fdSet);
+			void checkAndProcessUDPConnections(fd_set& fdSet);
 
 			int getLargestSocket(void) const;
 			int getLargestTCPSocket(void) const;

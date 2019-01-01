@@ -371,6 +371,30 @@ namespace inet
 		return;
 	}
 
+	void MasterConnection::checkAndProcessUDPConnections(fd_set& fdSet)
+	{
+		std::lock_guard<std::mutex> udpConnectionsLock {this->udp_mutex};
+		std::lock_guard<std::mutex> processHandlersLock {this->proc_mutex};
+		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
+		{
+			std::unique_ptr<UDPConnection> const& udpConnection = *it;
+			unsigned fd = static_cast<unsigned>(*udpConnection);
+			if(FD_ISSET(fd, &fdSet) != false)
+			{
+				std::unique_ptr<ProcessHandler> const& curProcHandler = this->processHandlers.at(fd);
+				bool keepConnection = (*curProcHandler)(*udpConnection);
+				if(!keepConnection)
+				{
+					it = this->udpConnections.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+		}
+	}
+
 	int MasterConnection::getLargestSocket(void) const
 	{
 		int result = -1;

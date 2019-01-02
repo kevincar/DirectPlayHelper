@@ -69,11 +69,11 @@ namespace inet
 			std::unique_ptr<std::vector<IPConnection const*> const> getAllConnections(void) const;
 
 			// Connection Processing
-			bool checkAndProcessConnections(double timeout);
+			bool checkAndProcessConnections();
 			bool loadFdSetConnections(fd_set&) const;
 			bool loadFdSetTCPConnections(fd_set&) const;
 			bool loadFdSetUDPConnections(fd_set&) const;
-			int waitForFdSetConnections(fd_set&, double timeout) const;
+			int waitForFdSetConnections(fd_set&) const;
 			void checkAndProcessTCPConnections(fd_set& fdSet);
 			void checkAndProcessUDPConnections(fd_set& fdSet);
 

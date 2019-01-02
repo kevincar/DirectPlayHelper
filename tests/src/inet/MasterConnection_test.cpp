@@ -48,6 +48,14 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 	unsigned numAcceptors = mc.getNumTCPAcceptors();
 
 	ASSERT_EQ(numAcceptors, 1u);
+
+	std::vector<inet::TCPAcceptor const*> acceptors = mc.getAcceptors();
+	inet::TCPAcceptor const* acceptor = acceptors[0];
+	int acceptorID = static_cast<int>(*acceptor);
+
+	mc.removeTCPAcceptor(acceptorID);
+
+	ASSERT_EQ(mc.getNumTCPAcceptors(), 0u);
 }
 
 TEST(MasterConnectionTest, createAndRemoveUDPConnection)

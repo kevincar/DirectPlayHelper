@@ -60,10 +60,20 @@ TEST(MasterConnectionTest, createAndRemoveAcceptorTCP)
 
 TEST(MasterConnectionTest, createAndRemoveUDPConnection)
 {
-	inet::MasterConnection mc;
+	inet::MasterConnection mc(0.5);
 
-	//std::shared_ptr<inet::MasterConnection::ProcessHandler> ph = std::make_shared<inet::MasterConnection::ProcessHandler([])
+	std::unique_ptr<inet::MasterConnection::ProcessHandler> ph = std::make_unique<inet::MasterConnection::ProcessHandler>([](inet::IPConnection const& conn)->bool{return true;});
 
-	//mc.createUDPConnection();
+	mc.createUDPConnection(ph);
+
+	//ASSERT_EQ(mc.getNumUDPConnections(), 1u);
+
+	std::vector<inet::UDPConnection const*> udpConnections = mc.getUDPConnections();
+	//inet::UDPConnection const* curUDPConn = udpConnections[0];
+	//unsigned int const curConnID = static_cast<unsigned>(*curUDPConn);
+	
+	//mc.removeUDPConnection(curConnID);
+
+	//ASSERT_EQ(mc.getNumUDPConnections(), 0u);
 }
 

@@ -130,22 +130,67 @@ namespace inet
 	{
 		std::unique_ptr<UDPConnection> newConnection = std::make_unique<UDPConnection>();
 
-		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
+		std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
+
 		UDPConnection const* pConn = newConnection.get();
 		unsigned int connectionID = static_cast<unsigned int>(*pConn);
 		this->udpConnections.push_back(std::move(newConnection));
 
-		std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
 		std::unique_ptr<ProcessHandler> ph = std::move(pPH);
 		this->processHandlers.emplace(connectionID, std::move(ph));
 
 		return 0;
 	}
 
-	//void MasterConnection::removeUDPConnection(unsigned int connID)
-	//{
-		//this->removeConnection(connID);
-	//}
+	std::vector<UDPConnection const*> MasterConnection::getUDPConnections(void) const
+	{
+		std::vector<UDPConnection const*> result;
+
+		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
+
+		for(std::unique_ptr<UDPConnection> const& curConn: this->udpConnections)
+		{
+			UDPConnection const* pCurConn = curConn.get();
+			result.push_back(pCurConn);
+		}
+
+		return result;
+	}
+
+	void MasterConnection::removeUDPConnection(unsigned int connID)
+	{
+		std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
+
+		// remove procedures firts
+		for(std::map<unsigned, std::unique_ptr<ProcessHandler>>::iterator it = this->processHandlers.begin(); it != this->processHandlers.end(); )
+		{
+			std::pair<unsigned const, std::unique_ptr<ProcessHandler> const&> curPair = *it;
+			unsigned const procConnID = curPair.first;
+			if(connID == procConnID)
+			{
+				it = this->processHandlers.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		// Remove UDPConnection
+		for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
+		{
+			std::unique_ptr<UDPConnection> const& curConn = *it;
+			unsigned const curConnID = static_cast<unsigned>(*curConn);
+			if(curConnID == connID)
+			{
+				it = this->udpConnections.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
 
 	//void MasterConnection::acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection)
 	//{
@@ -325,26 +370,28 @@ namespace inet
 
 	void MasterConnection::checkAndProcessUDPConnections(fd_set& fdSet)
 	{
-		std::lock_guard<std::mutex> udpConnectionsLock {this->udp_mutex};
-		std::lock_guard<std::mutex> processHandlersLock {this->proc_mutex};
-		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
 		{
-			std::unique_ptr<UDPConnection> const& udpConnection = *it;
-			unsigned fd = static_cast<unsigned>(*udpConnection);
-			if(FD_ISSET(fd, &fdSet) != false)
+			std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
+			for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
 			{
-				std::unique_ptr<ProcessHandler> const& curProcHandler = this->processHandlers.at(fd);
-				bool keepConnection = (*curProcHandler)(*udpConnection);
-				if(!keepConnection)
+				std::unique_ptr<UDPConnection> const& udpConnection = *it;
+				unsigned fd = static_cast<unsigned>(*udpConnection);
+				if(FD_ISSET(fd, &fdSet) != false)
 				{
-					it = this->udpConnections.erase(it);
-				}
-				else
-				{
-					++it;
+					std::unique_ptr<ProcessHandler> const& curProcHandler = this->processHandlers.at(fd);
+					bool keepConnection = (*curProcHandler)(*udpConnection);
+					if(!keepConnection)
+					{
+						it = this->udpConnections.erase(it);
+					}
+					else
+					{
+						++it;
+					}
 				}
 			}
 		}
+		return;
 	}
 
 	int MasterConnection::getLargestSocket(void) const

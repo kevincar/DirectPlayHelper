@@ -105,7 +105,7 @@ namespace inet
 		return result;
 	}
 
-	void MasterConnection::removeTCPAcceptor(int acceptorID)
+	void MasterConnection::removeTCPAcceptor(unsigned int acceptorID)
 	{
 		// Is there an easy way to shut down the acceptor?
 		// I suppose we'll simply try it and see how it goes
@@ -114,7 +114,7 @@ namespace inet
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
 		{
 			TCPAcceptor const* curAcceptor = &(*it->get());
-			int curAcceptorID = *curAcceptor;
+			unsigned int curAcceptorID = static_cast<unsigned>(*curAcceptor);
 			if(acceptorID == curAcceptorID)
 			{
 				it = this->acceptors.erase(it);
@@ -230,10 +230,9 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	bool MasterConnection::checkAndProcessConnections()
+	void MasterConnection::checkAndProcessConnections()
 	{
 		fd_set fdSet;
-		bool result = false;
 		unsigned int nConnections = 0;
 		
 		// Only continue if there are connections to check
@@ -243,7 +242,7 @@ namespace inet
 		if(nConnections < 1)
 		{
 			//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - No connections to check";
-			return true;
+			return;
 		}
 
 		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - loading fd_set connections";
@@ -256,7 +255,7 @@ namespace inet
 		if(connectionsWaiting < 1)
 		{
 			//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - no connections waiting with data";
-			return false;
+			return;
 		}
 
 		// TCPAcceptors
@@ -267,7 +266,7 @@ namespace inet
 		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and processing UDP Connections";
 		this->checkAndProcessUDPConnections(fdSet);
 
-		return result;
+		return;
 	}
 
 	bool MasterConnection::loadFdSetConnections(fd_set& fdSet) const

@@ -192,37 +192,6 @@ namespace inet
 		}
 	}
 
-	//void MasterConnection::acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection)
-	//{
-		//// Obtain the process handler this connection will use as defined by
-		//// the master
-		//std::lock_guard<std::mutex> mcproc_lock {this->mcproc_mutex};
-		//std::shared_ptr<processHandler> childPH = this->masterChildProcessHandlers[masterID];
-
-		//// Add the connection with the appropriate processHandler
-		//unsigned int connID = this->addConnection(newTCPConnection, childPH);
-
-		//// Add the child connection ID to the masterChild List
-		//std::lock_guard<std::mutex> masterTCPList_lock {this->masterTCPList_mutex};
-		//this->masterTCPList[masterID].emplace_back(connID);
-	//}
-
-	//std::shared_ptr<TCPConnection> const MasterConnection::answerIncomingConnection(void) const
-	//{
-		////sockaddr_in addr {};
-		////unsigned int addrsize = sizeof(sockaddr_in);
-
-		////int newSocket = ::accept(*this->socket.get(), (sockaddr*)&addr, &addrsize);
-		////if(newSocket == -1)
-		////{
-			////std::cout << "MasterConnection::listen Failed to accept incoming connection " << errno << std::endl;
-		////}
-
-		//// Assemble the data into a new TCPConnection object
-		////return std::make_shared<TCPConnection>(newSocket, static_cast<TCPConnection const&>(*this), addr);
-		//return std::make_shared<TCPConnection>();
-	//}
-
 	void MasterConnection::stopListening(void)
 	{
 		std::lock_guard<std::mutex> listenThreadLock {this->listeningThread_mutex};
@@ -248,7 +217,7 @@ namespace inet
 		 //Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
-			this->checkAndProcessConnections(this->timeout);
+			this->checkAndProcessConnections();
 		}
 	}
 
@@ -261,7 +230,7 @@ namespace inet
 		this->listeningThread = std::thread([=]{this->beginListening();});
 	}
 
-	bool MasterConnection::checkAndProcessConnections(double timeout)
+	bool MasterConnection::checkAndProcessConnections()
 	{
 		fd_set fdSet;
 		bool result = false;
@@ -280,7 +249,7 @@ namespace inet
 		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - loading fd_set connections";
 		this->loadFdSetConnections(fdSet);
 		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - calling select...";
-		int connectionsWaiting = this->waitForFdSetConnections(fdSet, timeout);
+		int connectionsWaiting = this->waitForFdSetConnections(fdSet);
 		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - select finished";
 
 		// Only continue if there are connections waiting
@@ -335,13 +304,13 @@ namespace inet
 		return true;
 	}
 
-	int MasterConnection::waitForFdSetConnections(fd_set& fdSet, double timeout) const
+	int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const
 	{
 		struct timeval tv;
 		int largestFD = this->getLargestSocket();
 
 		// Set timeout
-		int seconds = static_cast<int>(floor(timeout));
+		int seconds = static_cast<int>(floor(this->timeout));
 		double remainder = timeout - seconds;
 		double remainder_us = remainder * 1e6;
 		int microseconds = static_cast<int>(floor(remainder_us));

@@ -30,7 +30,7 @@ namespace inet
 			// TCP Connection Control
 			unsigned int createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH);
 			std::vector<TCPAcceptor const*> getAcceptors(void) const;
-			void removeTCPAcceptor(int acceptConnID);
+			void removeTCPAcceptor(unsigned int acceptConnID);
 
 			// UDP Connection Control
 			unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>& pPH);
@@ -68,20 +68,17 @@ namespace inet
 			std::unique_ptr<std::vector<IPConnection const*> const> getAllConnections(void) const;
 
 			// Connection Processing
-			bool checkAndProcessConnections();
 			bool loadFdSetConnections(fd_set&) const;
 			bool loadFdSetTCPConnections(fd_set&) const;
 			bool loadFdSetUDPConnections(fd_set&) const;
 			int waitForFdSetConnections(fd_set&) const;
+			void checkAndProcessConnections();
 			void checkAndProcessTCPConnections(fd_set& fdSet);
 			void checkAndProcessUDPConnections(fd_set& fdSet);
 
 			int getLargestSocket(void) const;
 			int getLargestTCPSocket(void) const;
 			int getLargestUDPSocket(void) const;
-
-			void removeConnection(unsigned int connID);
-			bool isConnMasterTCP(unsigned int connID) const;
 	};
 }
 

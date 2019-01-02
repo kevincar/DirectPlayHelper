@@ -31,7 +31,6 @@ namespace inet
 			unsigned int createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH);
 			std::vector<TCPAcceptor const*> getAcceptors(void) const;
 			void removeTCPAcceptor(int acceptConnID);
-			void acceptConnection(unsigned int masterID, std::shared_ptr<TCPConnection> const& newTCPConnection);
 
 			// UDP Connection Control
 			unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>& pPH);

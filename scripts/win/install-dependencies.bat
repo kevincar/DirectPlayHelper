@@ -16,3 +16,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 12" ..
 
 echo "Building g3log"
 msbuild g3log.sln /p:Configuration=Release /p:Platform=Win32
+
+cd ..
+cd ..

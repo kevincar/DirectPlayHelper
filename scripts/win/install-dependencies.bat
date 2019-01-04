@@ -9,4 +9,4 @@ mkdir build
 cd build
 
 cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 12" ..
-msbuild g3log.sln /p:Configuration=Release
+msbuild g3log.sln /p:Configuration=Release /p:Platform=Win32

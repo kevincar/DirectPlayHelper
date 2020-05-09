@@ -51,6 +51,6 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 # Link dependencies
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
-		#g3logger
+		g3log
 		#inet
 		gtest_main)

@@ -3,6 +3,7 @@
 #define INET_TCP_ACCEPTOR
 
 #include <vector>
+#include <functional>
 #include "inet/TCPConnection.hpp"
 
 namespace inet

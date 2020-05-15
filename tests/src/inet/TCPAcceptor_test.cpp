@@ -49,7 +49,7 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 		//LOG(DEBUG) << "Server: initializting...";
 		inet::TCPAcceptor tcpa(acceptHandler, processHandler);
 		//LOG(DEBUG) << "Server: main listening fd is " << static_cast<int>(tcpa);
-		tcpa.setAddress("0.0.0.0:0");
+		tcpa.setAddress("127.0.0.1:0");
 		{
 			std::lock_guard<std::mutex> serverAddressLock {serverAddressMutex};
 			serverAddress = tcpa.getAddressString();
@@ -257,7 +257,7 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove)
 			// Set up server
 			//std::cout << "Server: Starting..." << std::endl;
 			inet::TCPAcceptor tcpa{acceptHandler, processHandler};
-			tcpa.setAddress("0.0.0.0:0");
+			tcpa.setAddress("127.0.0.1:0");
 			{
 				std::lock_guard<std::mutex> addressLock{addressMutex};
 				serverAddress = tcpa.getAddressString();
@@ -346,7 +346,7 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove)
 			});
 
 	std::thread client([&]{
-			//std::cout << "Client: starting..." << std::endl;
+			////std::cout << "Client: starting..." << std::endl;
 			inet::TCPConnection tcp{};
 			std::unique_lock<std::mutex> statusLock {statusMutex};
 			//std::cout << "Client: Waiting for server to start" << std::endl;
@@ -410,7 +410,7 @@ TEST(TCPAcceptorTest, checkAndProcessConnections)
 	std::condition_variable statusCV;
 
 	// Server
-	std::string serverAddress {"0.0.0.0:0"};
+	std::string serverAddress {"127.0.0.1:0"};
 	std::mutex serverAddressMutex;
 	std::unique_ptr<std::thread> serverThread = startTestServer(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
 

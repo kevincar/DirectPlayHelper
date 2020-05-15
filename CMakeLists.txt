@@ -8,16 +8,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-# G3Logger the package cmake script doesn't add the library we'll do that here
-#find_package(g3logger REQUIRED CONFIG)
-#add_library(g3logger STATIC IMPORTED)
-#set_target_properties(g3logger PROPERTIES IMPORTED_LOCATION ${G3LOG_LIBRARIES})
-#message(STATUS "g3logger libraries: ${G3LOG_INCLUDE_DIRS}")
+#####################################################################
+#																	#
+#						DEPENDENCIES								#
+#																	#
+#####################################################################
+
 ExternalProject_Add(g3log_project
 	GIT_REPOSITORY https://github.com/KjellKod/g3log
 	GIT_TAG master
 	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/g3log"
-	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/g3log -DG3_SHARED_LIB=OFF
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/g3log -DG3_SHARED_LIB=OFF -DUSE_DYNAMIC_LOGGING_LEVELS=ON
 	)
 ExternalProject_Get_Property(g3log_project install_dir)
 message(STATUS "g3log installation directory: ${install_dir}")
@@ -30,11 +31,17 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
 
+#####################################################################
+#																	#
+#							PROGRAM									#
+#																	#
+#####################################################################
+
 # build the app
 add_executable("${PROJECT_NAME}"
 	src/main.cpp
-	#src/DPServer.cpp
-	#src/ArgParser.cpp
+	src/DPServer.cpp
+	src/ArgParser.cpp
 	)
 
 # Includes
@@ -45,13 +52,17 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 		)
 
 # build the inet library
-#add_subdirectory(src/inet)
+add_subdirectory(src/inet)
 
 # Link dependencies
+if(WIN32)
+	set(ws2_32 ws2_32.lib)
+endif()
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		g3log
-		#inet
+		"${ws2_32}"
+		inet
 		)
 
 # Oh yeah, and add the tests

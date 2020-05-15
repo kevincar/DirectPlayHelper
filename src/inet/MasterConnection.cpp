@@ -1,12 +1,18 @@
+#include "inet/MasterConnection.hpp"
+
 #include <iostream>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/time.h>
+
+#ifdef HAVE_SELECT_H
+#include <sys/select.h>
+#endif /* HAVE_SELECT_H */
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif /* HAVE_WINSOCK2_H */
+
 #include <g3log/g3log.hpp>
-#include "inet/MasterConnection.hpp"
 
 namespace inet
 {
@@ -96,7 +102,7 @@ namespace inet
 		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		std::vector<TCPAcceptor const*> result {};
 
-		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
+		for(std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
 			TCPAcceptor const* curAcceptor = &(*it->get());
 			result.push_back(curAcceptor);
@@ -340,7 +346,7 @@ namespace inet
 	{
 		{
 			std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
-			for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
+			for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
 			{
 				std::unique_ptr<UDPConnection> const& udpConnection = *it;
 				unsigned fd = static_cast<unsigned>(*udpConnection);
@@ -387,7 +393,7 @@ namespace inet
 		int result = -1;
 
 		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
-		for(std::vector<std::unique_ptr<TCPAcceptor> const>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
+		for(std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
 			TCPAcceptor const* curAcceptor = it->get();
 			int curAcceptorLargestSocket = curAcceptor->getLargestSocket();
@@ -405,7 +411,7 @@ namespace inet
 		int result = -1;
 
 		std::lock_guard<std::mutex> udpConnLock {this->udp_mutex};
-		for(std::vector<std::unique_ptr<UDPConnection> const>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
+		for(std::vector<std::unique_ptr<UDPConnection>>::const_iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
 			UDPConnection const* curConn = it->get();
 			int curConnSocket = *curConn;

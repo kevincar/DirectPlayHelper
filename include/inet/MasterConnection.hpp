@@ -2,6 +2,8 @@
 #ifndef INET_MASTER_CONNECTION_HPP
 #define INET_MASTER_CONNECTION_HPP
 
+#include "inet/config.hpp"
+
 #include <map>
 #include <vector>
 #include "inet/TCPConnection.hpp"
@@ -65,7 +67,7 @@ namespace inet
 			void beginListening();
 			void startListening();
 
-			std::unique_ptr<std::vector<IPConnection const*> const> getAllConnections(void) const;
+			std::unique_ptr<std::vector<IPConnection const*>> getAllConnections(void) const;
 
 			// Connection Processing
 			bool loadFdSetConnections(fd_set&) const;

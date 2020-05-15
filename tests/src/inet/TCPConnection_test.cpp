@@ -1,6 +1,12 @@
-#include <arpa/inet.h>
 #include "inet/TCPConnection.hpp"
 #include "gtest/gtest.h"
+
+#ifdef HAVE_ARPA_INET_H
+#include "arpa/inet.h"
+#endif /* HAVE_ARPA_INET_H */
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif /* HAVE_WS2TCPIP_H */
 
 TEST(TCPConnectionTest, Constructor)
 {
@@ -17,8 +23,9 @@ TEST(TCPConnectionTest, Constructor)
 	unsigned int port = 8080;
 	sockaddr_in addr {};
 	addr.sin_family = AF_INET;
-	int inet_aton_result = ::inet_aton(ipAddress.data(), &addr.sin_addr);
-	ASSERT_NE(inet_aton_result, 0);
+	int aton_result = INET_ATON(ipAddress, &addr.sin_addr);
+	ASSERT_NE(aton_result, ATON_ERROR);
+
 	addr.sin_port = htons(port);
 	
 	EXPECT_NO_THROW({
@@ -44,6 +51,7 @@ TEST(TCPConnectionTest, setAddress)
 TEST(TCPConnectionTest, listen)
 {
 	inet::TCPConnection tcpc;
+	tcpc.setAddress("0.0.0.0:0");
 	ASSERT_NO_THROW({
 			tcpc.listen();
 			});
@@ -63,7 +71,7 @@ TEST(TCPConnectionTest, isDataReady)
 
 		// Start our server
 		inet::TCPConnection tcp_server {};
-		tcp_server.setAddress("0.0.0.0:0");
+		tcp_server.setAddress("127.0.0.1:0");
 		{
 			tcp_server.listen();
 			std::lock_guard<std::mutex> addressLock {serverAddress_mutex};
@@ -98,6 +106,7 @@ TEST(TCPConnectionTest, isDataReady)
 		{
 			std::lock_guard<std::mutex> addressLock {serverAddress_mutex};
 			connect_result = tcp_client.connect(serverAddress);
+			EXPECT_EQ(connect_result, 0);
 		}
 		status = "Client Connect Attempt";
 		statusLock.unlock();
@@ -118,7 +127,7 @@ TEST(TCPConnectionTest, connect)
 {
 	inet::TCPConnection tcpc;
 	int result = tcpc.connect("127.0.0.1:2300");
-	ASSERT_EQ(result == 61 || result == 60, true);
+	ASSERT_EQ(result == ERR(ETIMEDOUT) || result == ERR(ECONNREFUSED), true);
 }
 
 TEST(TCPConnectionTest, castInt)

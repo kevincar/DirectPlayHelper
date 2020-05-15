@@ -25,18 +25,18 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 
 # Make the test executable
 add_executable("${TEST_PROJECT_NAME}"
-	#../src/DPServer.cpp
-	#../src/ArgParser.cpp
+	../src/DPServer.cpp
+	../src/ArgParser.cpp
 
 	./src/main_test.cpp
-	#./src/DPServer_test.cpp
-	#./src/ArgParser_test.cpp
-	#./src/inet/Socket_test.cpp
-	#./src/inet/ServiceAddress_test.cpp
-	#./src/inet/TCPConnection_test.cpp
-	#./src/inet/UDPConnection_test.cpp
-	#./src/inet/TCPAcceptor_test.cpp
-	#./src/inet/MasterConnection_test.cpp
+	./src/DPServer_test.cpp
+	./src/ArgParser_test.cpp
+	./src/inet/Socket_test.cpp
+	./src/inet/ServiceAddress_test.cpp
+	./src/inet/TCPConnection_test.cpp
+	./src/inet/UDPConnection_test.cpp
+	./src/inet/TCPAcceptor_test.cpp
+	./src/inet/MasterConnection_test.cpp
 	)
 
 # Includes
@@ -45,12 +45,13 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 		../include
 		./include
 		"${gtest_SOURCE_DIR}/include"
-		#${G3LOG_INCLUDE_DIRS}
+		"${install_dir}/include"
 		)
 
 # Link dependencies
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		g3log
-		#inet
+		"${ws2_32}"
+		inet
 		gtest_main)

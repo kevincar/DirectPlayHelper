@@ -51,8 +51,9 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 		"${install_dir}/include"
 		)
 
-# build the inet library
+# build the libraries
 add_subdirectory(src/inet)
+add_subdirectory(src/nathp)
 
 # Link dependencies
 if(WIN32)
@@ -63,6 +64,7 @@ target_link_libraries("${PROJECT_NAME}"
 		g3log
 		"${ws2_32}"
 		inet
+		nathp
 		)
 
 # Oh yeah, and add the tests

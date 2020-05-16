@@ -37,6 +37,8 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/inet/UDPConnection_test.cpp
 	./src/inet/TCPAcceptor_test.cpp
 	./src/inet/MasterConnection_test.cpp
+
+	./src/nathp/Server_test.cpp
 	)
 
 # Includes

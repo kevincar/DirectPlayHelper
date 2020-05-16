@@ -1,6 +1,18 @@
 
+#include "inet/config.hpp"
+
 #include <memory>
+
+#ifdef HAVE_ARPA_INET_H
 #include "arpa/inet.h"
+#endif /* HAVE_ARPA_INET_H */
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif /* HAVE_WS2TCPIP_H */
+#endif /* HAVE_WINSOCK2_H */
+
 #include "inet/ServiceAddress.hpp"
 #include "inet/Socket.hpp"
 #include "gtest/gtest.h"
@@ -27,7 +39,13 @@ TEST(ServiceAddressTest, constructor)
 	addr.sin_family = AF_INET;
 	std::string ipAddress = "10.0.0.2";
 	unsigned int port = 47624;
+#ifdef HAVE_ARPA_INET_H
 	int inet_aton_result = ::inet_aton(ipAddress.data(), &addr.sin_addr);
+#endif /* HAVE_ARPA_INET_H */
+#ifdef HAVE_WS2TCPIP_H
+	std::wstring wIPAddress = std::wstring(ipAddress.begin(), ipAddress.end());
+	int inet_aton_result = InetPtonW(AF_INET, wIPAddress.c_str(), &addr.sin_addr);
+#endif /* HAVE_WS2TCPIP_H */
 	addr.sin_port = htons(port);
 
 	ASSERT_NE(inet_aton_result, 0);

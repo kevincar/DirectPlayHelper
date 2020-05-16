@@ -33,9 +33,9 @@ TEST(UDPConnection, sendAndRecv)
 		ASSERT_EQ(bytes_sent, -1);
 
 		int result = udpc.connect(worker2_address);
-		EXPECT_EQ(result, 0);
+		EXPECT_EQ(result, 0) << ("failed to connect to: " + worker2_address);
 		bytes_sent = udpc.send(data.data(), static_cast<unsigned int>(data.size()));
-		EXPECT_GT(bytes_sent, 0);
+		EXPECT_GT(bytes_sent, 0) << ("sending error: " + std::to_string(ERRORCODE));
 
 		status = "data sent";
 		lk.unlock();
@@ -58,7 +58,7 @@ TEST(UDPConnection, sendAndRecv)
 		cv.wait(lk, [&]{return status == "worker1 ready";});
 
 		inet::UDPConnection udpc {};
-		udpc.setAddress("0.0.0.0:0");
+		udpc.setAddress("127.0.0.1:0");
 		worker2_address = udpc.getAddressString();
 		
 		status = "worker 2 ready";

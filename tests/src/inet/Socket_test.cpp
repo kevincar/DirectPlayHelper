@@ -1,4 +1,12 @@
+#include "inet/config.hpp"
+
+#ifdef HAVE_SOCKET_H
 #include <sys/socket.h>
+#endif /* HAVE_SOCKET_H */
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif /* HAVE_WINSOCK2_H */
+
 #include "inet/Socket.hpp"
 #include "gtest/gtest.h"
 
@@ -21,13 +29,15 @@ TEST(SocketTest, captureConstructor)
 			});
 }
 
-TEST(SocketTest, listen)
-{
-	inet::Socket socket(AF_INET, SOCK_STREAM, 0);
-	EXPECT_NO_THROW({
-			socket.listen();
-			});
-}
+// Until we test for bound sockets we shouldn't test for this
+//TEST(SocketTest, listen)
+//{
+	//// This should throw on unbound sockets
+	//inet::Socket socket(AF_INET, SOCK_STREAM, 0);
+	//EXPECT_THROW({
+			//socket.listen();
+			//});
+//}
 
 TEST(SocketTest, operatorInt)
 {

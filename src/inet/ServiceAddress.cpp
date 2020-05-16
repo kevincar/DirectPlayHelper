@@ -1,9 +1,20 @@
 
+#include "inet/config.hpp"
+
 #include <vector>
 #include <iostream>
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
+
+#ifdef HAVE_ARPA_INET_H
 #include "arpa/inet.h"
+#endif /* HAVE_ARPA_INET_H */
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif /* HAVE_WS2TCPIP_H */
+#endif /* HAVE_WINSOCK2_H */
 
 namespace inet
 {
@@ -50,7 +61,7 @@ namespace inet
 
 	void ServiceAddress::setAddressString(std::string const& address)
 	{
-		std::vector<std::string const> const ipAndPort = getIPandPort(address);
+		std::vector<std::string> const ipAndPort = getIPandPort(address);
 		std::string const IPAddressString = ipAndPort.at(0);
 		std::string const portString = ipAndPort.at(1);
 
@@ -64,11 +75,26 @@ namespace inet
 	void ServiceAddress::setIPAddressString(std::string const& IPAddress)
 	{
 		std::lock_guard<std::mutex> lock(this->addr_mutex);
-		int result = ::inet_aton(IPAddress.data(), &this->addr.sin_addr);
-		if(result == 0)
+		int result = INET_ATON(IPAddress, &this->addr.sin_addr);
+		if(result == ATON_ERROR)
 		{
-			throw std::out_of_range(IPAddress + std::string(" is an invalid IP Address"));
+			throw std::out_of_range(IPAddress + std::string(" is an invalid IP Address. error: ") + std::to_string(ERRORCODE));
 		}
+//#ifdef HAVE_ARPA_INET_H
+		//int result = ::inet_aton(IPAddress.data(), &this->addr.sin_addr);
+//#endif [> HAVE_ARPA_INET_H <]
+//#ifdef HAVE_WS2TCPIP_H
+		//std::wstring wIPAddress = std::wstring(IPAddress.begin(), IPAddress.end());
+		//int result = InetPtonW(AF_INET, wIPAddress.c_str(), &this->addr.sin_addr);
+		//if (result == -1)
+		//{
+			//throw std::logic_error(IPAddress + std::string(" error: ") + std::to_string(ERRORCODE));
+		//}
+//#endif [> HAVE_ARPA_INET_H <]
+		//if(result == 0)
+		//{
+			//throw std::out_of_range(IPAddress + std::string(" is an invalid IP Address"));
+		//}
 	}
 
 	void ServiceAddress::setPortString(std::string const& port)
@@ -99,7 +125,7 @@ namespace inet
 		return (sockaddr const*)&this->addr;
 	}
 
-	std::vector<std::string const> const ServiceAddress::getIPandPort(std::string const AddressString)
+	std::vector<std::string> const ServiceAddress::getIPandPort(std::string const AddressString)
 	{
 		std::string::size_type const colonPosition = AddressString.find(":");
 		if(colonPosition == std::string::npos)
@@ -108,7 +134,7 @@ namespace inet
 		}
 		std::string const IPAddress = AddressString.substr(0, colonPosition);
 		std::string const port = AddressString.substr(colonPosition+1);
-		std::vector<std::string const> const result {IPAddress, port};
+		std::vector<std::string> const result {IPAddress, port};
 		return result;
 	}
 }

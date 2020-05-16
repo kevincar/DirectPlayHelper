@@ -59,16 +59,16 @@ namespace inet
 	TCPConnection const& TCPAcceptor::accept(void)
 	{
 		sockaddr_in peerAddr;
-		socklen_t addrSize = 0;
+		SOCKLEN addrSize = sizeof(sockaddr_in);
 		this->listen();
 		int capturedSocket = ::accept(static_cast<int>(*this), reinterpret_cast<sockaddr *>(&peerAddr), &addrSize);
 
 		if(capturedSocket <= -1)
 		{
-			int err = errno;
-			throw std::out_of_range(std::string("TCPAcceptor::accept - Failed to accept connection ") + std::to_string(err));
+			throw std::out_of_range(std::string("TCPAcceptor::accept - Failed to accept connection ") + std::to_string(ERRORCODE));
 		}
 
+		//std::cout << "about to make a new TCPConnection from new socket..." << std::endl;
 		std::unique_ptr<TCPConnection> pNewConn = std::make_unique<TCPConnection>(capturedSocket, *this, peerAddr);
 
 		std::lock_guard<std::mutex> acceptLock {this->acceptHandler_mutex};

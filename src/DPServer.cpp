@@ -24,10 +24,13 @@ void DPServer::processArgs(void)
 		return this->usage();
 	}
 
-	for(unsigned int i = 0; i < this->args.size(); i++) {
+	for(unsigned int i = 0; i < this->args.size(); i++)
+	{
 		std::string curArg = this->args[i];
+		LOG(DEBUG) << "Processing Arg: " << curArg;
 		if( (curArg == "-s") || (curArg == "--server") )
 		{
+			LOG(DEBUG) << "Server argument found";
 			if(this->setAppState(SERVER) == false)
 			{
 				LOG(INFO) << "DPServer state has already been set";
@@ -37,6 +40,7 @@ void DPServer::processArgs(void)
 		}
 		else if( (curArg == "-c") || (curArg == "--client") )
 		{
+			LOG(DEBUG) << "Client argument found";
 			if(this->setAppState(CLIENT) == false)
 			{
 				LOG(INFO) << "DPServer state has already been set";
@@ -51,7 +55,8 @@ void DPServer::processArgs(void)
 				return;
 			}
 
-			std::string potentialHostIPAddress = this->args[i+1];
+			std::string potentialHostIPAddress = (i+1 >= this->args.size()) ? "" : this->args[i+1];
+			LOG(DEBUG) << "Potential Host Address: \"" << potentialHostIPAddress << "\"";
 			std::regex pattern("([0-9]+\\.){3}[0-9]+");
 			bool match = std::regex_match(potentialHostIPAddress, pattern);
 			if(match == false)
@@ -66,6 +71,7 @@ void DPServer::processArgs(void)
 		}
 		else if( (curArg == "-p") || (curArg == "--port") )
 		{
+			LOG(DEBUG) << "Port argument found";
 			if(i == this->args.size())
 			{
 				LOG(INFO) << "Port flag used but no port number provided";

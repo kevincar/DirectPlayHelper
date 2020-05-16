@@ -1,6 +1,14 @@
+#include "inet/config.hpp"
+
+#ifdef HAVE_SOCKET_H
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#endif /* HAVE_SOCKET_H */
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif /* HAVE_WINSOCK2_H */
+
 #include <cmath>
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
@@ -40,15 +48,18 @@ namespace inet
 			int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
 			if(result == -1)
 			{
-				throw std::out_of_range(std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno));
+				throw std::out_of_range(std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(ERRORCODE));
 			}
 		}
 
 		// using ADDR_ANY will result in a random assignment so update to be accurate
-		if(address == "0.0.0.0:0")
-		{
-			this->updateSrcAddr();
-		}
+		// Removed the condition because 0.0.0.0 and 127.0.0.1 behave
+		// differently on different OS's so it's better to just update the
+		// address to however the OS interpreted it
+		//if(address == "0.0.0.0:0")
+		//{
+		this->updateSrcAddr();
+		//}
 	}
 
 	void IPConnection::listen(void)
@@ -78,7 +89,7 @@ namespace inet
 		int result = ::select(this->socket+1, &fs, nullptr, nullptr, &tv);
 		if(result == -1)
 		{
-			throw std::out_of_range(std::string("IPConnection::isDataReady failed with errno: ") + std::to_string(errno));
+			throw std::out_of_range(std::string("IPConnection::isDataReady failed with errno: ") + std::to_string(ERRORCODE));
 		}
 
 		return FD_ISSET(this->socket, &fs);
@@ -93,9 +104,9 @@ namespace inet
 		// connect to the address
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
 		int result = ::connect(this->socket, this->destAddress, sizeof(sockaddr_in));
-		if(result == -1)
+		if(result == SOCKET_ERROR)
 		{
-			return errno;
+			return ERRORCODE;
 		}
 
 
@@ -124,11 +135,11 @@ namespace inet
 	void IPConnection::updateSrcAddr(void)
 	{
 		std::lock_guard<std::mutex> addr_lock {this->srcAddr_mutex};
-		unsigned int addrlen {sizeof(sockaddr_in)};
+		SOCKLEN addrlen {sizeof(sockaddr_in)};
 		int result = ::getsockname(this->socket, this->srcAddress, &addrlen);
 		if(result == -1)
 		{
-			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno));
+			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(ERRORCODE));
 		}
 	}
 }

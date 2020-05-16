@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
-#include <g3log/g3log.hpp>
-#include <g3log/logworker.hpp>
+#include "g3log/g3log.hpp"
+#include "g3log/logworker.hpp"
 #include "DPServer.hpp"
 #include "CustomSink.hpp"
 
@@ -14,8 +14,12 @@ int main(int argc, char const* argv[])
 	g3::initializeLogging(logWorker.get());
 
 
-	std::unique_ptr<DPServer> app = std::unique_ptr<DPServer>(new DPServer(argc, argv)); 
-	app->start();
+	//std::unique_ptr<DPServer> app = std::unique_ptr<DPServer>(new DPServer(argc, argv)); 
+	//app->start();
+	
+
+	LOG(DEBUG) << "Hello, World!";
+	//std::cout << "Hello, world!" << std::endl;
 
 	return 0;
 }

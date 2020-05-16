@@ -2,9 +2,19 @@
 #ifndef INET_IP_CONNECTION_HPP
 #define INET_IP_CONNECTION_HPP
 
+#include "inet/config.hpp"
+
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
 #include <memory>
+
+#ifdef HAVE_SOCKET_H
+#define SOCKLEN socklen_t
+#endif /* HAVE_SOCKET_H */
+#ifdef HAVE_WINSOCK2_H
+#define SOCKLEN int
+#endif /* HAVE_WINSOCK2_H */
+
 
 namespace inet
 {

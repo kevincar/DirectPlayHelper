@@ -1,5 +1,4 @@
 
-#include "sys/socket.h"
 #include "inet/TCPConnection.hpp"
 
 namespace inet

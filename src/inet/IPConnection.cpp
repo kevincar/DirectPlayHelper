@@ -48,7 +48,7 @@ namespace inet
 			int result = ::bind(this->socket, this->srcAddress, sizeof(sockaddr_in));
 			if(result == -1)
 			{
-				throw std::out_of_range(std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(errno));
+				throw std::out_of_range(std::string("IPConnection::setAddress Failed to set address binding: ") + std::to_string(ERRORCODE));
 			}
 		}
 
@@ -139,7 +139,7 @@ namespace inet
 		int result = ::getsockname(this->socket, this->srcAddress, &addrlen);
 		if(result == -1)
 		{
-			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(errno));
+			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(ERRORCODE));
 		}
 	}
 }

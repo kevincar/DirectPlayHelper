@@ -326,7 +326,7 @@ namespace inet
 		int retval = ::select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
 		if(retval == -1) {
-			throw std::logic_error(std::string("MasterConnection::waitForFdSetConnections - failed to select! ERR CODE: ") + std::to_string(errno));
+			throw std::logic_error(std::string("MasterConnection::waitForFdSetConnections - failed to select! ERR CODE: ") + std::to_string(ERRORCODE));
 		}
 
 		return retval;

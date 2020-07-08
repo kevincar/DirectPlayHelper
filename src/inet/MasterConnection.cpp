@@ -87,14 +87,13 @@ namespace inet
 		return result;
 	}
 
-	unsigned int MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
+	TCPAcceptor* MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
 		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		TCPAcceptor* acceptor = new TCPAcceptor(pAcceptPH, pChildPH);
 		std::unique_ptr<TCPAcceptor> pAcceptor {std::move(acceptor)};
 		this->acceptors.push_back(std::move(pAcceptor));
-
-		return 0;
+		return this->acceptors.back().get();
 	}
 
 	std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const

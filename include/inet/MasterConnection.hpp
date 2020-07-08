@@ -18,7 +18,7 @@ namespace inet
 			typedef std::function<bool (IPConnection const&)> ProcessHandler;
 			
 			MasterConnection(double const t = 5.0);
-			~MasterConnection(void);
+			virtual ~MasterConnection(void);
 
 			// Listening Control
 			bool isListening(void) const;
@@ -30,7 +30,7 @@ namespace inet
 			unsigned int getNumConnections(void) const;
 
 			// TCP Connection Control
-			unsigned int createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH);
+			TCPAcceptor* createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH);
 			std::vector<TCPAcceptor const*> getAcceptors(void) const;
 			void removeTCPAcceptor(unsigned int acceptConnID);
 

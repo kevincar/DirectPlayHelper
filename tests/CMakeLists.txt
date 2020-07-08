@@ -39,6 +39,7 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/inet/MasterConnection_test.cpp
 
 	./src/nathp/Server_test.cpp
+	./src/nathp/Packet_test.cpp
 	)
 
 # Includes
@@ -56,4 +57,5 @@ target_link_libraries("${TEST_PROJECT_NAME}"
 		g3log
 		"${ws2_32}"
 		inet
+		nathp
 		gtest_main)

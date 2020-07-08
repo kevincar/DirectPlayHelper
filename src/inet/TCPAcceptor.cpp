@@ -108,13 +108,6 @@ namespace inet
 		{
 			bool accepted = false;
 			TCPConnection const& newConnection = this->accept();
-
-			std::lock_guard<std::mutex> acceptLock{this->acceptHandler_mutex};
-			{
-				accepted = this->acceptHandler(newConnection);
-				
-				// TODO: false acceptions should remove the connection
-			}
 		}
 		
 		// Check and Process Children

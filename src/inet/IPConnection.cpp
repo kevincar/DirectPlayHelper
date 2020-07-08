@@ -1,5 +1,7 @@
 #include "inet/config.hpp"
 
+#include <iostream>
+
 #ifdef HAVE_SOCKET_H
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -16,12 +18,23 @@
 
 namespace inet
 {
-	IPConnection::IPConnection(int type, int protocol) : socket(AF_INET, type, protocol) { }
+	IPConnection::IPConnection(int type, int protocol) : socket(AF_INET, type, protocol)
+	{
+		this->configureSocket();
+	}
 
 	IPConnection::IPConnection(int capture, int type, int protocol, IPConnection const& parentConnection, sockaddr_in& destAddr) :
 		socket(capture, AF_INET, type, protocol),
 		srcAddress(parentConnection.srcAddress.getAddressString()),
 		destAddress(destAddr) { }
+
+	IPConnection::~IPConnection()
+	{
+		if(this->handlerProcess.joinable())
+		{
+			this->endHandlerProcess();
+		}
+	}
 
 	std::string const IPConnection::getAddressString(void) const
 	{
@@ -33,6 +46,12 @@ namespace inet
 	{
 		std::lock_guard<std::mutex> lock {this->srcAddr_mutex};
 		return this->srcAddress.getIPAddressString();
+	}
+
+	std::string const IPConnection::getDestAddressString(void) const
+	{
+		std::lock_guard<std::mutex> lock {this->destAddr_mutex};
+		return this->destAddress.getAddressString();
 	}
 
 	void IPConnection::setAddress(std::string const& address)
@@ -127,6 +146,38 @@ namespace inet
 		return static_cast<int>(result);
 	}
 
+	bool IPConnection::isDone(void) const
+	{
+		std::lock_guard<std::mutex> done_lock {this->done_mutex};
+		return this->done;
+	}
+
+	void IPConnection::startHandlerProcess(ConnectionHandler const& connectionHandler)
+	{
+		if(this->handlerProcess.joinable()) return;
+		this->handlerProcess = std::thread([&]{
+			while(!this->isDone())
+			{
+				bool toContinue = connectionHandler(*this);
+				if(!toContinue)
+				{
+					break;
+				}
+			}
+
+			while(!this->isDone()){}
+		});
+	}
+
+	void IPConnection::endHandlerProcess(void)
+	{
+		{
+			std::lock_guard<std::mutex> done_lock {this->done_mutex};
+			this->done = true;
+		}
+		this->handlerProcess.join();			
+	}
+
 	IPConnection::operator int const() const
 	{
 		return static_cast<int>(this->socket);
@@ -140,6 +191,19 @@ namespace inet
 		if(result == -1)
 		{
 			throw std::out_of_range(std::string("IPConnection::listen failed to update address after listen: ") + std::to_string(ERRORCODE));
+		}
+	}
+
+	void IPConnection::configureSocket(void)
+	{
+		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
+		int value = 1;
+		unsigned int value_size = sizeof(value);
+		int result = ::getsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &value, &value_size);
+		std::cout << "MOM" << std::endl;
+		if(result == SOCKET_ERROR)
+		{
+			throw std::out_of_range(std::string("IPConnection::configureSocket failed to configure the socket: ") + std::to_string(ERRORCODE));
 		}
 	}
 }

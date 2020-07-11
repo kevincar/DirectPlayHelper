@@ -17,6 +17,8 @@ namespace nathp
 		this->connectionHandler = [&](inet::IPConnection const& connection) -> bool {
 			unsigned int const buffer_size = 1024*4;
 			std::string buffer(buffer_size, '\0');
+			if(!connection.isDataReady(5.0)) return true;
+
 			connection.recv(buffer.data(), buffer_size);
 			// Do any NATHP processing like changes state flags etc.
 			// if there is data to send to the processHandler get it and send it

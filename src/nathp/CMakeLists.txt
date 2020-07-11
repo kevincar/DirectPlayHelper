@@ -20,11 +20,6 @@ target_include_directories(nathp BEFORE
 		"${CMAKE_CURRENT_BINARY_DIR}/../inet/include" # For config.hpp
 		)
 
-# NATHP Binary - For testing
-add_executable(binnathp
-	main.cpp
-	)
-
 target_include_directories(nathp BEFORE
 	PUBLIC
 		../../include

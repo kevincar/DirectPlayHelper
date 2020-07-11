@@ -6,14 +6,17 @@
 
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
+#include <functional>
 #include <memory>
 #include <thread>
 
 #ifdef HAVE_SOCKET_H
 #define SOCKLEN socklen_t
+#define OPTVAL_T int
 #endif /* HAVE_SOCKET_H */
 #ifdef HAVE_WINSOCK2_H
 #define SOCKLEN int
+#define OPTVAL_T char
 #endif /* HAVE_WINSOCK2_H */
 
 

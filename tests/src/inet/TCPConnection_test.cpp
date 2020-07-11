@@ -144,8 +144,8 @@ TEST(TCPConnectionTest, configureSocket)
 		inet::TCPConnection tcpc;
 		tcpc.setAddress("127.0.0.1:1234");
 		int socket = static_cast<int>(tcpc);
-		int value = 0;
-		unsigned int valuesize = sizeof(value);
+		OPTVAL_T value = 0;
+		SOCKLEN valuesize = sizeof(value);
 		int result = ::getsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &value, &valuesize);
 		ASSERT_EQ(result, 0);
 		ASSERT_NE(value, 0);

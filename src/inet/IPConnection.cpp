@@ -203,7 +203,7 @@ namespace inet
 	void IPConnection::configureSocket(void)
 	{
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
-		int value = 1;
+		OPTVAL_T value = 1;
 		unsigned int value_size = sizeof(value);
 		int result = ::setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &value, value_size);
 		if(result != 0)

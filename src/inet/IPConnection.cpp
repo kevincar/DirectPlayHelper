@@ -15,6 +15,7 @@
 #include "inet/Socket.hpp"
 #include "inet/ServiceAddress.hpp"
 #include "inet/IPConnection.hpp"
+#include <g3log/g3log.hpp>
 
 namespace inet
 {
@@ -156,6 +157,7 @@ namespace inet
 	{
 		if(this->handlerProcess.joinable()) return;
 		this->handlerProcess = std::thread([&]{
+			//LOG(DEBUG) << "Starting IPConnection process";
 			while(!this->isDone())
 			{
 				bool toContinue = connectionHandler(*this);
@@ -164,18 +166,22 @@ namespace inet
 					break;
 				}
 			}
+			//LOG(DEBUG) << "Done 1";
 
 			while(!this->isDone()){}
+			//LOG(DEBUG) << "Done 2";
 		});
 	}
 
 	void IPConnection::endHandlerProcess(void)
 	{
+		//LOG(DEBUG) << "Ending process";
 		{
 			std::lock_guard<std::mutex> done_lock {this->done_mutex};
 			this->done = true;
 		}
 		this->handlerProcess.join();			
+		//LOG(DEBUG) << "Thread rejoined";
 	}
 
 	IPConnection::operator int const() const
@@ -199,9 +205,8 @@ namespace inet
 		std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
 		int value = 1;
 		unsigned int value_size = sizeof(value);
-		int result = ::getsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &value, &value_size);
-		std::cout << "MOM" << std::endl;
-		if(result == SOCKET_ERROR)
+		int result = ::setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &value, value_size);
+		if(result != 0)
 		{
 			throw std::out_of_range(std::string("IPConnection::configureSocket failed to configure the socket: ") + std::to_string(ERRORCODE));
 		}

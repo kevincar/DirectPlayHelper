@@ -22,7 +22,7 @@ ExternalProject_Add(g3log_project
 	)
 ExternalProject_Get_Property(g3log_project install_dir)
 message(STATUS "g3log installation directory: ${install_dir}")
-set(g3log_LOC "${install_dir}/lib/libg3logger.a")
+set(g3log_LOC "${install_dir}/lib/libg3log.a")
 if(MSVC)
 	set(g3log_LOC "${install_dir}/lib/g3logger.lib")
 endif()

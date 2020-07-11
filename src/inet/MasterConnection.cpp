@@ -311,7 +311,6 @@ namespace inet
 	int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const
 	{
 		struct timeval tv;
-		int largestFD = this->getLargestSocket();
 
 		// Set timeout
 		int seconds = static_cast<int>(floor(this->timeout));
@@ -322,6 +321,10 @@ namespace inet
 		tv.tv_sec = seconds;
 		tv.tv_usec = microseconds;
 
+		// lock our connections during select
+		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		std::lock_guard<std::mutex> udpConnectionLock {this->udp_mutex};
+		int largestFD = this->getLargestSocket();
 		int retval = ::select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
 
 		if(retval == -1) {
@@ -391,7 +394,7 @@ namespace inet
 	{
 		int result = -1;
 
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
 			TCPAcceptor const* curAcceptor = it->get();
@@ -409,7 +412,7 @@ namespace inet
 	{
 		int result = -1;
 
-		std::lock_guard<std::mutex> udpConnLock {this->udp_mutex};
+		//std::lock_guard<std::mutex> udpConnLock {this->udp_mutex};
 		for(std::vector<std::unique_ptr<UDPConnection>>::const_iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); it++)
 		{
 			UDPConnection const* curConn = it->get();

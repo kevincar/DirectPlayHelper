@@ -1,8 +1,11 @@
 
+#include <chrono>
 #include "gtest/gtest.h"
 #include <g3log/g3log.hpp>
 #include "inet/TCPAcceptor.hpp"
 #include "inet/TCPAcceptor_test.hpp"
+
+#define PORT 4321
 
 // ==================================================================
 
@@ -24,14 +27,17 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 	
 		inet::TCPAcceptor::ProcessHandler processHandler = [&](inet::IPConnection const& connection)->bool
 		{
+			//LOG(DEBUG) << "Server: ProcHandler. connection " << (!!connection);
 			if(connection)
 			{
+				//LOG(DEBUG) << "Server: Waiting to recv data";
 				int const bufsize = 1024*4;
 				char buffer[bufsize] {};
 				int result = connection.recv(buffer, bufsize);
 				EXPECT_NE(result, -1);
 				if(result == 0)
 				{
+					//LOG(DEBUG) << "Server: Client terminated";
 					return false;
 				}
 
@@ -49,8 +55,10 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 		//LOG(DEBUG) << "Server: initializting...";
 		inet::TCPAcceptor tcpa(acceptHandler, processHandler);
 		//LOG(DEBUG) << "Server: main listening fd is " << static_cast<int>(tcpa);
-		tcpa.setAddress("127.0.0.1:0");
+		//LOG(DEBUG) << "Server: address currently is: " << serverAddress;
+		tcpa.setAddress(serverAddress);
 		{
+			//LOG(DEBUG) << "Awaiting lock";
 			std::lock_guard<std::mutex> serverAddressLock {serverAddressMutex};
 			serverAddress = tcpa.getAddressString();
 			tcpa.listen();
@@ -75,23 +83,35 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 				int const largestSocket = tcpa.getLargestSocket();
 				//std::cout << "Server: largest socket = " << largestSocket << std::endl;
 				struct timeval tv;
-				tv.tv_sec = 5;
+				tv.tv_sec = 1;
 				tv.tv_usec = 0;
 				int result = ::select(largestSocket + 1, &fdSet, NULL, NULL, &tv);
 				ASSERT_NE(result, -1);
 
 				// check connections
+
+				//LOG(DEBUG) << "Server: Checking Connections";
 				tcpa.checkAndProcessConnections(fdSet);
 
 				// Check done
 				{
 					std::lock_guard<std::mutex> done_lock {done_mutex};
 					isServerDone = done;
+
+					if(done)
+					{
+						{
+							std::lock_guard<std::mutex> statusLock {statusMutex};
+							status = "server done";
+						}
+						statusCV.notify_one();
+					}
 				}
 			}
 		});
 
 		processor.join();
+		//LOG(DEBUG) << "Server: Proc has joined";
 
 		std::unique_lock<std::mutex> statusLock {statusMutex};
 		statusCV.wait(statusLock, [&]{return status == "done";});
@@ -111,6 +131,7 @@ std::unique_ptr<std::thread> startTestClient(std::string& serverAddress, std::mu
 		//LOG(DEBUG) << "Client: client fd = " << static_cast<unsigned>(tcpc);
 		while(!connected)
 		{
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 			std::lock_guard<std::mutex> serverAddressLock {serverAddressMutex};
 			//LOG(DEBUG) << "Client: Attempting to connect to " << serverAddress;
 			int result = tcpc.connect(serverAddress);
@@ -126,13 +147,20 @@ std::unique_ptr<std::thread> startTestClient(std::string& serverAddress, std::mu
 		//LOG(DEBUG) << "Client: test data sent.";
 		EXPECT_NE(result, -1);
 
+		
+		// Wait for server complete
+		std::unique_lock<std::mutex> statusLock {statusMutex};
+		statusCV.wait(statusLock, [&]{return status == "server done";});
+		statusLock.unlock();
+		//LOG(DEBUG) << "Clinet: Server is done, closing client";
+
 		// Set status
 		{
-			std::unique_lock<std::mutex> statusLock {statusMutex};
+			std::lock_guard<std::mutex> statusLock {statusMutex};
 			status = "done";
 		}
 		statusCV.notify_one();
-		return;
+	return;
 	});
 }
 
@@ -410,13 +438,20 @@ TEST(TCPAcceptorTest, checkAndProcessConnections)
 	std::condition_variable statusCV;
 
 	// Server
-	std::string serverAddress {"127.0.0.1:0"};
+	std::string serverAddress = std::string("127.0.0.1:") + std::to_string(PORT);
 	std::mutex serverAddressMutex;
 	std::unique_ptr<std::thread> serverThread = startTestServer(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
 
 	// Client
 	std::unique_ptr<std::thread> clientThread = startTestClient(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
 	
-	serverThread->join();
 	clientThread->join();
+	//LOG(DEBUG) << "Client thread joined";
+	serverThread->join();
+	//LOG(DEBUG) << "Server thread joined";
+
+	//serverThread = startTestServer(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+	//clientThread = startTestClient(serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+	//serverThread->join();
+	//clientThread->join();
 }

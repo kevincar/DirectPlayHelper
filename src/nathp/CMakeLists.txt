@@ -26,8 +26,3 @@ target_include_directories(nathp BEFORE
 		${install_dir}/include
 		"${CMAKE_CURRENT_BINARY_DIR}/../inet/include" # For config.hpp
 		)
-
-target_link_libraries(binnathp
-	PUBLIC
-		inet
-		)

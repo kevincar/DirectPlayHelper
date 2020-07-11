@@ -3,6 +3,7 @@
 #include <memory>
 #include <iostream>
 
+#include <g3log/g3log.hpp>
 namespace inet
 {
 	TCPAcceptor::TCPAcceptor(AcceptHandler const& AcceptHandler, ProcessHandler const& ConnectionHandler) : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) { }
@@ -112,14 +113,27 @@ namespace inet
 		
 		// Check and Process Children
 		std::lock_guard<std::mutex> childLock {this->child_mutex};
-		for(std::unique_ptr<TCPConnection> const& conn : this->childConnections)
+		for(std::vector<std::unique_ptr<TCPConnection>>::iterator it = this->childConnections.begin(); it != this->childConnections.end(); )
 		{
+			std::unique_ptr<TCPConnection>& conn = *it;
 			if(FD_ISSET(static_cast<int const>(*conn), &fdSet) != false)
 			{
 				std::lock_guard<std::mutex> procLock {this->connectionHandler_mutex};
 				{
 					bool keepConnection = this->connectionHandler(*conn);
+					if(keepConnection)
+					{
+						++it;
+					}
+					else
+					{
+						it = this->childConnections.erase(it);
+					}
 				}
+			}
+			else
+			{
+				++it;
 			}
 		}
 		return;

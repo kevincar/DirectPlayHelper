@@ -7,14 +7,15 @@
 
 std::unique_ptr<std::thread> startTestNATHPServer(int& connectedClients, std::mutex& connClientsMutex, std::string& serverAddress, std::mutex& serverAddressMutex, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV)
 {
-	LOG(DEBUG) << "Server: Starting thread...";
+	//LOG(DEBUG) << "Server: Starting thread...";
 	return std::make_unique<std::thread>([&]
 	{
+		// STEP 1 - Set up
 		bool done = false;
 		std::mutex done_mutex;
 		inet::TCPAcceptor::AcceptHandler acceptHandler = [&](inet::TCPConnection const& connection)->bool
 		{
-			LOG(DEBUG) << "Server: new connection from: " << connection.getDestAddressString();
+			//LOG(DEBUG) << "Server: new connection from: " << connection.getDestAddressString();
 			return true;
 		};
 	
@@ -30,8 +31,8 @@ std::unique_ptr<std::thread> startTestNATHPServer(int& connectedClients, std::mu
 			return true;
 		};
 
-		// Start up the server
-		LOG(DEBUG) << "Server: initializting...";
+		// STEP 2 - Start up the server
+		//LOG(DEBUG) << "Server: initializting...";
 		nathp::Server server(acceptHandler, processHandler, PORT);
 		{
 			std::lock_guard<std::mutex> statusLock {statusMutex};
@@ -40,23 +41,24 @@ std::unique_ptr<std::thread> startTestNATHPServer(int& connectedClients, std::mu
 		statusCV.notify_one();
 
 		// This proccessor thread is responsible for checking for incoming data
-		LOG(DEBUG) << "Server: Waiting for clients to connect... " << std::to_string(connectedClients);
+		// STEP 3 - Wait for clients to connect
+		//LOG(DEBUG) << "Server: Waiting for clients to connect... " << std::to_string(connectedClients);
 		std::unique_lock<std::mutex> connLock {connClientsMutex};
-		statusCV.wait(connLock, [&]{return connectedClients != 0;});
+		statusCV.wait(connLock, [&]{return connectedClients > 0;});
 
-		
+		// STEP 4 - Let Clients know server is ready for disconnect
 		{
 			std::lock_guard<std::mutex> statusLock {statusMutex};
 			status = "server disconnect ready";
 		}
 		statusCV.notify_one();
 
-		
-		LOG(DEBUG) << "Server: Waiting for clients to disconnect...";
+		// STEP 5 - Let clients disconnect
+		//LOG(DEBUG) << "Server: Waiting for clients to disconnect...";
 		statusCV.wait(connLock, [&]{return connectedClients == 0;});
 		connLock.unlock();
 
-		LOG(DEBUG) << "Server: done";
+		//LOG(DEBUG) << "Server: done";
 		return;
 	});
 }
@@ -66,26 +68,26 @@ void waitForServer(std::string& status, std::mutex& statusMutex, std::condition_
 {
 	std::unique_lock<std::mutex> statusLock {statusMutex};
 	statusCV.wait(statusLock, [&]{return (status == "server connect ready" || status == "server disconnect ready");});
-	LOG(DEBUG) << "Done waiting for server";
+	//LOG(DEBUG) << "Done waiting for server";
 	statusLock.unlock();
 }
 
 std::unique_ptr<std::thread> startTestNATHPClient(int clientNumber, int& connectedClients, std::mutex& connClientsMutex, std::string& serverAddress, std::mutex& serverAddressMutex, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV)
 {
 	std::string clientStr = std::string("Client ") + std::to_string(clientNumber) + std::string(": ");
-	LOG(DEBUG) << clientStr << "starting thread";
+	//LOG(DEBUG) << clientStr << "starting thread";
 	return std::make_unique<std::thread>([&, clientStr]
 	{
 		// Start the client
-		LOG(DEBUG) << clientStr << "Waiting for the server to start";
+		//LOG(DEBUG) << clientStr << "Waiting for the server to start";
 		waitForServer(status, statusMutex, statusCV);
 
-		LOG(DEBUG) << clientStr << "Starting client...";
+		//LOG(DEBUG) << clientStr << "Starting client...";
 		nathp::Client client("127.0.0.1:" + std::to_string(PORT));
 		{
 			std::lock_guard<std::mutex> connLock {connClientsMutex};
 			connectedClients++;
-			LOG(DEBUG) << clientStr << "Number of connected clients = " << std::to_string(connectedClients);
+			//LOG(DEBUG) << clientStr << "Number of connected clients = " << std::to_string(connectedClients);
 		}
 		statusCV.notify_one();
 		
@@ -95,17 +97,50 @@ std::unique_ptr<std::thread> startTestNATHPClient(int clientNumber, int& connect
 		std::unique_lock<std::mutex> statusLock {statusMutex};
 		statusCV.wait(statusLock, [&]{return status == "server disconnect ready";});
 		statusLock.unlock();
-		LOG(DEBUG) << clientStr << "Complete... Disconnecting...";
+		//LOG(DEBUG) << clientStr << "Complete... Disconnecting...";
 		{
 			std::lock_guard<std::mutex> connLock {connClientsMutex};
 			connectedClients--;
 		}
 		statusCV.notify_one();
+		//LOG(DEBUG) << clientStr << "DONE!";
 		return;
 	});
 }
 
-TEST(NATPHTest, Connection)
+
+bool serverAcceptHandler(inet::TCPConnection const& connection)
+{
+	//LOG(DEBUG) << "Server: new connection from: " << connection.getDestAddressString();
+	return true;
+}
+
+bool serverProcHandler(char const* buffer, unsigned int size)
+{
+	//LOG(DEBUG) << "Server: Received data: " << std::string(buffer);
+	//if(std::string(buffer) == "Test Data.")
+	//{
+		//std::lock_guard<std::mutex> done_lock {done_mutex};
+		//done = true;
+	//}
+
+	return true;
+}
+
+TEST(NATHPTest, Constructor)
+{
+	EXPECT_NO_THROW(
+	{
+		nathp::Server server(serverAcceptHandler, serverProcHandler, PORT);
+	}) << "First attempt failed";
+	ASSERT_EQ(1, 1);
+	EXPECT_NO_THROW(
+	{
+		nathp::Server server(serverAcceptHandler, serverProcHandler, PORT);
+	}) << "Second attempt failed";
+}
+
+TEST(NATHPTest, Connection)
 {
 	int connectedClients = 0;
 	std::mutex connClientsMutex;
@@ -122,5 +157,7 @@ TEST(NATPHTest, Connection)
 	//std::unique_ptr<std::thread> client2Thread = startTestNATHPClient(2, connectedClients, connClientsMutex, serverAddress, serverAddressMutex, status, statusMutex, statusCV);
 	//client2Thread->join();
 	client1Thread->join();
+	//LOG(DEBUG) << "Client Rejoined";
 	serverThread->join();
+	//LOG(DEBUG) << "Server Rejoined";
 }

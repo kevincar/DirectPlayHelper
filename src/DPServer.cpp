@@ -27,41 +27,41 @@ void DPServer::processArgs(void)
 	for(unsigned int i = 0; i < this->args.size(); i++)
 	{
 		std::string curArg = this->args[i];
-		LOG(DEBUG) << "Processing Arg: " << curArg;
+		//LOG(DEBUG) << "Processing Arg: " << curArg;
 		if( (curArg == "-s") || (curArg == "--server") )
 		{
-			LOG(DEBUG) << "Server argument found";
+			//LOG(DEBUG) << "Server argument found";
 			if(this->setAppState(SERVER) == false)
 			{
-				LOG(INFO) << "DPServer state has already been set";
+				//LOG(INFO) << "DPServer state has already been set";
 				this->appState = NOT_SET;
 				return;
 			}
 		}
 		else if( (curArg == "-c") || (curArg == "--client") )
 		{
-			LOG(DEBUG) << "Client argument found";
+			//LOG(DEBUG) << "Client argument found";
 			if(this->setAppState(CLIENT) == false)
 			{
-				LOG(INFO) << "DPServer state has already been set";
+				//LOG(INFO) << "DPServer state has already been set";
 				this->appState = NOT_SET;
 				return;
 			}
 
 			if(i == this->args.size())
 			{
-				LOG(INFO) << "No host IP Address provided for client";
+				//LOG(INFO) << "No host IP Address provided for client";
 				this->appState = NOT_SET;
 				return;
 			}
 
 			std::string potentialHostIPAddress = (i+1 >= this->args.size()) ? "" : this->args[i+1];
-			LOG(DEBUG) << "Potential Host Address: \"" << potentialHostIPAddress << "\"";
+			//LOG(DEBUG) << "Potential Host Address: \"" << potentialHostIPAddress << "\"";
 			std::regex pattern("([0-9]+\\.){3}[0-9]+");
 			bool match = std::regex_match(potentialHostIPAddress, pattern);
 			if(match == false)
 			{
-				LOG(INFO) << potentialHostIPAddress << " is not a properly formated host name";
+				//LOG(INFO) << potentialHostIPAddress << " is not a properly formated host name";
 				this->appState = NOT_SET;
 				return;
 			}
@@ -71,10 +71,10 @@ void DPServer::processArgs(void)
 		}
 		else if( (curArg == "-p") || (curArg == "--port") )
 		{
-			LOG(DEBUG) << "Port argument found";
+			//LOG(DEBUG) << "Port argument found";
 			if(i == this->args.size())
 			{
-				LOG(INFO) << "Port flag used but no port number provided";
+				//LOG(INFO) << "Port flag used but no port number provided";
 			}
 
 			std::string potentialPortNum = this->args[i+1];

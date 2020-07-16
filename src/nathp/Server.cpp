@@ -1,6 +1,7 @@
 
 #include <cstdlib>
 #include "nathp/Server.hpp"
+#include <g3log/g3log.hpp>
 
 
 namespace nathp
@@ -10,26 +11,17 @@ namespace nathp
 		// Initialize the internal master connection that will handle the
 		// server data
 		this->pMasterConnection = std::make_unique<inet::MasterConnection>();
-		this->internalAcceptHandler = [&](inet::TCPConnection const& connection) -> bool
-		{
-			return this->externalAcceptHandler(connection);
-		};
 
-		this->internalProcessHandler = [&](inet::TCPConnection const& connection) -> bool
-		{
-			unsigned int const buffer_size = 1024*4;
-			char buffer[buffer_size] {};
-			connection.recv(buffer, buffer_size);
-			//Message* message = reinterpret_cast<Message*>(buffer);
-			//this->processMessage(message);
-			return true;
-		};
-		inet::TCPAcceptor* tcpa = this->pMasterConnection->createTCPAcceptor(this->internalAcceptHandler, this->internalProcessHandler);
+		inet::TCPAcceptor::AcceptHandler ah = std::bind(&Server::internalAcceptHandler, this, std::placeholders::_1);
+		inet::TCPAcceptor::ProcessHandler ph = std::bind(&Server::internalProcessHandler, this, std::placeholders::_1);
+		this->setState(Server::State::STARTING);
+		inet::TCPAcceptor* tcpa = this->pMasterConnection->createTCPAcceptor(ah, ph);
 
 		 // Set the address
 		 std::string address = std::string("0.0.0.0:") + std::to_string(this->main_port);
 		 tcpa->setAddress(address);
 		 tcpa->listen();
+		 this->setState(Server::State::READY);
 	}
 
 	std::vector<unsigned int> Server::getClientList(void) const
@@ -49,18 +41,66 @@ namespace nathp
 		return false;
 	}
 
-	//void Server::processMessage(inet::TCPConnection const& connection, Message& message)
-	//{
-		//switch(message.command)
-		//{
-			//case Command::getClientList:
-				//// we need an easier and repeatable way to load data into the message
-				////std::vector<unsigned int> clientList = this->getClientList();
-				////message.data = (unsigned char[])std::malloc(sizeof(clientList.data()));
-				////std::copy(clientList.begin(), clientList.end(), message.data);
-				////message.result = true;
-				////connection.send(reinterpret_cast<char*>(&message), message.data)
-				//break;
-		//}
-	//}
+	Server::State Server::getState(void) const
+	{
+		std::lock_guard<std::mutex> state_lock {this->state_mutex};
+		return this->state;
+	}
+
+	bool Server::internalAcceptHandler(inet::TCPConnection const& conn)
+	{
+		return this->externalAcceptHandler(conn);
+	}
+
+	bool Server::internalProcessHandler(inet::TCPConnection const& conn)
+	{
+		unsigned int const buffer_size = 1024*4;
+		char buffer[buffer_size] {};
+		int bytes_received = conn.recv(buffer, buffer_size);
+		if(bytes_received == -1)
+		{
+			LOG(WARNING) << "Failed to receive bytes!";
+			return true;
+		}
+		else if(bytes_received == 0)
+		{
+			LOG(INFO) << "Connection shutdown";
+			return false;
+		}
+
+		nathp::Packet packet {};
+		packet.setData((unsigned char*)buffer, bytes_received);
+		this->processMessage(conn, packet);
+		return true;
+	}
+	
+	void Server::processMessage(inet::TCPConnection const& connection, Packet const& packet)
+	{
+		switch(packet.command)
+		{
+			case Packet::Command::getClientList:
+				{
+					// we need an easier and repeatable way to load data into the message
+					Packet returnPacket {};
+					std::vector<unsigned int> clientList = this->getClientList();
+					returnPacket.setData((unsigned char const*)clientList.data(), clientList.size());
+					int result = connection.send((char const*)returnPacket.data(), returnPacket.size());
+					if(result < 0)
+					{
+						LOG(WARNING) << "Failed to send getClientList resopnse";
+					}
+				}
+				break;
+			default:
+				LOG(WARNING) << "NATHP Server - Unrecognized NATHP packet command request";
+		}
+		return;
+	}
+
+	void Server::setState(Server::State s)
+	{
+		std::lock_guard<std::mutex> state_lock {this->state_mutex};
+		this->state = s;
+		return;
+	}
 }

@@ -1,0 +1,7 @@
+
+#ifndef NATHP_CONSTANTS_HPP
+#define NATHP_CONSTANTS_HPP
+
+#define NATHP_PORT 47625
+
+#endif /* NATHP_CONSTANTS_HPP */

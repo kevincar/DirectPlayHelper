@@ -30,7 +30,7 @@ namespace inet
 
 		protected:
 			std::vector<std::unique_ptr<TCPConnection>> childConnections;
-			mutable std::mutex child_mutex;
+			mutable std::recursive_mutex child_mutex;
 
 			std::mutex acceptHandler_mutex;
 			AcceptHandler acceptHandler;

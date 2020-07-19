@@ -37,23 +37,26 @@ namespace inet
 
 	unsigned int MasterConnection::getNumTCPAcceptors(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getNumTCPAcceptors";
 		unsigned int result = 0;
 
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		result = static_cast<unsigned int>(this->acceptors.size());
 
+		//LOG(DEBUG) << "MasterConnection::getNumTCPAcceptors - " << result;
 		return result;
 	}
 
 	unsigned int MasterConnection::getNumTCPConnections(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getNumTCPConnections";
 		unsigned int result = 0;
 
 		result += this->getNumTCPAcceptors();
 		
 		// TCPAcceptor connections
 		{
-			std::lock_guard<std::mutex> acceptor_lock {this->acceptor_mutex};
+			std::lock_guard<std::recursive_mutex> acceptor_lock {this->acceptor_mutex};
 			for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
 			{
 				std::vector<TCPConnection const*> acceptorConnections = acceptor->getConnections();
@@ -61,21 +64,25 @@ namespace inet
 			}
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getNumTCPConnections - " << result;
 		return result;
 	}
 
 	unsigned int MasterConnection::getNumUDPConnections(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getNumUDPConnections";
 		unsigned int result = 0;
 
 		std::lock_guard<std::mutex> udp_lock { this->udp_mutex };
 		result += this->udpConnections.size();
 
+		//LOG(DEBUG) << "MasterConnection::getNumUDPConnections - " << result;
 		return result;
 	}
 
 	unsigned int MasterConnection::getNumConnections(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getNumConnections";
 		unsigned int result = 0;
 
 		//LOG(DEBUG) << "getting numTCPConnections";
@@ -84,21 +91,26 @@ namespace inet
 		//LOG(DEBUG) << "getting numUDPConnections";
 		result += this->getNumUDPConnections();
 
+		//LOG(DEBUG) << "MasterConnection::getNumConnections - " << result;
 		return result;
 	}
 
 	TCPAcceptor* MasterConnection::createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH, TCPAcceptor::ProcessHandler const& pChildPH)
 	{
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//LOG(DEBUG) << "MasterConnection::createTCPAcceptor";
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		TCPAcceptor* acceptor = new TCPAcceptor(pAcceptPH, pChildPH);
 		std::unique_ptr<TCPAcceptor> pAcceptor {std::move(acceptor)};
 		this->acceptors.push_back(std::move(pAcceptor));
+
+		//LOG(DEBUG) << "MasterConnection::createTCPAcceptor - fd = " << static_cast<int>(*this->acceptors.back().get());
 		return this->acceptors.back().get();
 	}
 
 	std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const
 	{
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//LOG(DEBUG) << "MasterConnection::getAcceptors";
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		std::vector<TCPAcceptor const*> result {};
 
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
@@ -107,14 +119,14 @@ namespace inet
 			result.push_back(curAcceptor);
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getAcceptors - N = " << result.size();
 		return result;
 	}
 
 	void MasterConnection::removeTCPAcceptor(unsigned int acceptorID)
 	{
-		// Is there an easy way to shut down the acceptor?
-		// I suppose we'll simply try it and see how it goes
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//LOG(DEBUG) << "MasterConnection::removeTCPAcceptor";
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::iterator it = this->acceptors.begin(); it != this->acceptors.end(); )
 		{
@@ -129,10 +141,12 @@ namespace inet
 				++it;
 			}
 		}
+		//LOG(DEBUG) << "MasterConnection::removeTCPAcceptor - remaining: " << this->acceptors.size();
 	}
 
 	unsigned int MasterConnection::createUDPConnection(std::unique_ptr<ProcessHandler>& pPH)
 	{
+		//LOG(DEBUG) << "MasterConnection::createUDPConnection";
 		std::unique_ptr<UDPConnection> newConnection = std::make_unique<UDPConnection>();
 
 		std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
@@ -144,11 +158,13 @@ namespace inet
 		std::unique_ptr<ProcessHandler> ph = std::move(pPH);
 		this->processHandlers.emplace(connectionID, std::move(ph));
 
+		//LOG(DEBUG) << "MasterConnection::createUDPConnection - Complete";
 		return 0;
 	}
 
 	std::vector<UDPConnection const*> MasterConnection::getUDPConnections(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getUDPConnections";
 		std::vector<UDPConnection const*> result;
 
 		std::lock_guard<std::mutex> udp_lock {this->udp_mutex};
@@ -159,11 +175,13 @@ namespace inet
 			result.push_back(pCurConn);
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getUDPConnections - N = " << result.size();
 		return result;
 	}
 
 	void MasterConnection::removeUDPConnection(unsigned int connID)
 	{
+		//LOG(DEBUG) << "MasterConnection::removeUDPConnections";
 		std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
 
 		// remove procedures firts
@@ -195,10 +213,13 @@ namespace inet
 				++it;
 			}
 		}
+
+		//LOG(DEBUG) << "MasterConnection::removeUDPConnections - remaining = " << this->udpConnections.size();
 	}
 
 	void MasterConnection::stopListening(void)
 	{
+		//LOG(DEBUG) << "MasterConnection::stopListening";
 		std::lock_guard<std::mutex> listenThreadLock {this->listeningThread_mutex};
 		if(std::this_thread::get_id() == this->listeningThread.get_id())
 		{
@@ -209,6 +230,7 @@ namespace inet
 			this->setListeningState(false);
 			this->listeningThread.join();
 		}
+		//LOG(DEBUG) << "MasterConnection::stopListening - Complete";
 	}
 
 	void MasterConnection::setListeningState(bool state)
@@ -222,6 +244,14 @@ namespace inet
 		 //Check for a new connection every 5 seconds
 		while(this->isListening())
 		{
+			/*
+			 * On windows, this thread can run through fast enough that mutex
+			 * locks aren't released for a long enough time for other threads
+			 * to utilize shared resources. This delay allows a small window
+			 * for shared resources to be aquired by other threads that need
+			 * them. This is not the most elegant solution but works for now.
+			 */
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			this->checkAndProcessConnections();
 		}
 	}
@@ -237,11 +267,11 @@ namespace inet
 
 	void MasterConnection::checkAndProcessConnections()
 	{
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections";
 		fd_set fdSet;
 		unsigned int nConnections = 0;
 		
 		// Only continue if there are connections to check
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - getting number of connections";
 		nConnections = this->getNumConnections();
 
 		if(nConnections < 1)
@@ -250,11 +280,8 @@ namespace inet
 			return;
 		}
 
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - loading fd_set connections";
 		this->loadFdSetConnections(fdSet);
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - calling select...";
 		int connectionsWaiting = this->waitForFdSetConnections(fdSet);
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - select finished";
 
 		// Only continue if there are connections waiting
 		if(connectionsWaiting < 1)
@@ -264,18 +291,18 @@ namespace inet
 		}
 
 		// TCPAcceptors
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and processing TCP Connections";
 		this->checkAndProcessTCPConnections(fdSet);
 
 		// UDPConnections
-		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and processing UDP Connections";
 		this->checkAndProcessUDPConnections(fdSet);
 
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - Completed";
 		return;
 	}
 
 	bool MasterConnection::loadFdSetConnections(fd_set& fdSet) const
 	{
+		//LOG(DEBUG) << "MasterConnection::loadFdSetConnections";
 		// Clear the set
 		FD_ZERO(&fdSet);
 
@@ -283,33 +310,40 @@ namespace inet
 		this->loadFdSetTCPConnections(fdSet);
 		this->loadFdSetUDPConnections(fdSet);
 	
+		//LOG(DEBUG) << "MasterConnection::loadFdSetConnections - Complete";
 		return true;
 	}
 
 	bool MasterConnection::loadFdSetTCPConnections(fd_set& fdSet) const
 	{
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//LOG(DEBUG) << "MasterConnection::loadFdSetTCPConnections";
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
 		{
 			acceptor->loadFdSetConnections(fdSet);
 		}
 
+		//LOG(DEBUG) << "MasterConnection::loadFdSetTCPConnections - Complete";
 		return true;
 	}
 
 	bool MasterConnection::loadFdSetUDPConnections(fd_set& fdSet) const
 	{
+		//LOG(DEBUG) << "MasterConnection::loadFdSetUDPConnections";
 		std::lock_guard<std::mutex> udpConnectionLock {this->udp_mutex};
 		for(std::unique_ptr<UDPConnection> const& udpConnection : this->udpConnections)
 		{
 			int fd = static_cast<int>(*udpConnection);
 			FD_SET(fd, &fdSet);
 		}
+
+		//LOG(DEBUG) << "MasterConnection::loadFdSetUDPConnections - Complete";
 		return true;
 	}
 
 	int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const
 	{
+		//LOG(DEBUG) << "MasterConnection::waitForFdSetConnections";
 		struct timeval tv;
 
 		// Set timeout
@@ -322,7 +356,7 @@ namespace inet
 		tv.tv_usec = microseconds;
 
 		// lock our connections during select
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		std::lock_guard<std::mutex> udpConnectionLock {this->udp_mutex};
 		int largestFD = this->getLargestSocket();
 		int retval = ::select(largestFD+1, &fdSet, nullptr, nullptr, &tv);
@@ -331,21 +365,25 @@ namespace inet
 			throw std::logic_error(std::string("MasterConnection::waitForFdSetConnections - failed to select! ERR CODE: ") + std::to_string(ERRORCODE));
 		}
 
+		//LOG(DEBUG) << "MasterConnection::waitForFdSetConnections - Complete";
 		return retval;
 	}
 
 	void MasterConnection::checkAndProcessTCPConnections(fd_set& fdSet)
 	{
-		std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessTCPConnections";
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		for(std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors)
 		{
 			acceptor->checkAndProcessConnections(fdSet);
 		}
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessTCPConnections - Complete";
 		return;
 	}
 
 	void MasterConnection::checkAndProcessUDPConnections(fd_set& fdSet)
 	{
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessUDPConnections";
 		{
 			std::scoped_lock locks {this->udp_mutex, this->proc_mutex};
 			for(std::vector<std::unique_ptr<UDPConnection>>::iterator it = this->udpConnections.begin(); it != this->udpConnections.end(); )
@@ -367,11 +405,14 @@ namespace inet
 				}
 			}
 		}
+		
+		//LOG(DEBUG) << "MasterConnection::checkAndProcessUDPConnections - Complete";
 		return;
 	}
 
 	int MasterConnection::getLargestSocket(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getLargestSocket";
 		int result = -1;
 		int largestTCPSocket = this->getLargestTCPSocket();
 
@@ -387,14 +428,16 @@ namespace inet
 			result = largestUDPSocket;
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getLargestSocket - " << result;
 		return result;
 	}
 
 	int MasterConnection::getLargestTCPSocket(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getLargestTCPSocket";
 		int result = -1;
 
-		//std::lock_guard<std::mutex> acceptorLock {this->acceptor_mutex};
+		std::lock_guard<std::recursive_mutex> acceptorLock {this->acceptor_mutex};
 		for(std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it = this->acceptors.begin(); it != this->acceptors.end(); it++)
 		{
 			TCPAcceptor const* curAcceptor = it->get();
@@ -405,11 +448,13 @@ namespace inet
 			}
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getLargestTCPSocket - " << result;
 		return result;
 	}
 
 	int MasterConnection::getLargestUDPSocket(void) const
 	{
+		//LOG(DEBUG) << "MasterConnection::getLargestUDPSocket";
 		int result = -1;
 
 		//std::lock_guard<std::mutex> udpConnLock {this->udp_mutex};
@@ -423,6 +468,7 @@ namespace inet
 			}
 		}
 
+		//LOG(DEBUG) << "MasterConnection::getLargestUDPSocket - " << result;
 		return result;
 	}
 }

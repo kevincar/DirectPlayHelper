@@ -1,4 +1,5 @@
 
+#include <sstream>
 #include "nathp/Client.hpp"
 #include "nathp/Packet.hpp"
 #include <g3log/g3log.hpp>
@@ -32,7 +33,7 @@ namespace nathp
 			int result = this->serverConnection.connect(this->serverAddress);
 			if(result != 0)
 			{
-				LOG(WARNING) << "Failed to connect! result = " << std::to_string(result) << "errno - " << std::to_string(ERRORCODE);
+				LOG(WARNING) << "Failed to connect! result = " << std::to_string(result) << " errno - " << std::to_string(ERRORCODE);
 			}
 			else
 			{
@@ -52,28 +53,37 @@ namespace nathp
 			throw std::runtime_error("Failed to connect client to server");
 		}
 
+		//LOG(DEBUG) << "Client connected: FD = " << static_cast<int>(this->serverConnection) << " | srcAddr = " << this->serverConnection.getAddressString() << " destAddr = " << this->serverConnection.getDestAddressString();
 		this->serverConnection.startHandlerProcess(this->ch);
 		return;
 	}
 
 	std::vector<unsigned int> Client::getClientList(void) const
 	{
+		//LOG(DEBUG) << "Client: Sending packet request for getClientList";
 		std::vector<unsigned int> result;
 		Packet packet;
 		if(this->serverConnection.send((char const*)packet.data(), packet.size()) == -1)
 		{
 			LOG(WARNING) << "Client failed to request getClientList | errno: " << std::to_string(ERRORCODE);
 		}
+
+		std::unique_lock<std::mutex> proc_lock {this->proc_mutex};
+		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.command];});
+		packet.setPayload(this->proc_rslt);
+		packet.getPayload(result);
+		//LOG(DEBUG) << "Client: sent packet request for getClientList " << result.size();
 		return result;
 	}
 
 	bool Client::connectionHandler(inet::IPConnection const& connection)
 	{
-		LOG(DEBUG) << "Client connection handler!";
+		//LOG(DEBUG) << "Client connection handler!";
 		unsigned int const buffer_size = 1024*4;
-		std::string buffer(buffer_size, '\0');
+		std::vector<char> buffer(buffer_size, '\0');
 		if(!connection.isDataReady(5.0)) return true;
 
+		//LOG(DEBUG) << "Client Connection Handler: Received Data";
 		int retval = connection.recv(buffer.data(), buffer_size);
 		if(retval == -1)
 		{

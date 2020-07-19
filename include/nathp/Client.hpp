@@ -19,7 +19,13 @@ namespace nathp
 			int nConnectionRetries = -1;
 		private:
 			bool connectionHandler(inet::IPConnection const& connection);
-			void processPacket(Packet const packet) const noexcept;
+			void processPacket(Packet& packet) const noexcept;
+			void clearProcStat(void) const noexcept;
+
+			std::mutex mutable proc_mutex;
+			std::condition_variable mutable proc_cv;
+			std::map<Packet::Command, bool> mutable proc_stat;
+			std::vector<unsigned char> mutable proc_rslt;
 
 			inet::IPConnection::ConnectionHandler ch;
 			inet::TCPConnection serverConnection;

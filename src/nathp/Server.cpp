@@ -10,7 +10,7 @@ namespace nathp
 	{ 
 		// Initialize the internal master connection that will handle the
 		// server data
-		this->pMasterConnection = std::make_unique<inet::MasterConnection>();
+		this->pMasterConnection = std::make_unique<inet::MasterConnection>(1);
 
 		inet::TCPAcceptor::AcceptHandler ah = std::bind(&Server::internalAcceptHandler, this, std::placeholders::_1);
 		inet::TCPAcceptor::ProcessHandler ph = std::bind(&Server::internalProcessHandler, this, std::placeholders::_1);
@@ -26,13 +26,16 @@ namespace nathp
 
 	std::vector<unsigned int> Server::getClientList(void) const
 	{
+		//LOG(DEBUG) << "Server::getClientList";
 		std::vector<unsigned int> result {};
-		std::vector<inet::TCPConnection const*> connections = this->pMasterConnection->getAcceptors().at(0)->getConnections();
+		std::vector<inet::TCPAcceptor const*> acceptors = this->pMasterConnection->getAcceptors();
+		std::vector<inet::TCPConnection const*> connections = acceptors.at(0)->getConnections();
 		for(inet::TCPConnection const* curConn : connections)
 		{
 			unsigned int connId = static_cast<int>(*curConn);
 			result.push_back(connId);
 		}
+		//LOG(DEBUG) << "Server: N Connections = " << result.size();
 		return result;
 	}
 
@@ -54,9 +57,11 @@ namespace nathp
 
 	bool Server::internalProcessHandler(inet::TCPConnection const& conn)
 	{
+		//LOG(DEBUG) << "Server: Received Data";
 		unsigned int const buffer_size = 1024*4;
 		char buffer[buffer_size] {};
 		int bytes_received = conn.recv(buffer, buffer_size);
+		//LOG(DEBUG) << "Server: Received Data!!!";
 		if(bytes_received == -1)
 		{
 			LOG(WARNING) << "Failed to receive bytes!";
@@ -80,10 +85,12 @@ namespace nathp
 		{
 			case Packet::Command::getClientList:
 				{
-					// we need an easier and repeatable way to load data into the message
 					Packet returnPacket {};
+					returnPacket.type = Packet::Type::response;
 					std::vector<unsigned int> clientList = this->getClientList();
-					returnPacket.setData((unsigned char const*)clientList.data(), clientList.size());
+					//LOG(DEBUG) << "size of client list: " << clientList.size();
+					returnPacket.setPayload(clientList);
+					//LOG(DEBUG) << "Size of data being stored: " << returnPacket.size();
 					int result = connection.send((char const*)returnPacket.data(), returnPacket.size());
 					if(result < 0)
 					{

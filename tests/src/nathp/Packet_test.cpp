@@ -17,4 +17,17 @@ TEST(NATPHTest, Packet)
 	nathp::Packet packet2;
 	packet2.setData(packet.data(), packet.size());
 	EXPECT_EQ(packet2.payload.at(4), packet.payload.at(4));
+	EXPECT_EQ(packet2.type, nathp::Packet::Type::request);
+	EXPECT_EQ(packet2.size(), 9);
 }
+
+TEST(NATHPTEST, Packet_setPayload)
+{
+	std::vector<unsigned int> v {1, 2, 3};
+
+	nathp::Packet packet;
+	packet.setPayload(v);
+
+	EXPECT_EQ(packet.size(), 16);
+}
+

@@ -5,6 +5,7 @@
 #include "inet/MasterConnection.hpp"
 #include "nathp/constants.hpp"
 #include "nathp/Packet.hpp"
+#include "nathp/ClientRecord.hpp"
 
 namespace nathp
 {
@@ -14,7 +15,7 @@ namespace nathp
 			Client(std::string serverIPAddress, int port = NATHP_PORT, bool start = true);
 			
 			void connect(void);
-			std::vector<unsigned int> getClientList(void) const;
+			std::vector<ClientRecord> getClientList(void) const;
 
 			int nConnectionRetries = -1;
 		private:

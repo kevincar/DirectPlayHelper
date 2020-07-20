@@ -5,6 +5,7 @@
 #include "inet/MasterConnection.hpp"
 #include "nathp/constants.hpp"
 #include "nathp/Packet.hpp"
+#include "nathp/ClientRecord.hpp"
 
 namespace nathp
 {
@@ -23,7 +24,7 @@ namespace nathp
 
 			Server(inet::TCPAcceptor::AcceptHandler const& acceptHandler, ProcessHandler const& processHandler, unsigned int port = NATHP_PORT);
 
-			std::vector<unsigned int> getClientList(void) const;
+			std::vector<ClientRecord> getClientList(void) const;
 			bool connectoToClient(unsigned int clientId);
 			State getState(void) const;
 

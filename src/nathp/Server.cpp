@@ -24,16 +24,19 @@ namespace nathp
 		 this->setState(Server::State::READY);
 	}
 
-	std::vector<unsigned int> Server::getClientList(void) const
+	std::vector<ClientRecord> Server::getClientList(void) const
 	{
 		//LOG(DEBUG) << "Server::getClientList";
-		std::vector<unsigned int> result {};
+		std::vector<nathp::ClientRecord> result {};
 		std::vector<inet::TCPAcceptor const*> acceptors = this->pMasterConnection->getAcceptors();
 		std::vector<inet::TCPConnection const*> connections = acceptors.at(0)->getConnections();
 		for(inet::TCPConnection const* curConn : connections)
 		{
 			unsigned int connId = static_cast<int>(*curConn);
-			result.push_back(connId);
+			ClientRecord cr;
+			cr.id = connId;
+			cr.address = curConn->getDestAddressString();
+			result.push_back(cr);
 		}
 		//LOG(DEBUG) << "Server: N Connections = " << result.size();
 		return result;
@@ -87,9 +90,14 @@ namespace nathp
 				{
 					Packet returnPacket {};
 					returnPacket.type = Packet::Type::response;
-					std::vector<unsigned int> clientList = this->getClientList();
+					std::vector<ClientRecord> clientList = this->getClientList();
+					for(ClientRecord cr : clientList)
+					{
+						unsigned char const* begin = cr.data();
+						unsigned char const* end = begin + cr.size();
+						returnPacket.payload.insert(returnPacket.payload.end(), begin, end);
+					}
 					//LOG(DEBUG) << "size of client list: " << clientList.size();
-					returnPacket.setPayload(clientList);
 					//LOG(DEBUG) << "Size of data being stored: " << returnPacket.size();
 					int result = connection.send((char const*)returnPacket.data(), returnPacket.size());
 					if(result < 0)

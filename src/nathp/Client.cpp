@@ -58,10 +58,10 @@ namespace nathp
 		return;
 	}
 
-	std::vector<unsigned int> Client::getClientList(void) const
+	std::vector<nathp::ClientRecord> Client::getClientList(void) const
 	{
 		//LOG(DEBUG) << "Client: Sending packet request for getClientList";
-		std::vector<unsigned int> result;
+		std::vector<ClientRecord> result;
 		Packet packet;
 		if(this->serverConnection.send((char const*)packet.data(), packet.size()) == -1)
 		{
@@ -71,7 +71,15 @@ namespace nathp
 		std::unique_lock<std::mutex> proc_lock {this->proc_mutex};
 		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.command];});
 		packet.setPayload(this->proc_rslt);
-		packet.getPayload(result);
+		for(auto it = packet.payload.begin(); it != packet.payload.end(); )
+		{
+			ClientRecord cr;
+			_ClientRecord* _cr = reinterpret_cast<_ClientRecord*>(&(*it));
+			unsigned int size = sizeof(_ClientRecord) + _cr->addressLen;
+			cr.setData(reinterpret_cast<unsigned char const*>(_cr), size);
+			result.push_back(cr);
+			it += size;
+		}
 		//LOG(DEBUG) << "Client: sent packet request for getClientList " << result.size();
 		return result;
 	}

@@ -123,11 +123,7 @@ std::unique_ptr<std::thread> startTestNATHPClient(int clientNumber, std::string&
 void redClientProc(nathp::Client& cli) noexcept
 {
 	SLEEP(250);
-	std::vector<unsigned int> clientList = cli.getClientList();
-	for(unsigned int i : clientList)
-	{
-		//LOG(DEBUG) << "Client " << i;
-	}
+	std::vector<nathp::ClientRecord> clientList = cli.getClientList();
 	EXPECT_EQ(clientList.size(), 2) << "Failed to receive the correct amount connected clients";
 	return;
 }

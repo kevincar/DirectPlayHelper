@@ -55,21 +55,68 @@ namespace nathp
 
 		//LOG(DEBUG) << "Client connected: FD = " << static_cast<int>(this->serverConnection) << " | srcAddr = " << this->serverConnection.getAddressString() << " destAddr = " << this->serverConnection.getDestAddressString();
 		this->serverConnection.startHandlerProcess(this->ch);
+		this->id = this->requestClientID();
+		this->serverConnection.setPublicAddress(this->requestPublicAddress());
 		return;
 	}
 
-	std::vector<nathp::ClientRecord> Client::getClientList(void) const
+	unsigned int Client::requestClientID(void) const noexcept
+	{
+		unsigned int result = -1;
+		Packet packet;
+		packet.senderID = -1;
+		packet.recipientID = 0;
+		packet.type = Packet::Type::request;
+		packet.msg = Packet::Message::initClientID;
+		int sendResult = packet.sendVia(this->serverConnection);
+		if(sendResult == -1)
+		{
+			LOG(WARNING) << "Client failed to request the client ID | errno: " << std::to_string(ERRORCODE);
+			return result;
+		}
+
+		std::unique_lock<std::mutex> proc_lock {this->proc_mutex};
+		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.msg];});
+		packet.setPayload(this->proc_rslt);
+		result = *reinterpret_cast<unsigned int*>(packet.payload.data());
+		return result;
+	}
+
+	std::string Client::requestPublicAddress(void) const noexcept
+	{
+		std::string result;
+		Packet packet;
+		packet.senderID = this->id;
+		packet.recipientID = 0;
+		packet.type = Packet::Type::request;
+		packet.msg = Packet::Message::initPublicAddress;
+		int sendResult = packet.sendVia(this->serverConnection);
+		if(sendResult == -1)
+		{
+			LOG(WARNING) << "Client failed to request the client public address | errno: " << std::to_string(ERRORCODE);
+			return result;
+		}
+
+		std::unique_lock<std::mutex> proc_lock {this->proc_mutex};
+		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.msg];});
+		packet.setPayload(this->proc_rslt);
+		result.assign(packet.payload.begin(), packet.payload.end());
+		return result;
+	}
+
+	std::vector<nathp::ClientRecord> Client::getClientList(void) const noexcept
 	{
 		//LOG(DEBUG) << "Client: Sending packet request for getClientList";
 		std::vector<ClientRecord> result;
 		Packet packet;
-		if(this->serverConnection.send((char const*)packet.data(), packet.size()) == -1)
+		int sendResult = packet.sendVia(this->serverConnection);
+		if(sendResult == -1)
 		{
 			LOG(WARNING) << "Client failed to request getClientList | errno: " << std::to_string(ERRORCODE);
 		}
 
 		std::unique_lock<std::mutex> proc_lock {this->proc_mutex};
-		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.command];});
+		this->proc_cv.wait(proc_lock, [&]{return this->proc_stat[packet.msg];});
 		packet.setPayload(this->proc_rslt);
 		for(auto it = packet.payload.begin(); it != packet.payload.end(); )
 		{
@@ -77,11 +124,21 @@ namespace nathp
 			_ClientRecord* _cr = reinterpret_cast<_ClientRecord*>(&(*it));
 			unsigned int size = sizeof(_ClientRecord) + _cr->addressLen;
 			cr.setData(reinterpret_cast<unsigned char const*>(_cr), size);
-			result.push_back(cr);
+			if(cr.address != this->serverConnection.getAddressString())
+				result.push_back(cr);
 			it += size;
 		}
 		//LOG(DEBUG) << "Client: sent packet request for getClientList " << result.size();
 		return result;
+	}
+
+	bool Client::connectToPeer(ClientRecord const& clientRecord) const noexcept
+	{
+		// 1. Set up a new inet::TCPConnection to connect to the server
+		// 2. Use the same connection handler as the server since the protocols
+		// shouldn't be any different
+		// 3. Send a request
+		return true;
 	}
 
 	bool Client::connectionHandler(inet::IPConnection const& connection)
@@ -125,14 +182,17 @@ namespace nathp
 			return;
 		}
 
-		switch(packet.command)
+		switch(packet.msg)
 		{
-			case Packet::Command::getClientList:
-				//LOG(DEBUG) << "Client received a response to a getClientList request " << packet.payload.size();
-				packet.getPayload(this->proc_rslt);
-				this->proc_stat[packet.command] = true;
-				this->proc_cv.notify_all();
-				break;
+			case Packet::Message::initClientID:
+			case Packet::Message::initPublicAddress:
+			case Packet::Message::getClientList:
+				{
+					packet.getPayload(this->proc_rslt);
+					this->proc_stat[packet.msg] = true;
+					this->proc_cv.notify_all();
+					break;
+				}
 			default:
 				LOG(WARNING) << "Client received a NATHP packet with an unrecognized command";
 		}
@@ -142,9 +202,9 @@ namespace nathp
 	void Client::clearProcStat(void) const noexcept
 	{
 		std::lock_guard<std::mutex> proc_lock {this->proc_mutex};
-		for(int i = Packet::Command::getClientList; i < Packet::Command::getClientList + 1; i++)
+		for(int i = Packet::Message::getClientList; i < Packet::Message::getClientList + 1; i++)
 		{
-			Packet::Command j = static_cast<Packet::Command>(i);
+			Packet::Message j = static_cast<Packet::Message>(i);
 			this->proc_stat[j] = false;
 		}
 		return;

@@ -124,7 +124,16 @@ void redClientProc(nathp::Client& cli) noexcept
 {
 	SLEEP(250);
 	std::vector<nathp::ClientRecord> clientList = cli.getClientList();
-	EXPECT_EQ(clientList.size(), 2) << "Failed to receive the correct amount connected clients";
+	EXPECT_EQ(clientList.size(), 1) << "Failed to receive the correct amount connected clients";
+
+	// request to connect to the peer
+	//nathp::ClientRecord peer = clientList.at(0);
+	//cli.connectToPeer(peer);
+
+	// Once Client::connectToPeer, either we're connected or we're not
+	//std::vector<nathp::ClientRecord> connectedPeers = cli.getPeers();
+	//EXPECT_EQ(connectedPeers.length(), 1);
+
 	return;
 }
 

@@ -84,9 +84,43 @@ namespace nathp
 	
 	void Server::processMessage(inet::TCPConnection const& connection, Packet const& packet)
 	{
-		switch(packet.command)
+		switch(packet.msg)
 		{
-			case Packet::Command::getClientList:
+			case Packet::Message::initClientID:
+				{
+					unsigned int id = static_cast<int>(connection);
+					Packet returnPacket;
+					returnPacket.senderID = 0;
+					returnPacket.recipientID = id;
+					returnPacket.type = Packet::Type::response;
+					returnPacket.msg = packet.msg;
+					returnPacket.setPayload(id);
+					int result = returnPacket.sendVia(connection);
+					if(result < 0)
+					{
+						LOG(WARNING) << "Failed to send initClientID response";
+					}
+				}
+				break;
+			case Packet::Message::initPublicAddress:
+				{
+					std::string address = connection.getDestAddressString();
+					std::vector<char> vAddress;
+					vAddress.assign(address.begin(), address.end());
+					Packet returnPacket;
+					returnPacket.senderID = 0;
+					returnPacket.recipientID = static_cast<int>(connection);
+					returnPacket.type = Packet::Type::response;
+					returnPacket.msg = packet.msg;
+					returnPacket.setPayload(vAddress);
+					int result = returnPacket.sendVia(connection);
+					if(result < 0)
+					{
+						LOG(WARNING) << "Failed ot send initPublicAddress response";
+					}
+				}
+				break;
+			case Packet::Message::getClientList:
 				{
 					Packet returnPacket {};
 					returnPacket.type = Packet::Type::response;
@@ -99,7 +133,7 @@ namespace nathp
 					}
 					//LOG(DEBUG) << "size of client list: " << clientList.size();
 					//LOG(DEBUG) << "Size of data being stored: " << returnPacket.size();
-					int result = connection.send((char const*)returnPacket.data(), returnPacket.size());
+					int result = returnPacket.sendVia(connection);
 					if(result < 0)
 					{
 						LOG(WARNING) << "Failed to send getClientList resopnse";

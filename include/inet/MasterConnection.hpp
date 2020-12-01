@@ -35,7 +35,7 @@ namespace inet
 			void removeTCPAcceptor(unsigned int acceptConnID);
 
 			// UDP Connection Control
-			unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>& pPH);
+			UDPConnection* createUDPConnection(std::unique_ptr<ProcessHandler>& pPH);
 			std::vector<UDPConnection const*> getUDPConnections(void) const;
 			void removeUDPConnection(unsigned int connID);
 

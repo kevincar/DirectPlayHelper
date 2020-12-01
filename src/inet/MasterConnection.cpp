@@ -144,7 +144,7 @@ namespace inet
 		//LOG(DEBUG) << "MasterConnection::removeTCPAcceptor - remaining: " << this->acceptors.size();
 	}
 
-	unsigned int MasterConnection::createUDPConnection(std::unique_ptr<ProcessHandler>& pPH)
+	UDPConnection* MasterConnection::createUDPConnection(std::unique_ptr<ProcessHandler>& pPH)
 	{
 		//LOG(DEBUG) << "MasterConnection::createUDPConnection";
 		std::unique_ptr<UDPConnection> newConnection = std::make_unique<UDPConnection>();
@@ -159,7 +159,7 @@ namespace inet
 		this->processHandlers.emplace(connectionID, std::move(ph));
 
 		//LOG(DEBUG) << "MasterConnection::createUDPConnection - Complete";
-		return 0;
+		return this->udpConnections.back().get();
 	}
 
 	std::vector<UDPConnection const*> MasterConnection::getUDPConnections(void) const

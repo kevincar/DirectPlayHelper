@@ -13,8 +13,10 @@ namespace nathp
 
 		_Packet* _packet;
 		_packet = (_Packet*)std::malloc(this->size());
+		_packet->senderID = this->senderID;
+		_packet->recipientID = this->recipientID;
 		_packet->type = this->type;
-		_packet->command = this->command;
+		_packet->msg = this->msg;
 		_packet->payloadSize = (uint16_t)this->payload.size();
 		std::copy(this->payload.begin(), this->payload.end(), _packet->payload);
 
@@ -42,8 +44,10 @@ namespace nathp
 		}
 
 		_Packet* _packet = (_Packet*)data;
+		this->senderID = _packet->senderID;
+		this->recipientID = _packet->recipientID;
 		this->type = _packet->type;
-		this->command = _packet->command;
+		this->msg = _packet->msg;
 		this->payload.resize(_packet->payloadSize);
 		std::copy(_packet->payload, _packet->payload + _packet->payloadSize, this->payload.begin());
 		return;

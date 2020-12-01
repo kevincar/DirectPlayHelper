@@ -41,10 +41,16 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 					return false;
 				}
 
-				if(std::string(buffer) == "Test Data.")
+				if(std::string(buffer) == "OK")
 				{
 					std::lock_guard<std::mutex> done_lock {done_mutex};
 					done = true;
+				}
+				else if(std::string(buffer) == "Test Data.")
+				{
+					std::string sendData = "HI!";
+					result = connection.send(sendData.c_str(), sendData.size());
+					EXPECT_NE(result, -1);
 				}
 				//LOG(DEBUG) << "Server: Received data: " << std::string(buffer);
 			}
@@ -147,6 +153,15 @@ std::unique_ptr<std::thread> startTestClient(std::string& serverAddress, std::mu
 		//LOG(DEBUG) << "Client: test data sent.";
 		EXPECT_NE(result, -1);
 
+		// Receive data
+		std::string recvData(1024, '\0');
+		result = tcpc.recv(recvData.data(), recvData.size());
+		EXPECT_NE(result, -1);
+
+		sendData = "OK";
+		result = tcpc.send(sendData.c_str(), static_cast<unsigned>(sendData.size()+1));
+		//LOG(DEBUG) << "Client: test data sent.";
+		EXPECT_NE(result, -1);
 		
 		// Wait for server complete
 		std::unique_lock<std::mutex> statusLock {statusMutex};

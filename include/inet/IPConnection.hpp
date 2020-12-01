@@ -35,7 +35,10 @@ namespace inet
 			std::string const getPortString(void) const;
 			std::string const getPort(void) const;
 			std::string const getDestAddressString(void) const;
+			std::string const getPublicAddressString(void) const;
 			void setAddress(std::string const& address);
+			void setPublicAddress(std::string const& address);
+			void setPort(unsigned int port);
 			void listen(void);
 			bool isDataReady(double timeout) const;
 			int connect(std::string addressString);
@@ -57,10 +60,12 @@ namespace inet
 			mutable std::mutex socket_mutex;
 			mutable std::mutex srcAddr_mutex;
 			mutable std::mutex destAddr_mutex;
+			mutable std::mutex publicAddr_mutex;
 			mutable std::mutex done_mutex;
 			Socket socket;
 			ServiceAddress srcAddress {};
 			ServiceAddress destAddress {};
+			ServiceAddress publicAddress {};
 			bool done = false;
 			std::thread handlerProcess;
 	};

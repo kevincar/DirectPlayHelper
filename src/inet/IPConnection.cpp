@@ -55,6 +55,12 @@ namespace inet
 		return this->destAddress.getAddressString();
 	}
 
+	std::string const IPConnection::getPublicAddressString(void) const
+	{
+		std::lock_guard<std::mutex> lock {this->publicAddr_mutex};
+		return this->publicAddress.getAddressString();
+	}
+
 	void IPConnection::setAddress(std::string const& address)
 	{
 		{
@@ -80,6 +86,19 @@ namespace inet
 		//{
 		this->updateSrcAddr();
 		//}
+	}
+
+	void IPConnection::setPublicAddress(std::string const& address)
+	{
+		std::lock_guard<std::mutex> lock {this->publicAddr_mutex};
+		this->publicAddress.setAddressString(address);
+	}
+
+	void IPConnection::setPort(unsigned int port)
+	{
+		std::string ipAddress = this->getIPAddressString();
+		std::string newAddress = ipAddress + ":" + std::to_string(port);
+		this->setAddress(newAddress);
 	}
 
 	void IPConnection::listen(void)

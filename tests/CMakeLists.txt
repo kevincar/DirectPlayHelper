@@ -23,6 +23,16 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
                  ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
                  EXCLUDE_FROM_ALL)
 
+# CTPL Dependency
+ExternalProject_Add(ctpl
+	PREFIX "ctpl"
+	GIT_REPOSITORY "https://github.com/vit-vit/ctpl"
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND "")
+ExternalProject_Get_Property(ctpl SOURCE_DIR)
+set(ctpl_SOURCE_DIR ${SOURCE_DIR})
+message(STATUS "ctpl dir: ${ctpl_SOURCE_DIR}")
 # Make the test executable
 add_executable("${TEST_PROJECT_NAME}"
 	../src/DPServer.cpp
@@ -40,7 +50,7 @@ add_executable("${TEST_PROJECT_NAME}"
 
 	./src/nathp/Packet_test.cpp
 	./src/nathp/ClientRecord_test.cpp
-	./src/nathp/Server_test.cpp
+	./src/nathp/Protocol_test.cpp
 	)
 
 # Includes
@@ -50,6 +60,7 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 		./include
 		"${gtest_SOURCE_DIR}/include"
 		"${install_dir}/include"
+		"${ctpl_SOURCE_DIR}"
 		)
 
 # Link dependencies

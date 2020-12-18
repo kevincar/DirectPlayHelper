@@ -24,6 +24,10 @@ namespace server_asset
 	{
 		// Create the nathp server
 		nathp::Server server {acceptHandler, processHandler};
+
+		// wait for connection
+		// status_cv.waite(statusLock, [&]{return server.getClientList().size() == nExpectedClients})
+
 		return true;
 	}
 }

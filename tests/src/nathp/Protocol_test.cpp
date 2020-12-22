@@ -1,7 +1,8 @@
+#include "nathp/assets/server.hpp"
+#include "nathp/assets/protocol.hpp"
 #include "nathp/Server.hpp"
 #include "nathp/Client.hpp"
 #include "ctpl_stl.h"
-#include "assets/server.hpp"
 #include "gtest/gtest.h"
 #include <g3log/g3log.hpp>
 
@@ -173,9 +174,17 @@ TEST(NATHPTest, Constructor)
 
 TEST(NATHPTest, Connection)
 {
+	std::mutex status_mutex {};
+	std::condition_variable status_cv {};
+
+	nathp::asset::lock_pack lp {};
+	lp.status_mutex = &status_mutex;
+	lp.status_cv = &status_cv;
+
 	ctpl::thread_pool p(3);
-	std::future<bool> r = p.push(server_asset::startServer);
+	std::future<bool> r = p.push(nathp::asset::server::start, lp);
 	EXPECT_EQ(r.get(), true);
+
 	//int connectedClients = 0;
 	//std::mutex connClientsMutex;
 

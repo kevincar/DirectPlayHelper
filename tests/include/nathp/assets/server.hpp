@@ -4,6 +4,7 @@
 
 #include "nathp/Server.hpp"
 #include "nathp/assets/protocol.hpp"
+#include <g3log/g3log.hpp>
 
 namespace nathp 
 {
@@ -33,6 +34,16 @@ namespace nathp
 			{
 				// Create the nathp server
 				nathp::Server server {acceptHandler, processHandler};
+
+				// Wait for Clients to finish
+				LOG(INFO) << "Waiting for clients to finish";
+				std::unique_lock<std::mutex> status_lock {*lp.status_mutex};
+				lp.status_cv->wait(status_lock, [&]{
+						LOG(INFO) << "&lp.status == " << (long)lp.status;
+						LOG(INFO) << "lp.status == " << *lp.status;
+						return *lp.status == "Clients Done";
+						});
+				status_lock.unlock();
 
 				return true;
 			}

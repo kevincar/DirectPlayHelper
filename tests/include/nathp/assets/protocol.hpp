@@ -12,7 +12,7 @@ namespace nathp
 		class lock_pack
 		{
 			public:
-				std::string status;
+				std::string* status;
 				std::mutex* status_mutex;
 				std::condition_variable* status_cv;
 		};

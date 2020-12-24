@@ -186,8 +186,10 @@ TEST(NATHPTest, Connection)
 
 	ctpl::thread_pool p(3);
 	std::future<bool> r = p.push(nathp::asset::server::start, lp);
-	std::future<bool> rc = p.push(nathp::asset::client::start, lp);
+	std::future<bool> rc = p.push(nathp::asset::client::start, lp, nathp::asset::client::red);
+	std::future<bool> rc2 = p.push(nathp::asset::client::start, lp, nathp::asset::client::gold);
 
+	EXPECT_EQ(rc2.get(), true);
 	EXPECT_EQ(rc.get(), true);
 	EXPECT_EQ(r.get(), true);
 

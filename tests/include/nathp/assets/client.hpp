@@ -18,7 +18,7 @@ namespace nathp
 			std::condition_variable done_cv;
 			int n_clients = 0;
 
-			bool start(int id, lock_pack& lp)
+			bool start(int id, lock_pack& lp, std::function<void(void)> f)
 			{
 				n_clients++;
 
@@ -30,6 +30,8 @@ namespace nathp
 				EXPECT_NO_THROW({
 						client.connect();
 						});
+
+				f();
 
 				n_clients--;
 				
@@ -43,6 +45,16 @@ namespace nathp
 				LOG(INFO) << "Client finished...";
 				LOG(INFO) << "&lp.status == " << (long)lp.status;
 				return true;
+			}
+
+			void red()
+			{
+				LOG(INFO) << "RED CLIENT here :)";
+			}
+
+			void gold()
+			{
+				LOG(INFO) << "GOLD CLIENT HERE :)";
 			}
 		}
 	}

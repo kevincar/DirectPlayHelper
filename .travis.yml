@@ -14,7 +14,7 @@ install:
 
 before_script:
     - python -m pip install cpplint
-    - cpplint --filter=-build/c++11 ./include/**/* ./src/**/* ./tests/**/*
+    - cpplint --filter=-build/c++11,-legal/copyright ./include/**/* ./src/**/* ./tests/**/*
 
 script:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then sh ./scripts/osx/build.sh ; fi

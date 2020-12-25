@@ -1,7 +1,3 @@
-/*
- * Copyright 2020 Kevin Davis
- */
-
 #ifndef INCLUDE_INET_SOCKET_HPP_
 #define INCLUDE_INET_SOCKET_HPP_
 

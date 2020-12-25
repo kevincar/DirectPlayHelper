@@ -1,18 +1,21 @@
+/*
+ * Copyright 2020 Kevin Davis
+ */
 
-#ifndef INET_TCP_CONNECTION_HPP
-#define INET_TCP_CONNECTION_HPP
+#ifndef INCLUDE_INET_TCPCONNECTION_HPP_
+#define INCLUDE_INET_TCPCONNECTION_HPP_
 
 #include <thread>
+
 #include "inet/IPConnection.hpp"
 
-namespace inet
-{
-	class TCPConnection : public IPConnection
-	{
-		public:
-			TCPConnection(void);
-			TCPConnection(int captureRawSocket, IPConnection const& parentConnection, sockaddr_in& destAddr);
-	};
-}
+namespace inet {
+class TCPConnection : public IPConnection {
+ public:
+  TCPConnection(void);
+  TCPConnection(int captureRawSocket, IPConnection const& parentConnection,
+                sockaddr_in const& destAddr);
+};
+}  // namespace inet
 
-#endif /* INET_TCP_CONNECTION_HPP */
+#endif  // INCLUDE_INET_TCPCONNECTION_HPP_

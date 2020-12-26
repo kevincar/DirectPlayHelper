@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "inet/Socket.hpp"
 #include "inet/config.hpp"
+#include "inet/Socket.hpp"
 
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>

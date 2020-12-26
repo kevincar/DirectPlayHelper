@@ -64,7 +64,7 @@ TEST(MasterConnectionTest, createAndRemoveUDPConnection)
 
 	std::unique_ptr<inet::MasterConnection::ProcessHandler> ph = std::make_unique<inet::MasterConnection::ProcessHandler>([](inet::IPConnection const& conn)->bool{return true;});
 
-	mc.createUDPConnection(ph);
+	mc.createUDPConnection(std::move(ph));
 
 	//ASSERT_EQ(mc.getNumUDPConnections(), 1u);
 

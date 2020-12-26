@@ -65,11 +65,11 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 			bool isServerDone = false;
 			while(!isServerDone)
 			{
-				fd_set fdSet;
-				FD_ZERO(&fdSet);
+				fd_set server_fd_set;
+				FD_ZERO(&server_fd_set);
 
 				// load the fd_set with connections
-				tcpa.loadFdSetConnections(fdSet);
+				tcpa.loadFdSetConnections(&server_fd_set);
 
 				// call select
 				int const largestSocket = tcpa.getLargestSocket();
@@ -77,11 +77,11 @@ std::unique_ptr<std::thread> startTestServer(std::string& serverAddress, std::mu
 				struct timeval tv;
 				tv.tv_sec = 5;
 				tv.tv_usec = 0;
-				int result = ::select(largestSocket + 1, &fdSet, NULL, NULL, &tv);
+				int result = ::select(largestSocket + 1, &server_fd_set, NULL, NULL, &tv);
 				ASSERT_NE(result, -1);
 
 				// check connections
-				tcpa.checkAndProcessConnections(fdSet);
+				tcpa.checkAndProcessConnections(server_fd_set);
 
 				// Check done
 				{
@@ -392,14 +392,14 @@ TEST(TCPAcceptorTest, loadFdSetConnections)
 
 	inet::TCPAcceptor tcpa(acceptHandler, processHandler);
 
-	fd_set fdSet;
-	FD_ZERO(&fdSet);
-	tcpa.loadFdSetConnections(fdSet);
+	fd_set acceptor_fd_set;
+	FD_ZERO(&acceptor_fd_set);
+	tcpa.loadFdSetConnections(&acceptor_fd_set);
 	
 	struct timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 500;
-	int result = ::select(tcpa.getLargestSocket()+1, &fdSet, NULL, NULL, &tv);
+	int result = ::select(tcpa.getLargestSocket()+1, &acceptor_fd_set, NULL, NULL, &tv);
 	ASSERT_NE(result, -1);
 }
 

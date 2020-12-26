@@ -1,5 +1,5 @@
-#ifndef INET_CONFIG_HPP
-#define INET_CONFIG_HPP
+#ifndef INCLUDE_INET_CONFIG_HPP_
+#define INCLUDE_INET_CONFIG_HPP_
 
 #cmakedefine HAVE_UNISTD_H
 #cmakedefine HAVE_ERRNO_H
@@ -10,4 +10,4 @@
 #cmakedefine HAVE_WS2TCPIP_H
 #cmakedefine HAVE_SELECT_H
 
-#endif /* INET_CONFIG_HPP */
+#endif  // INCLUDE_INET_CONFIG_HPP_

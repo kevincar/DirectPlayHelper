@@ -70,7 +70,7 @@ TEST(UDPConnection, sendAndRecv)
 
 		char buffer[500] = {};
 		inet::ServiceAddress sa {};
-		udpc.recvFrom(buffer, 500, sa);
+		udpc.recvFrom(buffer, 500, &sa);
 		EXPECT_STREQ(buffer, "my data");
 
 		std::string data = "your data received";

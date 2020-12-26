@@ -34,7 +34,7 @@ class MasterConnection {
   void removeTCPAcceptor(unsigned int acceptConnID);
 
   // UDP Connection Control
-  unsigned int createUDPConnection(std::unique_ptr<ProcessHandler> const& pPH);
+  unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>&& pPH);
   std::vector<UDPConnection const*> getUDPConnections(void) const;
   void removeUDPConnection(unsigned int connID);
 
@@ -58,7 +58,7 @@ class MasterConnection {
   std::vector<std::unique_ptr<UDPConnection>> udpConnections;
   mutable std::mutex udp_mutex;
 
-  std::map<unsigned int, std::unique_ptr<ProcessHandler>> processHandlers;
+  std::map<const unsigned int, std::unique_ptr<ProcessHandler>> processHandlers;
   mutable std::mutex proc_mutex;
 
   void stopListening(void);
@@ -70,13 +70,13 @@ class MasterConnection {
       void) const;
 
   // Connection Processing
-  bool loadFdSetConnections(fd_set&) const;
-  bool loadFdSetTCPConnections(fd_set&) const;
-  bool loadFdSetUDPConnections(fd_set&) const;
-  int waitForFdSetConnections(fd_set&) const;
+  bool loadFdSetConnections(fd_set*) const;
+  bool loadFdSetTCPConnections(fd_set*) const;
+  bool loadFdSetUDPConnections(fd_set*) const;
+  int waitForFdSetConnections(fd_set*) const;
   void checkAndProcessConnections();
-  void checkAndProcessTCPConnections(fd_set const& fdSet);
-  void checkAndProcessUDPConnections(fd_set const& fdSet);
+  void checkAndProcessTCPConnections(fd_set* fdSet);
+  void checkAndProcessUDPConnections(fd_set* fdSet);
 
   int getLargestSocket(void) const;
   int getLargestTCPSocket(void) const;

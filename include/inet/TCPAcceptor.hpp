@@ -20,8 +20,8 @@ class TCPAcceptor : public TCPConnection {
 
   std::vector<TCPConnection const*> getConnections(void) const;
   void removeConnection(int connectionSocket);
-  TCPConnection const& accept(void);
-  void loadFdSetConnections(fd_set const& fdSet);
+  std::unique_ptr<TCPConnection> const& accept(void);
+  void loadFdSetConnections(fd_set* acceptor_fd_set);
   void checkAndProcessConnections(fd_set const& fdSet);
 
   AcceptHandler const getAcceptHandler() const;

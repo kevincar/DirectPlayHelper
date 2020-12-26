@@ -10,7 +10,7 @@ class UDPConnection : public IPConnection {
   int sendTo(char const* data, int const data_len,
              ServiceAddress const& addr) const;
   int recvFrom(char* buffer, int const buffer_len,
-          ServiceAddress const& addr) const;
+          ServiceAddress* addr) const;
 };
 }  // namespace inet
 

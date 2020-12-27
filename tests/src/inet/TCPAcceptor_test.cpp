@@ -9,9 +9,11 @@
 // ==================================================================
 
 std::unique_ptr<std::thread> startTestServer(
-    std::string const& serverAddress, std::mutex const& serverAddressMutex,
-    std::string const& status, std::mutex const& statusMutex,
-    std::condition_variable const& statusCV) {
+    std::shared_ptr<std::string> serverAddress,
+    std::shared_ptr<std::mutex> serverAddressMutex,
+    std::shared_ptr<std::string> status,
+    std::shared_ptr<std::mutex> statusMutex,
+    std::shared_ptr<std::condition_variable> statusCV) {
   // LOG(DEBUG) << "Server: Starting thread...";
   return std::make_unique<std::thread>([&] {
     bool done = false;
@@ -51,8 +53,8 @@ std::unique_ptr<std::thread> startTestServer(
     // LOG(DEBUG) << "Server: main listening fd is " << static_cast<int>(tcpa);
     tcpa.setAddress("127.0.0.1:0");
     {
-      std::lock_guard<std::mutex> serverAddressLock{serverAddressMutex};
-      serverAddress = tcpa.getAddressString();
+      std::lock_guard<std::mutex> serverAddressLock{*serverAddressMutex};
+      *serverAddress = tcpa.getAddressString();
       tcpa.listen();
       // LOG(DEBUG) << "Server: server started with address as " <<
       // serverAddress;
@@ -94,17 +96,19 @@ std::unique_ptr<std::thread> startTestServer(
 
     processor.join();
 
-    std::unique_lock<std::mutex> statusLock{statusMutex};
-    statusCV.wait(statusLock, [&] { return status == "done"; });
+    std::unique_lock<std::mutex> statusLock{*statusMutex};
+    statusCV->wait(statusLock, [&] { return *status == "done"; });
 
     return;
   });
 }
 
 std::unique_ptr<std::thread> startTestClient(
-    std::string const& serverAddress, std::mutex const& serverAddressMutex,
-    std::string const& status, std::mutex const& statusMutex,
-    std::condition_variable const& statusCV) {
+    std::shared_ptr<std::string> serverAddress,
+    std::shared_ptr<std::mutex> serverAddressMutex,
+    std::shared_ptr<std::string> status,
+    std::shared_ptr<std::mutex> statusMutex,
+    std::shared_ptr<std::condition_variable> statusCV) {
   return std::make_unique<std::thread>([&] {
     // Start the client
     bool connected = false;
@@ -112,9 +116,9 @@ std::unique_ptr<std::thread> startTestClient(
     inet::TCPConnection tcpc{};
     // LOG(DEBUG) << "Client: client fd = " << static_cast<unsigned>(tcpc);
     while (!connected) {
-      std::lock_guard<std::mutex> serverAddressLock{serverAddressMutex};
+      std::lock_guard<std::mutex> serverAddressLock{*serverAddressMutex};
       // LOG(DEBUG) << "Client: Attempting to connect to " << serverAddress;
-      int result = tcpc.connect(serverAddress);
+      int result = tcpc.connect(*serverAddress);
       if (result == 0) {
         connected = true;
       }
@@ -129,10 +133,10 @@ std::unique_ptr<std::thread> startTestClient(
 
     // Set status
     {
-      std::unique_lock<std::mutex> statusLock{statusMutex};
-      status = "done";
+      std::unique_lock<std::mutex> statusLock{*statusMutex};
+      *status = "done";
     }
-    statusCV.notify_one();
+    statusCV->notify_one();
     return;
   });
 }
@@ -315,8 +319,7 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove) {
             if (!keepConnection) {
               // Remove Connection
               tcpa.removeConnection(*curConn);
-              ASSERT_EQ(tcpa.getConnections().size(),
-                        static_cast<uint64_t>(0));
+              ASSERT_EQ(tcpa.getConnections().size(), static_cast<uint64_t>(0));
               // std::cout << "Proc: Connection removed" << std::endl;
 
               if (connections.size() == 1) {
@@ -367,7 +370,7 @@ TEST(TCPAcceptorTest, accpetProcessAndRemove) {
     const unsigned int kBufSize = 255;
     char buffer[kBufSize];
 
-    tcp.recv(buffer, bufSize);
+    tcp.recv(buffer, kBufSize);
     std::string data{buffer};
 
     ASSERT_STREQ(data.data(), "Thank you.");
@@ -404,19 +407,23 @@ TEST(TCPAcceptorTest, loadFdSetConnections) {
 }
 
 TEST(TCPAcceptorTest, checkAndProcessConnections) {
-  std::string status;
-  std::mutex statusMutex;
-  std::condition_variable statusCV;
+  std::shared_ptr<std::string> status = std::make_shared<std::string>();
+  std::shared_ptr<std::mutex> statusMutex = std::make_shared<std::mutex>();
+  std::shared_ptr<std::condition_variable> statusCV =
+      std::make_shared<std::condition_variable>();
 
   // Server
-  std::string serverAddress{"127.0.0.1:0"};
-  std::mutex serverAddressMutex;
+  std::shared_ptr<std::string> serverAddress =
+      std::make_shared<std::string>("127.0.0.1:0");
+  std::shared_ptr<std::mutex> p_server_address_mutex =
+      std::make_shared<std::mutex>();
+  // std::mutex serverAddressMutex;
   std::unique_ptr<std::thread> serverThread = startTestServer(
-      serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+      serverAddress, p_server_address_mutex, status, statusMutex, statusCV);
 
   // Client
   std::unique_ptr<std::thread> clientThread = startTestClient(
-      serverAddress, serverAddressMutex, status, statusMutex, statusCV);
+      serverAddress, p_server_address_mutex, status, statusMutex, statusCV);
 
   serverThread->join();
   clientThread->join();

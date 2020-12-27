@@ -9,9 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 #####################################################################
-#																	#
-#						DEPENDENCIES								#
-#																	#
+#																	                                  #
+#						DEPENDENCIES								                            #
+#																	                                  #
 #####################################################################
 
 ExternalProject_Add(g3log_project
@@ -32,9 +32,9 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 add_dependencies(g3log g3log_project)
 
 #####################################################################
-#																	#
-#							PROGRAM									#
-#																	#
+#																	                                  #
+#							PROGRAM									                              #
+#																	                                  #
 #####################################################################
 
 # build the app

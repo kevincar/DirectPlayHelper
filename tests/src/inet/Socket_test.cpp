@@ -7,40 +7,31 @@
 #include <winsock2.h>
 #endif /* HAVE_WINSOCK2_H */
 
-#include "inet/Socket.hpp"
 #include "gtest/gtest.h"
+#include "inet/Socket.hpp"
 
-TEST(SocketTest, constructor)
-{
-	EXPECT_NO_THROW({
-			inet::Socket socket(AF_INET, SOCK_STREAM, 0);
-			});
+TEST(SocketTest, constructor) {
+  EXPECT_NO_THROW({ inet::Socket socket(AF_INET, SOCK_STREAM, 0); });
 
-	EXPECT_THROW({
-			inet::Socket socket(999, 999, 999);
-			}, std::out_of_range);
+  EXPECT_THROW({ inet::Socket socket(999, 999, 999); }, std::out_of_range);
 }
 
-TEST(SocketTest, captureConstructor)
-{
-	int sock = ::socket(AF_INET, SOCK_STREAM, 0);
-	EXPECT_NO_THROW({
-			inet::Socket socket (sock, AF_INET, SOCK_STREAM, 0);
-			});
+TEST(SocketTest, captureConstructor) {
+  int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+  EXPECT_NO_THROW({ inet::Socket socket(sock, AF_INET, SOCK_STREAM, 0); });
 }
 
 // Until we test for bound sockets we shouldn't test for this
-//TEST(SocketTest, listen)
+// TEST(SocketTest, listen)
 //{
-	//// This should throw on unbound sockets
-	//inet::Socket socket(AF_INET, SOCK_STREAM, 0);
-	//EXPECT_THROW({
-			//socket.listen();
-			//});
+//// This should throw on unbound sockets
+// inet::Socket socket(AF_INET, SOCK_STREAM, 0);
+// EXPECT_THROW({
+// socket.listen();
+//});
 //}
 
-TEST(SocketTest, operatorInt)
-{
-	inet::Socket sock {AF_INET, SOCK_STREAM, 0};
-	EXPECT_GE(sock, 0);
+TEST(SocketTest, operatorInt) {
+  inet::Socket sock{AF_INET, SOCK_STREAM, 0};
+  EXPECT_GE(sock, 0);
 }

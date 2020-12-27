@@ -20,7 +20,7 @@ class Socket {
  public:
   Socket(int f, int t, int p);
   Socket(int capture, int f, int t, int p);
-  virtual ~Socket();
+  ~Socket();
   void listen(void);
   operator int() const;
 

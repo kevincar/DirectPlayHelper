@@ -78,7 +78,7 @@ unsigned int MasterConnection::getNumConnections(void) const {
   return result;
 }
 
-unsigned int MasterConnection::createTCPAcceptor(
+TCPAcceptor* MasterConnection::createTCPAcceptor(
     TCPAcceptor::AcceptHandler const& pAcceptPH,
     TCPAcceptor::ProcessHandler const& pChildPH) {
   std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
@@ -86,7 +86,7 @@ unsigned int MasterConnection::createTCPAcceptor(
   std::unique_ptr<TCPAcceptor> pAcceptor{std::move(acceptor)};
   this->acceptors.push_back(std::move(pAcceptor));
 
-  return 0;
+  return this->acceptors.back().get();
 }
 
 std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const {
@@ -121,7 +121,7 @@ void MasterConnection::removeTCPAcceptor(unsigned int acceptorID) {
   }
 }
 
-unsigned int MasterConnection::createUDPConnection(
+UDPConnection* MasterConnection::createUDPConnection(
     std::unique_ptr<ProcessHandler>&& process_handler) {
   std::unique_ptr<UDPConnection> newConnection =
       std::make_unique<UDPConnection>();
@@ -134,7 +134,7 @@ unsigned int MasterConnection::createUDPConnection(
 
   this->processHandlers.emplace(kConnFd, std::move(process_handler));
 
-  return 0;
+  return this->udpConnections.back().get();
 }
 
 std::vector<UDPConnection const*> MasterConnection::getUDPConnections(
@@ -200,6 +200,14 @@ void MasterConnection::setListeningState(bool state) {
 void MasterConnection::beginListening() {
   // Check for a new connection every 5 seconds
   while (this->isListening()) {
+    /*
+     * On windows, this thread can run through fast enough that mutex
+     * locks aren't released for a long enough time for other threads
+     * to utilize shared resources. This delay allows a small window
+     * for shared resources to be aquired by other threads that need
+     * them. This is not the most elegant solution but works for now.
+     */
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     this->checkAndProcessConnections();
   }
 }

@@ -13,9 +13,9 @@
 namespace inet {
 class MasterConnection {
  public:
-  typedef std::function<bool(IPConnection const&)> ProcessHandler;
-
+  
   explicit MasterConnection(double const t = 5.0);
+  
   ~MasterConnection(void);
 
   // Listening Control
@@ -39,6 +39,8 @@ class MasterConnection {
   void removeUDPConnection(unsigned int connID);
 
   std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
+  
+  typedef std::function<bool(IPConnection const&)> ProcessHandler;
 
  private:
   double timeout = 5.0;

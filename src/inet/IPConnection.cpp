@@ -1,4 +1,12 @@
+#include "inet/IPConnection.hpp"
+
+#include <cmath>
+#include <iostream>
+#include <g3log/g3log.hpp>
+
 #include "inet/config.hpp"
+#include "inet/ServiceAddress.hpp"
+#include "inet/Socket.hpp"
 
 #ifdef HAVE_SOCKET_H
 #include <sys/select.h>
@@ -9,15 +17,12 @@
 #include <winsock2.h>
 #endif /* HAVE_WINSOCK2_H */
 
-#include <cmath>
-
-#include "inet/IPConnection.hpp"
-#include "inet/ServiceAddress.hpp"
-#include "inet/Socket.hpp"
 
 namespace inet {
 IPConnection::IPConnection(int type, int protocol)
-    : socket(AF_INET, type, protocol) {}
+    : socket(AF_INET, type, protocol) {
+  this->configureSocket();
+}
 
 IPConnection::IPConnection(int capture, int type, int protocol,
                            IPConnection const& parentConnection,
@@ -25,6 +30,13 @@ IPConnection::IPConnection(int capture, int type, int protocol,
     : socket(capture, AF_INET, type, protocol),
       srcAddress(parentConnection.srcAddress.getAddressString()),
       destAddress(destAddr) {}
+      
+
+IPConnection::~IPConnection()	{
+  if(this->handlerProcess.joinable()) {
+    this->endHandlerProcess();
+    }
+}
 
 std::string const IPConnection::getAddressString(void) const {
   std::lock_guard<std::mutex> lock{this->srcAddr_mutex};
@@ -34,6 +46,16 @@ std::string const IPConnection::getAddressString(void) const {
 std::string const IPConnection::getIPAddressString(void) const {
   std::lock_guard<std::mutex> lock{this->srcAddr_mutex};
   return this->srcAddress.getIPAddressString();
+}
+
+std::string const IPConnection::getDestAddressString(void) const {
+  std::lock_guard<std::mutex> lock {this->destAddr_mutex};
+  return this->destAddress.getAddressString();
+}
+
+std::string const IPConnection::getPublicAddressString(void) const {
+  std::lock_guard<std::mutex> lock {this->publicAddr_mutex};
+  return this->publicAddress.getAddressString();
 }
 
 void IPConnection::setAddress(std::string const& address) {
@@ -63,6 +85,18 @@ void IPConnection::setAddress(std::string const& address) {
   this->updateSrcAddr();
   //}
 }
+
+void IPConnection::setPublicAddress(std::string const& address) {
+  std::lock_guard<std::mutex> lock {this->publicAddr_mutex};
+  this->publicAddress.setAddressString(address);
+}
+
+void IPConnection::setPort(unsigned int port) {
+  std::string ipAddress = this->getIPAddressString();
+  std::string newAddress = ipAddress + ":" + std::to_string(port);
+  this->setAddress(newAddress);
+}
+
 
 void IPConnection::listen(void) {
   std::lock_guard<std::mutex> socket_lock{this->socket_mutex};
@@ -123,6 +157,36 @@ int IPConnection::recv(char* buffer, unsigned int buffer_len) const {
   return static_cast<int>(result);
 }
 
+bool IPConnection::isDone(void) const {
+  std::lock_guard<std::mutex> done_lock {this->done_mutex};
+  return this->done;
+}
+
+void IPConnection::startHandlerProcess(ConnectionHandler const& connectionHandler) {
+  if(this->handlerProcess.joinable()) return;
+  this->handlerProcess = std::thread([&]{
+    //LOG(DEBUG) << "Starting IPConnection process";
+    while(!this->isDone()) {
+      bool toContinue = connectionHandler(*this);
+      if(!toContinue) {
+        break;
+      }
+    }
+    //LOG(DEBUG) << "Done 1";
+    while(!this->isDone()){}
+    //LOG(DEBUG) << "Done 2";
+  });
+}
+
+void IPConnection::endHandlerProcess(void) {
+  //LOG(DEBUG) << "Ending process";
+  {std::lock_guard<std::mutex> done_lock {this->done_mutex};
+			this->done = true;
+		}
+		this->handlerProcess.join();			
+		//LOG(DEBUG) << "Thread rejoined";
+	}
+
 IPConnection::operator int const() const {
   return static_cast<int>(this->socket);
 }
@@ -132,10 +196,20 @@ void IPConnection::updateSrcAddr(void) {
   SOCKLEN addrlen{sizeof(sockaddr_in)};
   int result = ::getsockname(this->socket, this->srcAddress, &addrlen);
   if (result == -1) {
-    throw std::out_of_range(
-        std::string(
-            "IPConnection::listen failed to update address after listen: ") +
-        std::to_string(ERRORCODE));
+    throw std::out_of_range(std::string(
+      "IPConnection::listen failed to update address after listen: ") +
+      std::to_string(ERRORCODE));
+}
+
+void IPConnection::configureSocket(void) {
+  std::lock_guard<std::mutex> socket_lock {this->socket_mutex};
+  OPTVAL_T value = 1;
+  unsigned int value_size = sizeof(value);
+  int result = ::setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &value, value_size);
+  if(result != 0) {
+    throw std::out_of_range(std::string(
+      "IPConnection::configureSocket failed to configure the socket: ") +
+      std::to_string(ERRORCODE));
   }
 }
 }  // namespace inet

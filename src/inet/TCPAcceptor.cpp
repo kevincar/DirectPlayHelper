@@ -1,13 +1,17 @@
 
-#include <inet/TCPAcceptor.hpp>
+#include "inet/TCPAcceptor.hpp"
+
 #include <iostream>
 #include <memory>
+
+#include <g3log/g3log.hpp>
+
 
 namespace inet {
 TCPAcceptor::TCPAcceptor(AcceptHandler const& AcceptHandler,
                          ProcessHandler const& ConnectionHandler)
     : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
-
+  
 int TCPAcceptor::getLargestSocket(void) const {
   int result = *this;
   std::vector<TCPConnection const*> connections = this->getConnections();
@@ -33,7 +37,7 @@ std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const {
 
   return result;
 }
-
+  
 void TCPAcceptor::removeConnection(const int kConnSocketFd) {
   std::lock_guard<std::mutex> child_lock{this->child_mutex};
 

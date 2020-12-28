@@ -124,20 +124,20 @@ TEST(TCPConnectionTest, castInt) {
   ASSERT_NE(result, -1);
 }
 
-TEST(TCPConnectionTest, configureSocket)
-{
-	// This opens and closes a socket
-	{
-		inet::TCPConnection tcpc;
-		tcpc.setAddress("127.0.0.1:1234");
-		int socket = static_cast<int>(tcpc);
-		OPTVAL_T value = 0;
-		SOCKLEN valuesize = sizeof(value);
-		int result = ::getsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &value, &valuesize);
-		ASSERT_EQ(result, 0);
-		ASSERT_NE(value, 0);
-	}
+TEST(TCPConnectionTest, configureSocket) {
+  // This opens and closes a socket
+  {
+    inet::TCPConnection tcpc;
+    tcpc.setAddress("127.0.0.1:1234");
+    int socket = static_cast<int>(tcpc);
+    OPTVAL_T value = 0;
+    SOCKLEN valuesize = sizeof(value);
+    int result =
+        ::getsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &value, &valuesize);
+    ASSERT_EQ(result, 0);
+    ASSERT_NE(value, 0);
+  }
 
-	inet::TCPConnection tcpc2;
-	tcpc2.setAddress("127.0.0.1:1234");
+  inet::TCPConnection tcpc2;
+  tcpc2.setAddress("127.0.0.1:1234");
 }

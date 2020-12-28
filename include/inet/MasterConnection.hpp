@@ -2,8 +2,8 @@
 #define INCLUDE_INET_MASTERCONNECTION_HPP_
 
 #include <map>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "inet/TCPAcceptor.hpp"
 #include "inet/TCPConnection.hpp"
@@ -13,10 +13,11 @@
 namespace inet {
 class MasterConnection {
  public:
-  
   explicit MasterConnection(double const t = 5.0);
-  
+
   ~MasterConnection(void);
+
+  typedef std::function<bool(IPConnection const&)> ProcessHandler;
 
   // Listening Control
   bool isListening(void) const;
@@ -28,19 +29,18 @@ class MasterConnection {
   unsigned int getNumConnections(void) const;
 
   // TCP Connection Control
-  unsigned int createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH,
+  TCPAcceptor* createTCPAcceptor(TCPAcceptor::AcceptHandler const& pAcceptPH,
                                  TCPAcceptor::ProcessHandler const& pChildPH);
   std::vector<TCPAcceptor const*> getAcceptors(void) const;
   void removeTCPAcceptor(unsigned int acceptConnID);
 
   // UDP Connection Control
-  unsigned int createUDPConnection(std::unique_ptr<ProcessHandler>&& pPH);
+  UDPConnection* createUDPConnection(std::unique_ptr<ProcessHandler>&& pPH);
   std::vector<UDPConnection const*> getUDPConnections(void) const;
   void removeUDPConnection(unsigned int connID);
 
   std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
-  
-  typedef std::function<bool(IPConnection const&)> ProcessHandler;
+
 
  private:
   double timeout = 5.0;
@@ -87,3 +87,4 @@ class MasterConnection {
 }  // namespace inet
 
 #endif  // INCLUDE_INET_MASTERCONNECTION_HPP_
+

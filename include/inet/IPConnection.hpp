@@ -7,8 +7,8 @@
 #include <thread>
 
 #include "inet/ServiceAddress.hpp"
-#include "inet/config.hpp"
 #include "inet/Socket.hpp"
+#include "inet/config.hpp"
 
 #ifdef HAVE_SOCKET_H
 #define SOCKLEN socklen_t
@@ -22,12 +22,15 @@
 namespace inet {
 class IPConnection {
  public:
+
+  typedef std::function<bool(IPConnection const&)> ConnectionHandler;
+
   IPConnection(int type, int protocol);
   IPConnection(int captureRawSocket, int type, int protocol,
                IPConnection const& parentConnection,
                sockaddr_in const& destAddr);
 
-  virtual ~IPConnection() = default;
+  virtual ~IPConnection();
 
   std::string const getAddressString(void) const;
   std::string const getIPAddressString(void) const;
@@ -48,26 +51,25 @@ class IPConnection {
   void endHandlerProcess(void);
 
   operator int const() const;
-  
-  typedef std::function<bool(IPConnection const&)> ConnectionHandler;
 
  protected:
   void updateSrcAddr(void);
   void configureSocket(void);
-  
+
   mutable std::mutex socket_mutex;
   mutable std::mutex srcAddr_mutex;
   mutable std::mutex destAddr_mutex;
   mutable std::mutex publicAddr_mutex;
   mutable std::mutex done_mutex;
-  
+
   Socket socket;
   ServiceAddress srcAddress{};
   ServiceAddress destAddress{};
-  ServiceAddress publicAddress {};
+  ServiceAddress publicAddress{};
   bool done = false;
   std::thread handlerProcess;
 };
 }  // namespace inet
 
 #endif  // INCLUDE_INET_IPCONNECTION_HPP_
+

@@ -6,12 +6,11 @@
 
 #include <g3log/g3log.hpp>
 
-
 namespace inet {
 TCPAcceptor::TCPAcceptor(AcceptHandler const& AcceptHandler,
                          ProcessHandler const& ConnectionHandler)
     : acceptHandler(AcceptHandler), connectionHandler(ConnectionHandler) {}
-  
+
 int TCPAcceptor::getLargestSocket(void) const {
   int result = *this;
   std::vector<TCPConnection const*> connections = this->getConnections();
@@ -28,7 +27,7 @@ int TCPAcceptor::getLargestSocket(void) const {
 
 std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const {
   std::vector<TCPConnection const*> result;
-  std::lock_guard<std::mutex> lock{this->child_mutex};
+  std::lock_guard<std::recursive_mutex> lock{this->child_mutex};
 
   for (std::unique_ptr<TCPConnection> const& pCurConn :
        this->childConnections) {
@@ -37,9 +36,9 @@ std::vector<TCPConnection const*> TCPAcceptor::getConnections(void) const {
 
   return result;
 }
-  
+
 void TCPAcceptor::removeConnection(const int kConnSocketFd) {
-  std::lock_guard<std::mutex> child_lock{this->child_mutex};
+  std::lock_guard<std::recursive_mutex> child_lock{this->child_mutex};
 
   for (std::vector<std::unique_ptr<TCPConnection>>::iterator it =
            this->childConnections.begin();
@@ -76,7 +75,7 @@ std::unique_ptr<TCPConnection> const& TCPAcceptor::accept(void) {
   std::lock_guard<std::mutex> acceptLock{this->acceptHandler_mutex};
   bool accepted = this->acceptHandler(*pNewConn);
   if (accepted) {
-    std::lock_guard<std::mutex> childLock{this->child_mutex};
+    std::lock_guard<std::recursive_mutex> childLock{this->child_mutex};
     this->childConnections.push_back(std::move(pNewConn));
     return this->childConnections.at(this->childConnections.size() - 1);
   }
@@ -91,7 +90,7 @@ void TCPAcceptor::loadFdSetConnections(fd_set* acceptor_fd_set) {
   FD_SET(kFd, acceptor_fd_set);
 
   // Now child connections
-  std::lock_guard<std::mutex> child_lock{this->child_mutex};
+  std::lock_guard<std::recursive_mutex> child_lock{this->child_mutex};
   for (std::unique_ptr<TCPConnection> const& conn : this->childConnections) {
     const int kConnFd = static_cast<int const>(*conn);
     FD_SET(kConnFd, acceptor_fd_set);
@@ -119,7 +118,7 @@ void TCPAcceptor::checkAndProcessConnections(fd_set const& acceptor_fd_set) {
   }
 
   // Check and Process Children
-  std::lock_guard<std::mutex> childLock{this->child_mutex};
+  std::lock_guard<std::recursive_mutex> childLock{this->child_mutex};
   for (std::unique_ptr<TCPConnection> const& conn : this->childConnections) {
     const int kConnFd = static_cast<int const>(*conn);
     if (FD_ISSET(kConnFd, &acceptor_fd_set) != false) {

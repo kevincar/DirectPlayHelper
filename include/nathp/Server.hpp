@@ -16,7 +16,7 @@ class Server {
  public:
   // A ProcessHandler is a function callback to process data coming into the
   // server
-  using std::function<bool(char const*, unsigned int)> = ProcessHandler;
+  using ProcessHandler = std::function<bool(char const*, unsigned int)>;
 
   enum State : unsigned char { OFF, STARTING, READY, BUSY };
 

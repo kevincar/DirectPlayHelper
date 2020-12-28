@@ -32,7 +32,7 @@ class Packet {
   template <typename T>
   void setPayload(std::vector<T> const& payload);
   template <typename T>
-  void getPayload(std::vector<T> const& dest);
+  void getPayload(std::vector<T>* dest) const;
 
   template <typename T>
   int sendVia(T const& connection) const noexcept;
@@ -41,8 +41,7 @@ class Packet {
   mutable unsigned char* packetData = nullptr;
 
   template <typename T, typename U>
-  static void vector_copy(std::vector<T> const& src, std::vector<U> const&
-      dest);
+  static void vector_copy(std::vector<T> const& src, std::vector<U>* dest);
 };
 
 struct _Packet {
@@ -55,9 +54,9 @@ struct _Packet {
 };
 
 template <typename T>
-void Packet::setPayload(T& data) {
-  unsigned char* start = reinterpret_cast<unsigned char*>(&data);
-  unsigned char* end = start + sizeof(T);
+void Packet::setPayload(T const& data) {
+  unsigned char const* start = reinterpret_cast<unsigned char const*>(&data);
+  unsigned char const* end = start + sizeof(T);
   this->payload.assign(start, end);
   return;
 }
@@ -69,27 +68,27 @@ T Packet::getPayload(void) {
 }
 
 template <typename T>
-void Packet::setPayload(std::vector<T>& payload) {
-  this->vector_copy(payload, this->payload);
+void Packet::setPayload(std::vector<T> const& payload) {
+  this->vector_copy(payload, &this->payload);
 }
 
 template <typename T>
-void Packet::getPayload(std::vector<T>& dest) {
+void Packet::getPayload(std::vector<T>* dest) const {
   this->vector_copy(this->payload, dest);
 }
 
 template <typename T, typename U>
-void Packet::vector_copy(std::vector<T>& src, std::vector<U>& dest) {
+void Packet::vector_copy(std::vector<T> const& src, std::vector<U>* dest) {
   double src_type_size = sizeof(T);
   double dest_type_size = sizeof(U);
   double ratio = src_type_size / dest_type_size;
   unsigned int size = (src.size() * ratio);
 
-  U* start = reinterpret_cast<U*>(src.data());
-  U* end = start + size;
+  U const* start = reinterpret_cast<U const*>(src.data());
+  U const* end = start + size;
 
-  dest.resize(size);
-  dest.assign(start, end);
+  dest->resize(size);
+  dest->assign(start, end);
   return;
 }
 

@@ -201,7 +201,6 @@ void IPConnection::updateSrcAddr(void) {
             "IPConnection::listen failed to update address after listen: ") +
         std::to_string(ERRORCODE));
   }
-
 }
 
 void IPConnection::configureSocket(void) {

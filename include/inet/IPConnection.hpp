@@ -22,7 +22,6 @@
 namespace inet {
 class IPConnection {
  public:
-
   typedef std::function<bool(IPConnection const&)> ConnectionHandler;
 
   IPConnection(int type, int protocol);

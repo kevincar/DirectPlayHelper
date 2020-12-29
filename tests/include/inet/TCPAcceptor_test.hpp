@@ -3,6 +3,7 @@
 #define TESTS_INCLUDE_INET_TCPACCEPTOR_TEST_HPP_
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 

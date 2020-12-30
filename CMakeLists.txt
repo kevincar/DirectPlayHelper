@@ -9,14 +9,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 #####################################################################
-#																	#
-#						DEPENDENCIES								#
-#																	#
+#																	                                  #
+#						DEPENDENCIES								                            #
+#																	                                  #
 #####################################################################
 
 ExternalProject_Add(g3log_project
 	GIT_REPOSITORY https://github.com/KjellKod/g3log
-	GIT_TAG master
+	GIT_TAG 1.3.4
 	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/g3log"
 	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/g3log -DG3_SHARED_LIB=OFF -DUSE_DYNAMIC_LOGGING_LEVELS=ON
 	)
@@ -24,7 +24,6 @@ ExternalProject_Get_Property(g3log_project install_dir)
 message(STATUS "g3log installation directory: ${install_dir}")
 set(g3log_LOC "${install_dir}/lib/libg3log.a")
 if(MSVC)
-	#set(g3log_LOC "${install_dir}/lib/g3logger.lib")
 	set(g3log_LOC "${install_dir}/lib/g3log.lib")
 endif()
 add_library(g3log STATIC IMPORTED)
@@ -33,9 +32,9 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 add_dependencies(g3log g3log_project)
 
 #####################################################################
-#																	#
-#							PROGRAM									#
-#																	#
+#																	                                  #
+#							PROGRAM									                              #
+#																	                                  #
 #####################################################################
 
 # build the app

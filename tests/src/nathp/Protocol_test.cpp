@@ -1,20 +1,21 @@
-#include "nathp/assets/server.hpp"
-#include "nathp/assets/client.hpp"
-#include "nathp/assets/protocol.hpp"
-#include "nathp/Server.hpp"
-#include "nathp/Client.hpp"
-#include "ctpl_stl.h"
-#include "gtest/gtest.h"
+#include <ctpl_stl.h>
 
 #include <g3log/g3log.hpp>
+
+#include "nathp/assets/protocol.hpp"
+#include "gtest/gtest.h"
+#include "nathp/Client.hpp"
+#include "nathp/Server.hpp"
+#include "nathp/assets/client.hpp"
+#include "nathp/assets/server.hpp"
 
 #define SLEEP(X) std::this_thread::sleep_for(std::chrono::milliseconds(X))
 
 void redClientProc(nathp::Client const& cli) noexcept;
 void goldClientProc(nathp::Client const& cli) noexcept;
 
-std::unique_ptr<std::thread> startTestNATHPServer(int nExpectedClients,
-    std::shared_ptr<std::string> status,
+std::unique_ptr<std::thread> startTestNATHPServer(
+    int nExpectedClients, std::shared_ptr<std::string> status,
     std::shared_ptr<std::mutex> status_mutex,
     std::shared_ptr<std::condition_variable> status_cv) {
   // LOG(DEBUG) << "Server: Starting thread...";
@@ -67,7 +68,7 @@ std::unique_ptr<std::thread> startTestNATHPServer(int nExpectedClients,
     // request";
     status_lock.lock();
     status_cv->wait(status_lock,
-                   [&] { return *status == "Client list request received"; });
+                    [&] { return *status == "Client list request received"; });
     status_lock.unlock();
     SLEEP(250);
     {
@@ -83,8 +84,8 @@ std::unique_ptr<std::thread> startTestNATHPServer(int nExpectedClients,
   });
 }
 
-std::unique_ptr<std::thread> startTestNATHPClient(int clientNumber,
-    std::shared_ptr<std::string> status,
+std::unique_ptr<std::thread> startTestNATHPClient(
+    int clientNumber, std::shared_ptr<std::string> status,
     std::shared_ptr<std::mutex> status_mutex,
     std::shared_ptr<std::condition_variable> status_cv) {
   std::string clientStr =
@@ -103,7 +104,7 @@ std::unique_ptr<std::thread> startTestNATHPClient(int clientNumber,
     // ready...";
     std::unique_lock<std::mutex> status_lock{*status_mutex};
     status_cv->wait(status_lock,
-                   [&] { return *status == "Clients are connected"; });
+                    [&] { return *status == "Clients are connected"; });
     status_lock.unlock();
     status_cv->notify_all();
 
@@ -177,43 +178,46 @@ TEST(NATHPTest, Constructor) {
   }) << "Second attempt failed";
 }
 
-TEST(NATHPTest, Connection)
-{
-	std::string status {};
-	std::mutex status_mutex {};
-	std::condition_variable status_cv {};
+TEST(NATHPTest, Connection) {
+  std::string status{};
+  std::mutex status_mutex{};
+  std::condition_variable status_cv{};
 
-	nathp::asset::lock_pack lp {};
-	lp.status = &status;
-	lp.status_mutex = &status_mutex;
-	lp.status_cv = &status_cv;
+  nathp::asset::lock_pack lp{};
+  lp.status = &status;
+  lp.status_mutex = &status_mutex;
+  lp.status_cv = &status_cv;
 
-	ctpl::thread_pool p(3);
-	std::future<bool> r = p.push(nathp::asset::server::start, lp);
-	std::future<bool> rc = p.push(nathp::asset::client::start, lp, nathp::asset::client::red);
-	std::future<bool> rc2 = p.push(nathp::asset::client::start, lp, nathp::asset::client::gold);
+  // Capture the lock_pack in a shared pointer. Don't let the shared_ptr object
+  // delete lp though because it will be deleted by this scope
+  std::shared_ptr<nathp::asset::lock_pack> p_lock_pack {&lp, [](auto p){}};
 
-	EXPECT_EQ(rc2.get(), true);
-	EXPECT_EQ(rc.get(), true);
-	EXPECT_EQ(r.get(), true);
+  ctpl::thread_pool p(3);
+  std::future<bool> r = p.push(nathp::asset::server::start, p_lock_pack);
+  std::future<bool> rc =
+      p.push(nathp::asset::client::start, p_lock_pack, nathp::asset::client::red);
+  std::future<bool> rc2 =
+      p.push(nathp::asset::client::start, p_lock_pack, nathp::asset::client::gold);
 
-	//int connectedClients = 0;
-	//std::mutex connClientsMutex;
+  EXPECT_EQ(rc2.get(), true);
+  EXPECT_EQ(rc.get(), true);
+  EXPECT_EQ(r.get(), true);
 
-	//std::string serverAddress {};
-	//std::mutex serverAddressMutex;
+  // int connectedClients = 0;
+  // std::mutex connClientsMutex;
 
-	//std::string status {};
-	//std::mutex statusMutex;
-	//std::condition_variable statusCV;
+  // std::string serverAddress {};
+  // std::mutex serverAddressMutex;
 
-	//std::unique_ptr<std::thread> serverThread = startTestNATHPServer(2, status, statusMutex, statusCV);
-	//std::unique_ptr<std::thread> redClientThread = startTestNATHPClient(1, status, statusMutex, statusCV);
-	//std::unique_ptr<std::thread> goldClientThread = startTestNATHPClient(2, status, statusMutex, statusCV);
-	//goldClientThread->join();
-	//LOG(DEBUG) << "Gold Client Rejoined";
-	//redClientThread->join();
-	//LOG(DEBUG) << "Red Client Rejoined";
-	//serverThread->join();
-	//LOG(DEBUG) << "Server Rejoined";
+  // std::string status {};
+  // std::mutex statusMutex;
+  // std::condition_variable statusCV;
+
+  // std::unique_ptr<std::thread> serverThread = startTestNATHPServer(2, status,
+  // statusMutex, statusCV); std::unique_ptr<std::thread> redClientThread =
+  // startTestNATHPClient(1, status, statusMutex, statusCV);
+  // std::unique_ptr<std::thread> goldClientThread = startTestNATHPClient(2,
+  // status, statusMutex, statusCV); goldClientThread->join(); LOG(DEBUG) <<
+  // "Gold Client Rejoined"; redClientThread->join(); LOG(DEBUG) << "Red Client
+  // Rejoined"; serverThread->join(); LOG(DEBUG) << "Server Rejoined";
 }

@@ -1,22 +1,19 @@
 
-#ifndef NATHP_ASSET_PROTOCOL_TEST
-#define NATHP_ASSET_PROTOCOL_TEST
+#ifndef TESTS_INCLUDE_NATHP_ASSETS_PROTOCOL_HPP_
+#define TESTS_INCLUDE_NATHP_ASSETS_PROTOCOL_HPP_
 
-#include <string>
 #include <mutex>
+#include <string>
 
-namespace nathp
-{
-	namespace asset
-	{
-		class lock_pack
-		{
-			public:
-				std::string* status;
-				std::mutex* status_mutex;
-				std::condition_variable* status_cv;
-		};
-	}
-}
+namespace nathp {
+namespace asset {
+class lock_pack {
+ public:
+  std::string* status;
+  std::mutex* status_mutex;
+  std::condition_variable* status_cv;
+};
+}  // namespace asset
+}  // namespace nathp
 
-#endif /* NATHP_ASSET_PROTOCOL_TEST */
+#endif  // TESTS_INCLUDE_NATHP_ASSETS_PROTOCOL_HPP_

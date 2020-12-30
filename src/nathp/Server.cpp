@@ -5,8 +5,8 @@
 #include <g3log/g3log.hpp>
 
 namespace nathp {
-Server::Server(inet::TCPAcceptor::AcceptHandler const& acceptHandler,
-               ProcessHandler const& processHandler, unsigned int port)
+Server::Server(inet::TCPAcceptor::AcceptHandler const&& acceptHandler,
+               ProcessHandler const&& processHandler, unsigned int port)
     : externalAcceptHandler(acceptHandler),
       externalProcessHandler(processHandler),
       main_port(port) {

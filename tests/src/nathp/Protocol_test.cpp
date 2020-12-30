@@ -43,7 +43,7 @@ std::unique_ptr<std::thread> startTestNATHPServer(
 
     // STEP 2 - Start up the server
     // LOG(DEBUG) << "Server: initializting...";
-    server = std::make_unique<nathp::Server>(acceptHandler, processHandler);
+    server = std::make_unique<nathp::Server>(std::move(acceptHandler), std::move(processHandler));
     // LOG(DEBUG) << "Server:: done initializing";
 
     // Wait until two clients are connected

@@ -20,8 +20,8 @@ class Server {
 
   enum State : unsigned char { OFF, STARTING, READY, BUSY };
 
-  Server(inet::TCPAcceptor::AcceptHandler const& accept_handler,
-         ProcessHandler const& process_handler, unsigned int port = NATHP_PORT);
+  Server(inet::TCPAcceptor::AcceptHandler const&& accept_handler,
+         ProcessHandler const&& process_handler, unsigned int port = NATHP_PORT);
 
   std::vector<ClientRecord> getClientList(void) const;
   bool connectoToClient(unsigned int clientId);

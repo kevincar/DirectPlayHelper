@@ -9,7 +9,7 @@ namespace nathp {
 ClientRecord::ClientRecord(unsigned int id) : id(id) {}
 
 ClientRecord::ClientRecord(std::vector<uint8_t> const& data) {
-  _ClientRecord const* cr = 
+  _ClientRecord const* cr =
       reinterpret_cast<_ClientRecord const*>(&(*data.begin()));
   this->fromData(*cr);
 }
@@ -41,9 +41,9 @@ void ClientRecord::fromData(_ClientRecord const& client_record_data) {
   this->id = client_record_data.id;
   this->state = static_cast<ClientRecord::State>(client_record_data.state);
   this->private_address =
-    this->addressFromData(client_record_data.private_address);
+      this->addressFromData(client_record_data.private_address);
   this->public_address =
-    this->addressFromData(client_record_data.public_address);
+      this->addressFromData(client_record_data.public_address);
 }
 
 _ClientRecord&& ClientRecord::toData(void) const {
@@ -57,24 +57,20 @@ _ClientRecord&& ClientRecord::toData(void) const {
 
 std::string ClientRecord::addressFromData(_address const& address_data) const {
   return std::to_string(address_data._1) + "." +
-    std::to_string(address_data._2) + "." + 
-    std::to_string(address_data._3) + "." + 
-    std::to_string(address_data._4) + ":" +
-    std::to_string(address_data.port);
+         std::to_string(address_data._2) + "." +
+         std::to_string(address_data._3) + "." +
+         std::to_string(address_data._4) + ":" +
+         std::to_string(address_data.port);
 }
 
 _address const ClientRecord::addressToData(std::string const& address) const {
   int vals[5] = {};
   char p;
-  std::stringstream ss {address};
+  std::stringstream ss{address};
   ss >> vals[0] >> p >> vals[1] >> p >> vals[2] >> p >> vals[3] >> p >> vals[4];
-  _address a = {
-    static_cast<uint8_t>(vals[0]), 
-    static_cast<uint8_t>(vals[1]),
-    static_cast<uint8_t>(vals[2]), 
-    static_cast<uint8_t>(vals[3]),
-    static_cast<uint16_t>(vals[4])
-  };
+  _address a = {static_cast<uint8_t>(vals[0]), static_cast<uint8_t>(vals[1]),
+                static_cast<uint8_t>(vals[2]), static_cast<uint8_t>(vals[3]),
+                static_cast<uint16_t>(vals[4])};
   return a;
 }
 }  // namespace nathp

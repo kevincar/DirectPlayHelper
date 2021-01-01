@@ -26,23 +26,23 @@ struct _ClientRecord {
 
 class ClientRecord {
  public:
-  enum State : unsigned char {connecting, connected, punching, idle};
-  ClientRecord(unsigned int id);
-  ClientRecord(std::vector<uint8_t> const& data);
-  ClientRecord(unsigned char const* data);
+  enum State : unsigned char { connecting, connected, punching, idle };
+  explicit ClientRecord(unsigned int id);
+  explicit ClientRecord(std::vector<uint8_t> const& data);
+  explicit ClientRecord(unsigned char const* data);
 
   unsigned char const* data(void) const noexcept;
   unsigned int size(void) const noexcept;
   void assign(unsigned char const* data) noexcept;
-  template<typename T>
+  template <typename T>
   void assign(T const& start, T const& end);
 
-  template<typename T>
+  template <typename T>
   ClientRecord& operator=(T const& data);
 
   // The ID is assigned the same integer as the file descriptor for the
   // connection on the server
-  unsigned int id;  
+  unsigned int id;
   State state = State::connecting;
   std::string private_address;
   std::string public_address;
@@ -56,15 +56,15 @@ class ClientRecord {
   mutable std::vector<uint8_t> data_;
 };
 
-
-template<typename T>
+template <typename T>
 void ClientRecord::assign(T const& start, T const& end) {
   this->data_.assign(start, end);
-  _ClientRecord const* cr = reinterpret_cast<_ClientRecord const*>(&(*this->data_.begin()));
+  _ClientRecord const* cr =
+      reinterpret_cast<_ClientRecord const*>(&(*this->data_.begin()));
   this->fromData(*cr);
 }
 
-template<typename T>
+template <typename T>
 ClientRecord& ClientRecord::operator=(T const& data) {
   this->assign(data.begin(), data.end());
   return *this;

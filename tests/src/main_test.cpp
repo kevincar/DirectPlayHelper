@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   logWorker->addSink(std::make_unique<CustomSink>(),
                      &CustomSink::ReceiveLogMessage);
   g3::initializeLogging(logWorker.get());
-  g3::log_levels::setHighest(INFO);
+  g3::log_levels::setHighest(DEBUG);
 
   // Begin testing
   ::testing::InitGoogleTest(&argc, argv);

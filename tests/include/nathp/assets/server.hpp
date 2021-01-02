@@ -33,12 +33,9 @@ bool start(int id, std::shared_ptr<lock_pack> p_lock_pack) {
   nathp::Server server{acceptHandler, processHandler};
 
   // Wait for Clients to finish
-  LOG(INFO) << "Waiting for clients to finish";
+  LOG(DEBUG) << "Waiting for clients to finish";
   std::unique_lock<std::mutex> status_lock{*p_lock_pack->status_mutex};
   p_lock_pack->status_cv->wait(status_lock, [&] {
-    LOG(INFO) << "&lp.status == " <<
-    reinterpret_cast<uint64_t>(&(*p_lock_pack->status));
-    LOG(INFO) << "lp.status == " << *p_lock_pack->status;
     return *p_lock_pack->status == "Clients Done";
   });
   status_lock.unlock();

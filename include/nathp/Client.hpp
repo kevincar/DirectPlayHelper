@@ -3,8 +3,8 @@
 #define INCLUDE_NATHP_CLIENT_HPP_
 
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "inet/MasterConnection.hpp"
 #include "nathp/ClientRecord.hpp"
@@ -14,32 +14,35 @@
 namespace nathp {
 class Client {
  public:
-  explicit Client(std::string serverIPAddress, int port = NATHP_PORT, bool
-      start = true);
+  explicit Client(std::string server_ip_address, int port = NATHP_PORT,
+                  bool start = true);
 
-  /* Server Commands */
   void connect(void);
-  unsigned int requestClientID(void) const noexcept;
-  std::string requestPublicAddress(void) const noexcept;
-  std::vector<ClientRecord> getClientList(void) const noexcept;
-  bool connectToPeer(ClientRecord const& peer) const noexcept;
+  // bool connectToPeer(ClientRecord const& peer) const noexcept;
 
-  unsigned int id = -1;
-  int nConnectionRetries = -1;
+  int reconnection_attempts = -1;
 
  private:
   bool connectionHandler(inet::IPConnection const& connection);
   void processPacket(Packet const& packet) const noexcept;
-  void clearProcStat(void) const noexcept;
 
-  std::mutex mutable proc_mutex;
-  std::condition_variable mutable proc_cv;
-  std::map<Packet::Message, bool> mutable proc_stat;
-  std::vector<unsigned char> mutable proc_rslt;
+  void clearProcResponseData(void) const noexcept;
+  int sendPacketTo(Packet const& packet, inet::IPConnection const& conn) const;
 
-  inet::IPConnection::ConnectionHandler ch;
-  inet::TCPConnection serverConnection;
-  std::string serverAddress;
+  unsigned int requestClientID(void) const noexcept;
+  std::string requestPublicAddress(void) const noexcept;
+  // std::vector<ClientRecord> requestClientList(void) const noexcept;
+
+  unsigned int id = -1;
+
+  std::mutex mutable proc_response_mutex;
+  std::condition_variable mutable proc_response_cv;
+  std::map<Packet::Message, bool> mutable proc_response_ready;
+  std::map<Packet::Message, std::vector<uint8_t>> mutable proc_response_data;
+
+  inet::IPConnection::ConnectionHandler connection_handler;
+  inet::TCPConnection server_connection;
+  std::string server_address;
 };
 }  // namespace nathp
 

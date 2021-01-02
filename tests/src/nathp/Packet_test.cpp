@@ -1,35 +1,64 @@
+#include <vector>
+#include <g3log/g3log.hpp>
+#include "gtest/gtest.h"
 #include "nathp/Packet.hpp"
 
-#include <g3log/g3log.hpp>
+TEST(Packet, Constructors) {
+  { nathp::Packet packet;
+    EXPECT_EQ(packet.sender_id, 0);
+  }
+  nathp::Packet init_packet {};
+  init_packet.sender_id = 0;
+  init_packet.recipient_id = 1;
+  init_packet.type = nathp::Packet::Type::request;
+  init_packet.msg = nathp::Packet::Message::getClientList;
+  init_packet.payload = std::vector<uint8_t> {0, 1, 2, 3, 4};
 
-#include "gtest/gtest.h"
+  unsigned char const* c_data = init_packet.data();
+  unsigned int c_data_size = init_packet.size();
+  { nathp::Packet packet {c_data, c_data_size};
+    EXPECT_EQ(packet.sender_id, 0);
+    EXPECT_EQ(packet.msg, nathp::Packet::Message::getClientList);
+  }
 
-TEST(NATPHTest, Packet) {
-  nathp::Packet packet;
-  packet.senderID = 0;
-  packet.recipientID = 1;
-  packet.type = nathp::Packet::Type::request;
-  packet.msg = nathp::Packet::Message::getClientList;
-
-  EXPECT_EQ(packet.size(), 12);
-  packet.payload = {1, 2, 3, 4, 5};
-
-  unsigned char* data = packet.data();
-  EXPECT_EQ(data[14], 3);
-
-  nathp::Packet packet2;
-  packet2.setData(packet.data(), packet.size());
-  EXPECT_EQ(packet2.recipientID, packet.recipientID);
-  EXPECT_EQ(packet2.payload.at(4), packet.payload.at(4));
-  EXPECT_EQ(packet2.type, nathp::Packet::Type::request);
-  EXPECT_EQ(packet2.size(), 17);
+  std::vector<uint8_t> data;
+  data.assign(c_data, c_data+c_data_size);
+  { nathp::Packet packet {data};
+    EXPECT_EQ(packet.sender_id, 0);
+    EXPECT_EQ(packet.payload[1], 1);
+  }
 }
 
-TEST(NATHPTEST, Packet_setPayload) {
+TEST(Packet, setPayload) {
+  int i = 32;
+  { nathp::Packet packet;
+    packet.setPayload(i);
+    EXPECT_EQ(packet.payload[0], 32);
+  }
   std::vector<unsigned int> v{1, 2, 3};
+  { nathp::Packet packet;
+    packet.setPayload(v);
+    EXPECT_EQ(packet.payload.size(), 12);
+    EXPECT_EQ(packet.payload[4], 2);
+  }
+  std::string s = "Payload";
+  { nathp::Packet packet;
+    packet.setPayload(s);
+    EXPECT_EQ(packet.payload[1], 'a');
+  }
+}
 
-  nathp::Packet packet;
-  packet.setPayload(v);
+TEST(Packet, getPayload) {
+  { nathp::Packet packet;
+    packet.payload = std::vector<uint8_t> {0xFF, 0xFF, 0xFF, 0xFF};
+    std::vector<int> payload = packet.getPayload<int>();
+    EXPECT_EQ(payload[0], -1);
+  }
 
-  EXPECT_EQ(packet.size(), 24);
+  { nathp::Packet packet;
+    packet.payload = std::vector<uint8_t> {0xFE, 0xFF, 0xFF, 0xFF};
+    std::vector<int> payload;
+    packet.getPayload(&payload);
+    EXPECT_EQ(payload[0], -2);
+  }
 }

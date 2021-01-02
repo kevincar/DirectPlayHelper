@@ -25,31 +25,28 @@ bool start(int id, std::shared_ptr<lock_pack> p_lock_pack,
 
   std::string ip_address = "127.0.0.1";
   nathp::Client client{ip_address, NATHP_PORT, false};
-  client.nConnectionRetries = 20;
+  client.reconnection_attempts = 20;
 
-  LOG(INFO) << "Client connecting...";
+  LOG(DEBUG) << "Client attempting to connect";
   EXPECT_NO_THROW({ client.connect(); });
 
   f();
 
   n_clients--;
 
-  LOG(INFO) << "p_lock_pack->status == " <<
-    reinterpret_cast<uint64_t>(&(*p_lock_pack->status));
   if (n_clients <= 0) {
     std::lock_guard<std::mutex> status_lock{*p_lock_pack->status_mutex};
     *p_lock_pack->status = "Clients Done";
   }
   p_lock_pack->status_cv->notify_all();
-  LOG(INFO) << "Client finished...";
-  LOG(INFO) << "&lp.status == " <<
-    reinterpret_cast<uint64_t>(&(*p_lock_pack->status));
+  LOG(DEBUG) << "Client finished...";
   return true;
 }
 
 void red() { LOG(INFO) << "RED CLIENT here :)"; }
 
 void gold() { LOG(INFO) << "GOLD CLIENT HERE :)"; }
+
 }  // namespace client
 }  // namespace asset
 }  // namespace nathp

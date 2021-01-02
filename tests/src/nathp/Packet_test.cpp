@@ -30,16 +30,21 @@ TEST(Packet, Constructors) {
 }
 
 TEST(Packet, setPayload) {
-  std::string s = "Payload";
+  int i = 32;
   { nathp::Packet packet;
-    packet.setPayload(s);
-    EXPECT_EQ(packet.payload[1], 'a');
+    packet.setPayload(i);
+    EXPECT_EQ(packet.payload[0], 32);
   }
   std::vector<unsigned int> v{1, 2, 3};
   { nathp::Packet packet;
     packet.setPayload(v);
     EXPECT_EQ(packet.payload.size(), 12);
     EXPECT_EQ(packet.payload[4], 2);
+  }
+  std::string s = "Payload";
+  { nathp::Packet packet;
+    packet.setPayload(s);
+    EXPECT_EQ(packet.payload[1], 'a');
   }
 }
 

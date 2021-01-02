@@ -2,6 +2,7 @@
 #ifndef INCLUDE_NATHP_PACKET_HPP_
 #define INCLUDE_NATHP_PACKET_HPP_
 
+#include <string>
 #include <vector>
 
 namespace nathp {
@@ -9,8 +10,9 @@ struct _Packet;
 class Packet {
  public:
   enum Message : unsigned char {
-    initClientID,
-    initPublicAddress,
+    getClientId,
+    getPrivateAddress,
+    getPublicAddress,
     getClientList
   };
   enum Type : unsigned char { request, response };
@@ -27,12 +29,14 @@ class Packet {
   void assign(T const& begin, T const& end);
 
   template <typename T>
-  void setPayload(T const& data);
+  void setPayload(T const& payload);
   template <typename T>
   void setPayload(std::vector<T> const& payload);
+  template <typename T>
+  void setPayload(std::basic_string<T> const& payload);
 
   template <typename T>
-  std::vector<T> getPayload(void);
+  std::vector<T> getPayload(void) const;
   template <typename T>
   void getPayload(std::vector<T>* dest) const;
 
@@ -80,8 +84,10 @@ void Packet::assign(T const& begin, T const& end) {
 }
 
 template <typename T>
-void Packet::setPayload(T const& container) {
-  this->payload.assign(container.begin(), container.end());
+void Packet::setPayload(T const& payload) {
+  uint8_t const* start = reinterpret_cast<uint8_t const*>(&payload);
+  uint8_t const* end = start + sizeof(T);
+  this->payload.assign(start, end);
   return;
 }
 
@@ -91,7 +97,12 @@ void Packet::setPayload(std::vector<T> const& payload) {
 }
 
 template <typename T>
-std::vector<T> Packet::getPayload(void) {
+void Packet::setPayload(std::basic_string<T> const& payload) {
+  this->payload.assign(payload.begin(), payload.end());
+}
+
+template <typename T>
+std::vector<T> Packet::getPayload(void) const {
   std::vector<T> dest;
   this->vector_copy(this->payload, &dest);
   return dest;

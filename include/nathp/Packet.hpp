@@ -5,6 +5,7 @@
 #include <vector>
 
 namespace nathp {
+struct _Packet;
 class Packet {
  public:
   enum Message : unsigned char {
@@ -12,64 +13,88 @@ class Packet {
     initPublicAddress,
     getClientList
   };
-
   enum Type : unsigned char { request, response };
 
-  unsigned int senderID;
-  unsigned int recipientID;
-  Type type = Type::request;
-  Message msg = Message::getClientList;
-  std::vector<unsigned char> payload;
+  Packet();
+  Packet(unsigned char const* data, unsigned int size);
+  template <typename T>
+  explicit Packet(T const& data);
 
-  unsigned char* data(void) const;
+  unsigned char const* data(void) const;
   unsigned int size(void) const;
+  void assign(uint8_t const* data, unsigned int const kSize);
+  template <typename T>
+  void assign(T const& begin, T const& end);
 
-  void setData(unsigned char const* data, unsigned int size);
   template <typename T>
   void setPayload(T const& data);
   template <typename T>
-  T getPayload(void);
-  template <typename T>
   void setPayload(std::vector<T> const& payload);
+
+  template <typename T>
+  std::vector<T> getPayload(void);
   template <typename T>
   void getPayload(std::vector<T>* dest) const;
 
   template <typename T>
-  int sendVia(T const& connection) const noexcept;
+  Packet& operator=(T const& container);
+
+  unsigned int sender_id = 0;
+  unsigned int recipient_id = 0;
+  Type type = Type::request;
+  Message msg = Message::getClientList;
+  std::vector<uint8_t> payload;
 
  private:
-  mutable unsigned char* packetData = nullptr;
+  void fromData(_Packet const& packet);
+  _Packet const* toData(void) const;
+
+  mutable std::vector<uint8_t> data_;
+  // mutable unsigned char* packetData = nullptr;
 
   template <typename T, typename U>
   static void vector_copy(std::vector<T> const& src, std::vector<U>* dest);
 };
 
 struct _Packet {
-  uint32_t senderID;
-  uint32_t recipientID;
+  uint32_t sender_id;
+  uint32_t recipient_id;
   Packet::Type type;
   Packet::Message msg;
-  uint16_t payloadSize;
+  uint16_t payload_size;
   unsigned char payload[];
 };
 
 template <typename T>
-void Packet::setPayload(T const& data) {
-  unsigned char const* start = reinterpret_cast<unsigned char const*>(&data);
-  unsigned char const* end = start + sizeof(T);
-  this->payload.assign(start, end);
-  return;
+Packet::Packet(T const& data) {
+  this->assign(data.begin(), data.end());
 }
 
 template <typename T>
-T Packet::getPayload(void) {
-  T result = *reinterpret_cast<T*>(this->payload.data());
-  return result;
+void Packet::assign(T const& begin, T const& end) {
+  this->data_.assign(begin, end);
+
+  _Packet const* packet =
+      reinterpret_cast<_Packet const*>(&(*this->data_.begin()));
+  this->fromData(*packet);
+}
+
+template <typename T>
+void Packet::setPayload(T const& container) {
+  this->payload.assign(container.begin(), container.end());
+  return;
 }
 
 template <typename T>
 void Packet::setPayload(std::vector<T> const& payload) {
   this->vector_copy(payload, &this->payload);
+}
+
+template <typename T>
+std::vector<T> Packet::getPayload(void) {
+  std::vector<T> dest;
+  this->vector_copy(this->payload, &dest);
+  return dest;
 }
 
 template <typename T>
@@ -93,11 +118,11 @@ void Packet::vector_copy(std::vector<T> const& src, std::vector<U>* dest) {
 }
 
 template <typename T>
-int Packet::sendVia(T const& connection) const noexcept {
-  char const* data = reinterpret_cast<char const*>(this->data());
-  unsigned int size = this->size();
-  int sendResult = connection.send(data, size);
-  return sendResult;
+Packet& Packet::operator=(T const& container) {
+  _Packet const* packet =
+      reinterpret_cast<_Packet const*>(&(*container.begin()));
+  this->fromData(*packet);
+  return *this;
 }
 }  // namespace nathp
 

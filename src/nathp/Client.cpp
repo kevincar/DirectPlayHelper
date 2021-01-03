@@ -2,7 +2,6 @@
 #include "nathp/Client.hpp"
 
 #include <sstream>
-
 #include <g3log/g3log.hpp>
 
 #include "nathp/Packet.hpp"
@@ -10,12 +9,12 @@
 namespace nathp {
 Client::Client(std::string server_ip_address, int port, bool start) {
   this->server_address = server_ip_address + ":" + std::to_string(port);
-  // this->clearProcStat();
+  this->clearProcResponseData();
 
   // Establish a connection
-  // if (start) {
-  // this->connect();
-  //}
+  if (start) {
+    this->connect();
+  }
 
   // Setup a thread to handle communication with the server
   this->connection_handler =
@@ -51,7 +50,45 @@ void Client::connect(void) {
   this->server_connection.startHandlerProcess(this->connection_handler);
   this->id = this->requestClientID();
   this->server_connection.setPublicAddress(this->requestPublicAddress());
+  this->requestRegisterPrivateAddress();
   return;
+}
+
+ClientRecord Client::getClientRecord(void) const {
+  ClientRecord client_record(this->id);
+  client_record.public_address =
+      this->server_connection.getPublicAddressString();
+  client_record.private_address = this->server_connection.getAddressString();
+  return client_record;
+}
+
+std::vector<nathp::ClientRecord> Client::requestClientList(
+    void) const noexcept {
+  LOG(DEBUG) << "Client " << this->id
+             << " sending packet request for getClientList";
+  std::vector<ClientRecord> result;
+  Packet packet;
+  packet.sender_id = this->id;
+  packet.recipient_id = 0;
+  packet.type = Packet::Type::request;
+  packet.msg = Packet::Message::getClientList;
+  int sendResult = this->sendPacketTo(packet, this->server_connection);
+  if (sendResult == -1) {
+    LOG(WARNING) << "Client failed to request getClientList | errno: "
+                 << std::to_string(ERRORCODE);
+  }
+
+  this->awaitResponse(&packet);
+  for (auto it = packet.payload.begin(); it != packet.payload.end();
+       it += sizeof(_ClientRecord)) {
+    uint8_t const* client_record_data =
+        reinterpret_cast<uint8_t const*>(&(*it));
+    ClientRecord client_record(client_record_data);
+    result.push_back(client_record);
+  }
+  LOG(DEBUG) << "Client: sent packet request for getClientList "
+             << result.size();
+  return result;
 }
 
 bool Client::connectionHandler(inet::IPConnection const& connection) {
@@ -92,8 +129,8 @@ void Client::processPacket(Packet const& packet) const noexcept {
 
   switch (packet.msg) {
     case Packet::Message::getClientId:
-    case Packet::Message::getPrivateAddress:
     case Packet::Message::getPublicAddress:
+    case Packet::Message::registerPrivateAddress:
     case Packet::Message::getClientList: {
       this->proc_response_data[packet.msg] = packet.getPayload<uint8_t>();
       this->proc_response_ready[packet.msg] = true;
@@ -124,6 +161,14 @@ int Client::sendPacketTo(Packet const& packet,
   return conn.send(data, kSize);
 }
 
+void Client::awaitResponse(Packet* packet) const noexcept {
+  std::unique_lock<std::mutex> proc_response_lock{this->proc_response_mutex};
+  this->proc_response_cv.wait(proc_response_lock, [&] {
+    return this->proc_response_ready[packet->msg];
+  });
+  packet->setPayload(this->proc_response_data[packet->msg]);
+}
+
 unsigned int Client::requestClientID(void) const noexcept {
   LOG(DEBUG) << "Requesting Client ID";
   unsigned int result = -1;
@@ -140,13 +185,9 @@ unsigned int Client::requestClientID(void) const noexcept {
     return result;
   }
 
-  LOG(DEBUG) << "Client waiting for response to getClientId";
-  std::unique_lock<std::mutex> proc_response_lock{this->proc_response_mutex};
-  this->proc_response_cv.wait(proc_response_lock, [&] {
-    return this->proc_response_ready[packet.msg];
-  });
-  packet.setPayload(this->proc_response_data[packet.msg]);
+  this->awaitResponse(&packet);
   result = *reinterpret_cast<unsigned int*>(packet.payload.data());
+  LOG(DEBUG) << "Client received ID of " << result;
   return result;
 }
 
@@ -158,48 +199,38 @@ std::string Client::requestPublicAddress(void) const noexcept {
   packet.recipient_id = 0;
   packet.type = Packet::Type::request;
   packet.msg = Packet::Message::getPublicAddress;
-  int sendResult = this->sendPacketTo(packet, this->server_connection);
-  if (sendResult == -1) {
+  int send_result = this->sendPacketTo(packet, this->server_connection);
+  if (send_result == -1) {
     LOG(WARNING)
         << "Client failed to request the client public address | errno: "
         << std::to_string(ERRORCODE);
     return result;
   }
 
-  std::unique_lock<std::mutex> proc_response_lock{this->proc_response_mutex};
-  this->proc_response_cv.wait(proc_response_lock, [&] {
-    return this->proc_response_ready[packet.msg];
-  });
-  packet.setPayload(this->proc_response_data[packet.msg]);
+  this->awaitResponse(&packet);
   result.assign(packet.payload.begin(), packet.payload.end());
   LOG(DEBUG) << "Client " << this->id << " received public address " << result;
   return result;
 }
 
-// std::vector<nathp::ClientRecord> Client::getClientList(void) const noexcept {
-//// LOG(DEBUG) << "Client: Sending packet request for getClientList";
-// std::vector<ClientRecord> result;
-// Packet packet;
-// int sendResult = this->sendPacketTo(packet, this->serverConnection);
-// if (sendResult == -1) {
-// LOG(WARNING) << "Client failed to request getClientList | errno: "
-//<< std::to_string(ERRORCODE);
-//}
+void Client::requestRegisterPrivateAddress(void) const noexcept {
+  Packet packet;
+  packet.sender_id = this->id;
+  packet.recipient_id = 0;
+  packet.type = Packet::Type::request;
+  packet.msg = Packet::Message::registerPrivateAddress;
+  packet.setPayload(this->server_connection.getAddressString());
 
-// std::unique_lock<std::mutex> proc_lock{this->proc_mutex};
-// this->proc_cv.wait(proc_lock, [&] { return this->proc_stat[packet.msg]; });
-// packet.setPayload(this->proc_rslt);
-// for (auto it = packet.payload.begin(); it != packet.payload.end();) {
-// ClientRecord cr{0};
-// _ClientRecord* _cr = reinterpret_cast<_ClientRecord*>(&(*it));
-// unsigned int size = sizeof(_ClientRecord) + _cr->addressLen;
-// cr.setData(reinterpret_cast<unsigned char const*>(_cr), size);
-// it += size;
-// }
-// LOG(DEBUG) << "Client: sent packet request for getClientList " <<
-// result.size();
-// return result;
-//}
+  int send_result = this->sendPacketTo(packet, this->server_connection);
+  if (send_result == -1) {
+    LOG(WARNING) << "Client failed to register the private address | errno: "
+                 << std::to_string(ERRORCODE);
+    return;
+  }
+
+  this->awaitResponse(&packet);
+  LOG(DEBUG) << "Client " << this->id << " registered private address";
+}
 
 // bool Client::connectToPeer(ClientRecord const& clientRecord) const noexcept {
 //// 1. Set up a new inet::TCPConnection to connect to the server

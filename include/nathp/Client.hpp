@@ -18,6 +18,8 @@ class Client {
                   bool start = true);
 
   void connect(void);
+  ClientRecord getClientRecord(void) const;
+  std::vector<ClientRecord> requestClientList(void) const noexcept;
   // bool connectToPeer(ClientRecord const& peer) const noexcept;
 
   int reconnection_attempts = -1;
@@ -29,9 +31,10 @@ class Client {
   void clearProcResponseData(void) const noexcept;
   int sendPacketTo(Packet const& packet, inet::IPConnection const& conn) const;
 
+  void awaitResponse(Packet* packet) const noexcept;
   unsigned int requestClientID(void) const noexcept;
   std::string requestPublicAddress(void) const noexcept;
-  // std::vector<ClientRecord> requestClientList(void) const noexcept;
+  void requestRegisterPrivateAddress(void) const noexcept;
 
   unsigned int id = -1;
 

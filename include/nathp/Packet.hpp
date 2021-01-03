@@ -11,8 +11,8 @@ class Packet {
  public:
   enum Message : unsigned char {
     getClientId,
-    getPrivateAddress,
     getPublicAddress,
+    registerPrivateAddress,
     getClientList
   };
   enum Type : unsigned char { request, response };
@@ -39,6 +39,8 @@ class Packet {
   std::vector<T> getPayload(void) const;
   template <typename T>
   void getPayload(std::vector<T>* dest) const;
+  template <typename T>
+  void getPayload(std::basic_string<T>* payload) const;
 
   template <typename T>
   Packet& operator=(T const& container);
@@ -111,6 +113,11 @@ std::vector<T> Packet::getPayload(void) const {
 template <typename T>
 void Packet::getPayload(std::vector<T>* dest) const {
   this->vector_copy(this->payload, dest);
+}
+
+template <typename T>
+void Packet::getPayload(std::basic_string<T>* payload) const {
+  payload->assign(this->payload.begin(), this->payload.end());
 }
 
 template <typename T, typename U>

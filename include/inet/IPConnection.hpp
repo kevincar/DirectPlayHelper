@@ -71,4 +71,3 @@ class IPConnection {
 }  // namespace inet
 
 #endif  // INCLUDE_INET_IPCONNECTION_HPP_
-

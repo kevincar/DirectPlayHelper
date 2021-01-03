@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <memory>
-
 #include <g3log/g3log.hpp>
 
 namespace inet {

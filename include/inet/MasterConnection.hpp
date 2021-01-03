@@ -41,7 +41,6 @@ class MasterConnection {
 
   std::shared_ptr<TCPConnection> const answerIncomingConnection(void) const;
 
-
  private:
   double timeout = 5.0;
 
@@ -87,4 +86,3 @@ class MasterConnection {
 }  // namespace inet
 
 #endif  // INCLUDE_INET_MASTERCONNECTION_HPP_
-

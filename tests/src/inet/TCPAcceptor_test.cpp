@@ -1,12 +1,10 @@
 #include "inet/TCPAcceptor_test.hpp"
 
 #include <chrono>
-
 #include <g3log/g3log.hpp>
 
 #include "gtest/gtest.h"
 #include "inet/TCPAcceptor.hpp"
-
 
 #define PORT 4321
 

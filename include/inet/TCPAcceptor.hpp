@@ -2,8 +2,8 @@
 #define INCLUDE_INET_TCPACCEPTOR_HPP_
 
 #include <functional>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "inet/TCPConnection.hpp"
 

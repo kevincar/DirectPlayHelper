@@ -10,8 +10,6 @@ Server::Server(inet::TCPAcceptor::AcceptHandler const&& acceptHandler,
     : external_accept_handle(acceptHandler),
       external_process_handle(processHandler),
       main_port(port) {
-  // Initialize the internal master connection that will handle the
-  // server data
   this->p_master_connection = std::make_unique<inet::MasterConnection>(1);
 
   inet::TCPAcceptor::AcceptHandler ah =
@@ -29,23 +27,6 @@ Server::Server(inet::TCPAcceptor::AcceptHandler const&& acceptHandler,
   tcpa->listen();
   this->setState(Server::State::READY);
 }
-
-// std::vector<ClientRecord> Server::getClientList(void) const {
-//// LOG(DEBUG) << "Server::getClientList";
-// std::vector<nathp::ClientRecord> result{};
-// std::vector<inet::TCPAcceptor const*> acceptors =
-// this->p_master_connection->getAcceptors();
-// std::vector<inet::TCPConnection const*> connections =
-// acceptors.at(0)->getConnections();
-// for (inet::TCPConnection const* curConn : connections) {
-// unsigned int connId = static_cast<int>(*curConn);
-// ClientRecord cr{connId};
-// cr.address = curConn->getDestAddressString();
-// result.push_back(cr);
-//}
-//// LOG(DEBUG) << "Server: N Connections = " << result.size();
-// return result;
-//}
 
 // bool Server::connectoToClient(unsigned int clientId) { return false; }
 
@@ -68,8 +49,7 @@ bool Server::internalAcceptHandler(inet::TCPConnection const& conn) {
   LOG(DEBUG) << "New client connection";
   ClientRecord client_record(conn);
   client_record.public_address = conn.getDestAddressString();
-  this->client_list.push_back(client_record);
-
+  this->addClientRecord(client_record);
   return accepted;
 }
 
@@ -92,6 +72,32 @@ bool Server::internalProcessHandler(inet::TCPConnection const& conn) {
   return true;
 }
 
+void Server::addClientRecord(ClientRecord const& client_record) {
+  ClientRecord* potential_client_record =
+      this->getClientRecord(client_record.id);
+
+  if (potential_client_record != nullptr) {
+    LOG(DEBUG) << "ClientRecord ID " << client_record.id << " already listed";
+    return;
+  }
+
+  std::lock_guard client_list_lock{this->client_list_mutex};
+  this->client_list.push_back(client_record);
+}
+
+ClientRecord* Server::getClientRecord(unsigned int id) {
+  ClientRecord* record = nullptr;
+  std::lock_guard client_list_lock{this->client_list_mutex};
+  for (auto it = client_list.begin(); it != client_list.end(); it++) {
+    ClientRecord* cur_record = reinterpret_cast<ClientRecord*>(&(*it));
+    if (cur_record->id == id) {
+      record = cur_record;
+      break;
+    }
+  }
+  return record;
+}
+
 void Server::processMessage(inet::TCPConnection const& connection,
                             Packet const& packet) {
   switch (packet.msg) {
@@ -101,22 +107,12 @@ void Server::processMessage(inet::TCPConnection const& connection,
     case Packet::Message::getPublicAddress: {
       this->processGetPublicAddress(connection, packet);
     } break;
-      // case Packet::Message::getClientList: {
-      // Packet returnPacket{};
-      // returnPacket.type = Packet::Type::response;
-      // std::vector<ClientRecord> clientList = this->getClientList();
-      // for (ClientRecord cr : clientList) {
-      // unsigned char const* begin = cr.data();
-      // unsigned char const* end = begin + cr.size();
-      // returnPacket.payload.insert(returnPacket.payload.end(), begin, end);
-      //}
-      //// LOG(DEBUG) << "size of client list: " << clientList.size();
-      //// LOG(DEBUG) << "Size of data being stored: " << returnPacket.size();
-      // int result = this->sendPacketTo(returnPacket, connection);
-      // if (result < 0) {
-      // LOG(WARNING) << "Failed to send getClientList resopnse";
-      //}
-    //} break;
+    case Packet::Message::registerPrivateAddress: {
+      this->processRegisterPrivateAddress(connection, packet);
+    } break;
+    case Packet::Message::getClientList: {
+      this->processGetClientList(connection, packet);
+    } break;
     default:
       LOG(WARNING)
           << "NATHP Server - Unrecognized NATHP packet command request";
@@ -127,30 +123,74 @@ void Server::processMessage(inet::TCPConnection const& connection,
 void Server::processGetClientId(inet::TCPConnection const& connection,
                                 Packet const& packet) const {
   unsigned int id = static_cast<int>(connection);
-  Packet returnPacket;
-  returnPacket.sender_id = 0;
-  returnPacket.recipient_id = id;
-  returnPacket.type = Packet::Type::response;
-  returnPacket.msg = packet.msg;
-  returnPacket.setPayload(id);
-  int result = this->sendPacketTo(returnPacket, connection);
+  Packet return_packet;
+  return_packet.sender_id = 0;
+  return_packet.recipient_id = id;
+  return_packet.type = Packet::Type::response;
+  return_packet.msg = packet.msg;
+  return_packet.setPayload(id);
+  int result = this->sendPacketTo(return_packet, connection);
   if (result < 0) {
-    LOG(WARNING) << "Failed to send initClientID response";
+    LOG(WARNING) << "Failed to send getClientId response";
   }
 }
 
 void Server::processGetPublicAddress(inet::TCPConnection const& connection,
                                      Packet const& packet) const {
   std::string public_address = connection.getDestAddressString();
-  Packet returnPacket;
-  returnPacket.sender_id = 0;
-  returnPacket.recipient_id = connection;
-  returnPacket.type = Packet::Type::response;
-  returnPacket.msg = packet.msg;
-  returnPacket.setPayload(public_address);
-  int result = this->sendPacketTo(returnPacket, connection);
+  Packet return_packet;
+  return_packet.sender_id = 0;
+  return_packet.recipient_id = connection;
+  return_packet.type = Packet::Type::response;
+  return_packet.msg = packet.msg;
+  return_packet.setPayload(public_address);
+  int result = this->sendPacketTo(return_packet, connection);
   if (result < 0) {
-    LOG(WARNING) << "Failed ot send initPublicAddress response";
+    LOG(WARNING) << "Failed ot send getPublicAddress response";
+  }
+}
+
+void Server::processRegisterPrivateAddress(
+    inet::TCPConnection const& connection, Packet const& packet) {
+  Packet return_packet;
+  return_packet.sender_id = 0;
+  return_packet.recipient_id = connection;
+  return_packet.type = Packet::Type::response;
+  return_packet.msg = packet.msg;
+
+  ClientRecord* client_record = this->getClientRecord(connection);
+  if (client_record == nullptr) {
+    LOG(WARNING) << "Failed to access the client record to register!";
+    return_packet.setPayload("FAIL");
+  } else {
+    packet.getPayload<char>(&client_record->private_address);
+    return_packet.setPayload("OK");
+  }
+
+  int result = this->sendPacketTo(return_packet, connection);
+  if (result < 0) {
+    LOG(WARNING) << "Failed to send registerPrivateAddress response";
+  }
+}
+
+void Server::processGetClientList(inet::TCPConnection const& connection,
+                                  Packet const& packet) const {
+  Packet return_packet;
+  return_packet.sender_id = 0;
+  return_packet.recipient_id = connection;
+  return_packet.type = Packet::Type::response;
+  return_packet.msg = Packet::Message::getClientList;
+
+  // Load the payload with all our client records
+  for (ClientRecord client_record : this->client_list) {
+    unsigned char const* begin = client_record.data();
+    unsigned char const* end = begin + client_record.size();
+    return_packet.payload.insert(return_packet.payload.end(), begin, end);
+  }
+
+  int result = this->sendPacketTo(return_packet, connection);
+  if (result < 0) {
+    LOG(WARNING) << "Failed to send getClientList resopnse";
   }
 }
 
@@ -159,4 +199,5 @@ void Server::setState(Server::State s) {
   this->state = s;
   return;
 }
+
 }  // namespace nathp

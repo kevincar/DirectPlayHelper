@@ -24,7 +24,6 @@ class Server {
          ProcessHandler const&& process_handler,
          unsigned int port = NATHP_PORT);
 
-  // std::vector<ClientRecord> getClientList(void) const;
   // bool connectoToClient(unsigned int clientId);
   // State getState(void) const;
   int sendPacketTo(Packet const& packet, inet::IPConnection const& conn) const;
@@ -32,12 +31,18 @@ class Server {
  private:
   bool internalAcceptHandler(inet::TCPConnection const& conn);
   bool internalProcessHandler(inet::TCPConnection const& conn);
+  void addClientRecord(ClientRecord const& client_record);
+  ClientRecord* getClientRecord(unsigned int id);
   void processMessage(inet::TCPConnection const& connection,
                       Packet const& packet);
   void processGetClientId(inet::TCPConnection const& connection,
                           Packet const& packet) const;
   void processGetPublicAddress(inet::TCPConnection const& connection,
                                Packet const& packet) const;
+  void processRegisterPrivateAddress(inet::TCPConnection const& connection,
+                                     Packet const& packet);
+  void processGetClientList(inet::TCPConnection const& connection,
+                            Packet const& packet) const;
   void setState(State s);
 
   unsigned int main_port;
@@ -47,6 +52,7 @@ class Server {
   std::vector<ClientRecord> client_list;
   State state = State::OFF;
   mutable std::mutex state_mutex;
+  mutable std::mutex client_list_mutex;
 };
 }  // namespace nathp
 

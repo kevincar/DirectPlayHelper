@@ -51,6 +51,7 @@ void red(nathp::Client* client) {
 
   // Validate that the red client address are there
   ClientRecord client_record = client->getClientRecord();
+  bool other_record_exists = false;
   for (ClientRecord cur_client_record : client_list) {
     if (cur_client_record.id == client_record.id) {
       EXPECT_STREQ(client_record.public_address.c_str(),
@@ -58,12 +59,14 @@ void red(nathp::Client* client) {
       EXPECT_STREQ(client_record.private_address.c_str(),
                    cur_client_record.private_address.c_str());
     } else {
+      other_record_exists = true;
       EXPECT_STRNE(client_record.public_address.c_str(),
                    cur_client_record.public_address.c_str());
       EXPECT_STRNE(client_record.private_address.c_str(),
                    cur_client_record.private_address.c_str());
     }
   }
+  EXPECT_EQ(other_record_exists, true);
 }
 
 void gold(nathp::Client* client) { LOG(INFO) << "GOLD CLIENT HERE :)"; }

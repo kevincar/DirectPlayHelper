@@ -60,7 +60,7 @@ TEST(Packet, getPayload) {
   {
     nathp::Packet packet;
     packet.payload = std::vector<uint8_t>{0xFF, 0xFF, 0xFF, 0xFF};
-    std::vector<int> payload = packet.getPayload<int>();
+    std::vector<int> payload = packet.getPayload<std::vector<int>>();
     EXPECT_EQ(payload[0], -1);
   }
 
@@ -71,6 +71,7 @@ TEST(Packet, getPayload) {
     packet.getPayload(&payload);
     EXPECT_EQ(payload[0], -2);
   }
+
   {
     nathp::Packet packet;
     std::vector<unsigned int> p = {0x6C6C6548, 0x57202C6F, 0x646C726F,

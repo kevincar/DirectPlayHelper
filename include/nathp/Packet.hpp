@@ -13,7 +13,8 @@ class Packet {
     getClientId,
     getPublicAddress,
     registerPrivateAddress,
-    getClientList
+    getClientList,
+    udpHolepunch
   };
   enum Type : unsigned char { request, response };
 
@@ -36,7 +37,7 @@ class Packet {
   void setPayload(std::basic_string<T> const& payload);
 
   template <typename T>
-  std::vector<T> getPayload(void) const;
+  T getPayload(void) const;
   template <typename T>
   void getPayload(std::vector<T>* dest) const;
   template <typename T>
@@ -104,9 +105,9 @@ void Packet::setPayload(std::basic_string<T> const& payload) {
 }
 
 template <typename T>
-std::vector<T> Packet::getPayload(void) const {
-  std::vector<T> dest;
-  this->vector_copy(this->payload, &dest);
+T Packet::getPayload(void) const {
+  T dest;
+  this->getPayload(&dest);
   return dest;
 }
 

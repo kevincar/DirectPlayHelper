@@ -37,11 +37,9 @@ bool start(int id, std::shared_ptr<lock_pack> p_lock_pack,
   n_clients--;
 
   if (n_clients <= 0) {
-    std::lock_guard<std::mutex> status_lock{*p_lock_pack->status_mutex};
-    *p_lock_pack->status = "Clients Done";
+    setStatus(p_lock_pack, "Clients Done");
   }
-  p_lock_pack->status_cv->notify_all();
-  LOG(DEBUG) << "Client finished...";
+  LOG(DEBUG) << "Client " << client.getClientRecord().id << " finished...";
   return true;
 }
 
@@ -51,6 +49,7 @@ void red(nathp::Client* client) {
 
   // Validate that the red client address are there
   ClientRecord client_record = client->getClientRecord();
+  ClientRecord other(-1);
   bool other_record_exists = false;
   for (ClientRecord cur_client_record : client_list) {
     if (cur_client_record.id == client_record.id) {
@@ -60,6 +59,7 @@ void red(nathp::Client* client) {
                    cur_client_record.private_address.c_str());
     } else {
       other_record_exists = true;
+      other = cur_client_record;
       EXPECT_STRNE(client_record.public_address.c_str(),
                    cur_client_record.public_address.c_str());
       EXPECT_STRNE(client_record.private_address.c_str(),
@@ -67,6 +67,10 @@ void red(nathp::Client* client) {
     }
   }
   EXPECT_EQ(other_record_exists, true);
+  EXPECT_NE(other.id, -1);
+
+  // Connect to peer
+  client->connectToPeer(other);
 }
 
 void gold(nathp::Client* client) { LOG(INFO) << "GOLD CLIENT HERE :)"; }

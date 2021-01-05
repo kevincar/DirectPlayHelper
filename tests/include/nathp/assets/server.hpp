@@ -33,10 +33,7 @@ bool start(int id, std::shared_ptr<lock_pack> p_lock_pack) {
 
   // Wait for Clients to finish
   LOG(DEBUG) << "Waiting for clients to finish";
-  std::unique_lock<std::mutex> status_lock{*p_lock_pack->status_mutex};
-  p_lock_pack->status_cv->wait(
-      status_lock, [&] { return *p_lock_pack->status == "Clients Done"; });
-  status_lock.unlock();
+  waitForStatus(p_lock_pack, "Clients Done");
 
   return true;
 }

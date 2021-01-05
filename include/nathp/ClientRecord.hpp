@@ -26,12 +26,13 @@ struct _ClientRecord {
 
 class ClientRecord {
  public:
-  enum State : unsigned char { connecting, connected, punching, idle };
+  enum State : unsigned char { connecting, punching, idle };
   explicit ClientRecord(unsigned int id);
   explicit ClientRecord(std::vector<uint8_t> const& data);
   explicit ClientRecord(unsigned char const* data);
 
   unsigned char const* data(void) const noexcept;
+  std::vector<uint8_t> container(void) const;
   unsigned int size(void) const noexcept;
   void assign(unsigned char const* data) noexcept;
   template <typename T>
@@ -43,7 +44,7 @@ class ClientRecord {
   // The ID is assigned the same integer as the file descriptor for the
   // connection on the server
   unsigned int id;
-  State state = State::connecting;
+  State state = State::idle;
   std::string private_address;
   std::string public_address;
 

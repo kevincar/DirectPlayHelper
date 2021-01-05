@@ -28,6 +28,11 @@ unsigned char const* ClientRecord::data(void) const noexcept {
   return &(*this->data_.begin());
 }
 
+std::vector<uint8_t> ClientRecord::container(void) const {
+  this->data();
+  return this->data_;
+}
+
 unsigned int ClientRecord::size(void) const noexcept {
   return sizeof(_ClientRecord);
 }

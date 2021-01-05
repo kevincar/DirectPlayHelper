@@ -33,7 +33,7 @@ bool MasterConnection::isListening(void) const {
 unsigned int MasterConnection::getNumTCPAcceptors(void) const {
   unsigned int result = 0;
 
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
   result = static_cast<unsigned int>(this->acceptors.size());
 
   return result;
@@ -46,7 +46,7 @@ unsigned int MasterConnection::getNumTCPConnections(void) const {
 
   // TCPAcceptor connections
   {
-    std::lock_guard<std::mutex> acceptor_lock{this->acceptor_mutex};
+    std::lock_guard<std::recursive_mutex> acceptor_lock{this->acceptor_mutex};
     for (std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors) {
       std::vector<TCPConnection const*> acceptorConnections =
           acceptor->getConnections();
@@ -81,7 +81,7 @@ unsigned int MasterConnection::getNumConnections(void) const {
 TCPAcceptor* MasterConnection::createTCPAcceptor(
     TCPAcceptor::AcceptHandler const& pAcceptPH,
     TCPAcceptor::ProcessHandler const& pChildPH) {
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
   TCPAcceptor* acceptor = new TCPAcceptor(pAcceptPH, pChildPH);
   std::unique_ptr<TCPAcceptor> pAcceptor{std::move(acceptor)};
   this->acceptors.push_back(std::move(pAcceptor));
@@ -90,7 +90,7 @@ TCPAcceptor* MasterConnection::createTCPAcceptor(
 }
 
 std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const {
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
   std::vector<TCPAcceptor const*> result{};
 
   for (std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it =
@@ -106,7 +106,7 @@ std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const {
 void MasterConnection::removeTCPAcceptor(unsigned int acceptorID) {
   // Is there an easy way to shut down the acceptor?
   // I suppose we'll simply try it and see how it goes
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
 
   for (std::vector<std::unique_ptr<TCPAcceptor>>::iterator it =
            this->acceptors.begin();
@@ -276,7 +276,7 @@ bool MasterConnection::loadFdSetConnections(fd_set* fdSet) const {
 }
 
 bool MasterConnection::loadFdSetTCPConnections(fd_set* fdSet) const {
-  std::lock_guard<std::mutex> acceptor_lock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptor_lock{this->acceptor_mutex};
   for (std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors) {
     acceptor->loadFdSetConnections(fdSet);
   }
@@ -320,7 +320,7 @@ int MasterConnection::waitForFdSetConnections(fd_set* fdSet) const {
 }
 
 void MasterConnection::checkAndProcessTCPConnections(fd_set* fdSet) {
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
   for (std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors) {
     acceptor->checkAndProcessConnections(*fdSet);
   }
@@ -370,7 +370,7 @@ int MasterConnection::getLargestSocket(void) const {
 int MasterConnection::getLargestTCPSocket(void) const {
   int result = -1;
 
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+  std::lock_guard<std::recursive_mutex> acceptorLock{this->acceptor_mutex};
   for (std::vector<std::unique_ptr<TCPAcceptor>>::const_iterator it =
            this->acceptors.begin();
        it != this->acceptors.end(); it++) {

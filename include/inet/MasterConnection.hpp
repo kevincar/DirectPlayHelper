@@ -53,7 +53,7 @@ class MasterConnection {
 
   // TCP Connections
   std::vector<std::unique_ptr<TCPAcceptor>> acceptors;
-  mutable std::mutex acceptor_mutex;
+  mutable std::recursive_mutex acceptor_mutex;
 
   // UDP Connections
   std::vector<std::unique_ptr<UDPConnection>> udpConnections;

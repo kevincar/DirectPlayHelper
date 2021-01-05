@@ -27,22 +27,27 @@ class Server {
   // bool connectoToClient(unsigned int clientId);
   // State getState(void) const;
   int sendPacketTo(Packet const& packet, inet::IPConnection const& conn) const;
+  int sendPacketTo(Packet const& packet, 
+                   ClientRecord const& client_record) const;
 
  private:
   bool internalAcceptHandler(inet::TCPConnection const& conn);
   bool internalProcessHandler(inet::TCPConnection const& conn);
   void addClientRecord(ClientRecord const& client_record);
+  ClientRecord const* getClientRecord(unsigned int id) const;
   ClientRecord* getClientRecord(unsigned int id);
   void processMessage(inet::TCPConnection const& connection,
                       Packet const& packet);
   void processGetClientId(inet::TCPConnection const& connection,
-                          Packet const& packet) const;
+                          Packet const& packet);
   void processGetPublicAddress(inet::TCPConnection const& connection,
                                Packet const& packet) const;
   void processRegisterPrivateAddress(inet::TCPConnection const& connection,
                                      Packet const& packet);
   void processGetClientList(inet::TCPConnection const& connection,
                             Packet const& packet) const;
+  void processUDPHolepunch(inet::TCPConnection const& connection,
+                           Packet const& pacekt);
   void setState(State s);
 
   unsigned int main_port;

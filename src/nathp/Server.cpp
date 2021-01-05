@@ -42,6 +42,32 @@ int Server::sendPacketTo(Packet const& packet,
   return conn.send(data, kSize);
 }
 
+int Server::sendPacketTo(Packet const& packet, 
+    ClientRecord const& client_record) const {
+  LOG(DEBUG) << "Neat oh!";
+  inet::IPConnection const* connection = nullptr;
+  std::vector<inet::TCPAcceptor const*> acceptors =
+    this->p_master_connection->getAcceptors();
+  LOG(DEBUG) << "Looping through acceptors";
+  for (auto acceptor : acceptors) {
+    LOG(DEBUG) << "ACCEPTOR";
+    LOG(DEBUG) << "Looping through connections";
+    for (auto cur_connection : acceptor->getConnections()) {
+      int const kConnFd = static_cast<int>(*cur_connection);
+      if (kConnFd == client_record.id) {
+        connection = reinterpret_cast<inet::IPConnection const*>(cur_connection);
+        break;
+      }
+    }
+  }
+  if (connection == nullptr) {
+    LOG(WARNING) << "Failed to find a connection to client "
+                 << client_record.id;
+    return -1;
+  }
+  return this->sendPacketTo(packet, *connection);
+}
+
 bool Server::internalAcceptHandler(inet::TCPConnection const& conn) {
   bool accepted = this->external_accept_handle(conn);
   if (!accepted) return accepted;
@@ -85,6 +111,19 @@ void Server::addClientRecord(ClientRecord const& client_record) {
   this->client_list.push_back(client_record);
 }
 
+ClientRecord const* Server::getClientRecord(unsigned int id) const {
+  ClientRecord const* record = nullptr;
+  std::lock_guard client_list_lock{this->client_list_mutex};
+  for (auto it = client_list.begin(); it != client_list.end(); it++) {
+    ClientRecord const* cur_record = reinterpret_cast<ClientRecord const*>(&(*it));
+    if (cur_record->id == id) {
+      record = cur_record;
+      break;
+    }
+  }
+  return record;
+}
+
 ClientRecord* Server::getClientRecord(unsigned int id) {
   ClientRecord* record = nullptr;
   std::lock_guard client_list_lock{this->client_list_mutex};
@@ -113,6 +152,9 @@ void Server::processMessage(inet::TCPConnection const& connection,
     case Packet::Message::getClientList: {
       this->processGetClientList(connection, packet);
     } break;
+    case Packet::Message::udpHolepunch: {
+      this->processUDPHolepunch(connection, packet);
+    } break;
     default:
       LOG(WARNING)
           << "NATHP Server - Unrecognized NATHP packet command request";
@@ -121,7 +163,8 @@ void Server::processMessage(inet::TCPConnection const& connection,
 }
 
 void Server::processGetClientId(inet::TCPConnection const& connection,
-                                Packet const& packet) const {
+                                Packet const& packet) {
+  this->getClientRecord(connection)->state = ClientRecord::State::connecting;
   unsigned int id = static_cast<int>(connection);
   Packet return_packet;
   return_packet.sender_id = 0;
@@ -171,6 +214,7 @@ void Server::processRegisterPrivateAddress(
   if (result < 0) {
     LOG(WARNING) << "Failed to send registerPrivateAddress response";
   }
+  this->getClientRecord(connection)->state = ClientRecord::State::idle;
 }
 
 void Server::processGetClientList(inet::TCPConnection const& connection,
@@ -191,6 +235,47 @@ void Server::processGetClientList(inet::TCPConnection const& connection,
   int result = this->sendPacketTo(return_packet, connection);
   if (result < 0) {
     LOG(WARNING) << "Failed to send getClientList resopnse";
+  }
+}
+
+void Server::processUDPHolepunch(inet::TCPConnection const& connection,
+    Packet const& packet) {
+  ClientRecord* client = this->getClientRecord(connection);
+  client->state = ClientRecord::State::punching;
+
+  std::vector<int> payload = packet.getPayload<std::vector<int>>();
+  int requested_client_id = payload[0];
+  ClientRecord* requested_client = this->getClientRecord(requested_client_id);
+
+  std::string response = "OK";
+  if (requested_client->state != ClientRecord::State::idle) {
+    response = "BUSY";
+  }
+
+  LOG(DEBUG) << "Initiating hole punch between client " << client->id 
+             << " and client " << requested_client_id;
+  Packet forward_packet;
+  forward_packet.sender_id = 0;
+  forward_packet.recipient_id =requested_client_id;
+  forward_packet.type = Packet::Type::request;
+  forward_packet.msg = packet.msg;
+  forward_packet.setPayload(client->container());
+  int result = this->sendPacketTo(forward_packet, *requested_client);
+  if (result < 0) {
+    LOG(WARNING) << "Failed to send getClientList resopnse";
+    return;
+  }
+
+  Packet return_packet;
+  return_packet.sender_id = 0;
+  return_packet.recipient_id = connection;
+  return_packet.type = Packet::Type::response;
+  return_packet.msg = packet.msg;
+  return_packet.setPayload(response);
+  result = this->sendPacketTo(return_packet, connection);
+  if (result < 0) {
+    LOG(WARNING) << "Failed to send getClientList resopnse";
+    return;
   }
 }
 

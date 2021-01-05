@@ -10,6 +10,7 @@
 #include "nathp/ClientRecord.hpp"
 #include "nathp/Packet.hpp"
 #include "nathp/constants.hpp"
+#include "nathp/type.hpp"
 
 namespace nathp {
 class Client {
@@ -20,7 +21,8 @@ class Client {
   void connect(void);
   ClientRecord getClientRecord(void) const;
   std::vector<ClientRecord> requestClientList(void) const noexcept;
-  // bool connectToPeer(ClientRecord const& peer) const noexcept;
+  bool connectToPeer(ClientRecord const& peer) const noexcept;
+  bool createHolepunch(type holepunch_type, ClientRecord const& client_record) const;
 
   int reconnection_attempts = -1;
 
@@ -35,6 +37,7 @@ class Client {
   unsigned int requestClientID(void) const noexcept;
   std::string requestPublicAddress(void) const noexcept;
   void requestRegisterPrivateAddress(void) const noexcept;
+  bool requestUDPHolepunch(ClientRecord const& client_record) const;
 
   unsigned int id = -1;
 

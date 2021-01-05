@@ -5,6 +5,7 @@
 #include <g3log/g3log.hpp>
 
 #include "nathp/Packet.hpp"
+#include "nathp/type.hpp"
 
 namespace nathp {
 Client::Client(std::string server_ip_address, int port, bool start) {
@@ -91,6 +92,31 @@ std::vector<nathp::ClientRecord> Client::requestClientList(
   return result;
 }
 
+bool Client::connectToPeer(ClientRecord const& client_record) const noexcept {
+  LOG(DEBUG) << "connectToPeer";
+  bool holepunch_succeeded = this->createHolepunch(type::UDP, client_record);
+  if (holepunch_succeeded) return true;
+
+  // bool relay_succeeded = this->requestRelayStatus();
+  return true;
+}
+
+bool Client::createHolepunch(type holepunch_type, ClientRecord const& client_record)
+  const {
+    bool result = false;
+    switch(holepunch_type) {
+      case type::UDP: {
+        result = this->requestUDPHolepunch(client_record);
+      } break;
+      case type::TCP: {
+        // result = this->requestTCPHolepunch(client_record);
+      } break;
+      default:
+        LOG(WARNING) << "type supplied to createHolepunch is unknown";
+    }
+    return result;
+}
+
 bool Client::connectionHandler(inet::IPConnection const& connection) {
   LOG(DEBUG) << "Running connection handler for client ID " << this->id;
   if (!connection.isDataReady(5.0)) return true;
@@ -131,8 +157,9 @@ void Client::processPacket(Packet const& packet) const noexcept {
     case Packet::Message::getClientId:
     case Packet::Message::getPublicAddress:
     case Packet::Message::registerPrivateAddress:
-    case Packet::Message::getClientList: {
-      this->proc_response_data[packet.msg] = packet.getPayload<uint8_t>();
+    case Packet::Message::getClientList: 
+    case Packet::Message::udpHolepunch: {
+      this->proc_response_data[packet.msg] = packet.getPayload<std::vector<uint8_t>>();
       this->proc_response_ready[packet.msg] = true;
       this->proc_response_cv.notify_all();
       break;
@@ -232,12 +259,24 @@ void Client::requestRegisterPrivateAddress(void) const noexcept {
   LOG(DEBUG) << "Client " << this->id << " registered private address";
 }
 
-// bool Client::connectToPeer(ClientRecord const& clientRecord) const noexcept {
-//// 1. Set up a new inet::TCPConnection to connect to the server
-//// 2. Use the same connection handler as the server since the protocols
-//// shouldn't be any different
-//// 3. Send a request
-// return true;
-//}
+bool Client::requestUDPHolepunch(ClientRecord const& client_record) const {
+  Packet packet;
+  packet.sender_id = this->id;
+  packet.recipient_id = 0;
+  packet.type = Packet::Type::request;
+  packet.msg = Packet::Message::udpHolepunch;
+  packet.setPayload(client_record.id);
 
+  int send_result = this->sendPacketTo(packet, this->server_connection);
+  if (send_result == -1) {
+    LOG(WARNING) << "Client failed to send a request to UDP hole punch| errno: "
+                 << std::to_string(ERRORCODE);
+    return false;
+  }
+
+  this->awaitResponse(&packet);
+  std::string response = packet.getPayload<std::string>();
+  if (response != "OK") return false;
+  return true;
+}
 }  // namespace nathp

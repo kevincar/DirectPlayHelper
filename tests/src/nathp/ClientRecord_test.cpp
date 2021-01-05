@@ -25,10 +25,17 @@ TEST(ClientRecord, constructors) {
 TEST(ClientRecord, data) {
   nathp::ClientRecord cr{14};
   cr.private_address = "1.2.3.4:5";
-  unsigned char const* data = cr.data();
-  EXPECT_EQ(data[0], cr.id);
-  EXPECT_EQ(data[5], 1);
-  EXPECT_EQ(data[9], 5);
+  { unsigned char const* data = cr.data();
+    EXPECT_EQ(data[0], cr.id);
+    EXPECT_EQ(data[5], 1);
+    EXPECT_EQ(data[9], 5);
+  }
+
+  { std::vector<uint8_t> data = cr.container();
+    EXPECT_EQ(data[0], cr.id);
+    EXPECT_EQ(data[5], 1);
+    EXPECT_EQ(data[9], 5);
+  }
 }
 
 TEST(ClientRecord, assign) {

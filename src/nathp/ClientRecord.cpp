@@ -45,18 +45,18 @@ void ClientRecord::assign(unsigned char const* data) noexcept {
 void ClientRecord::fromData(_ClientRecord const& client_record_data) {
   this->id = client_record_data.id;
   this->state = static_cast<ClientRecord::State>(client_record_data.state);
-  this->private_address =
-      this->addressFromData(client_record_data.private_address);
-  this->public_address =
-      this->addressFromData(client_record_data.public_address);
+  //this->private_address =
+      //this->addressFromData(client_record_data.private_address);
+  //this->public_address =
+      //this->addressFromData(client_record_data.public_address);
 }
 
 _ClientRecord&& ClientRecord::toData(void) const {
   _ClientRecord client_record;
   client_record.id = this->id;
   client_record.state = this->state;
-  client_record.private_address = this->addressToData(this->private_address);
-  client_record.public_address = this->addressToData(this->public_address);
+  //client_record.private_address = this->addressToData(this->private_address);
+  //client_record.public_address = this->addressToData(this->public_address);
   return std::move(client_record);
 }
 

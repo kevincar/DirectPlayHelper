@@ -16,19 +16,20 @@ namespace nathp {
 class Client {
  public:
   explicit Client(std::string server_ip_address, int port = NATHP_PORT,
-                  bool start = true);
+                  bool start = false);
 
   void connect(void);
   ClientRecord getClientRecord(void) const;
   std::vector<ClientRecord> requestClientList(void) const noexcept;
-  bool connectToPeer(ClientRecord const& peer) const noexcept;
-  bool createHolepunch(type holepunch_type, ClientRecord const& client_record) const;
+  bool connectToPeer(ClientRecord const& peer) noexcept;
+  bool createHolepunch(type holepunch_type, ClientRecord const& client_record);
 
   int reconnection_attempts = -1;
 
  private:
   bool connectionHandler(inet::IPConnection const& connection);
-  void processPacket(Packet const& packet) const noexcept;
+  void processRequestPacket(Packet const& packet) noexcept;
+  void processResponsePacket(Packet const& packet) const noexcept;
 
   void clearProcResponseData(void) const noexcept;
   int sendPacketTo(Packet const& packet, inet::IPConnection const& conn) const;
@@ -37,7 +38,9 @@ class Client {
   unsigned int requestClientID(void) const noexcept;
   std::string requestPublicAddress(void) const noexcept;
   void requestRegisterPrivateAddress(void) const noexcept;
-  bool requestUDPHolepunch(ClientRecord const& client_record) const;
+  bool requestUDPHolepunch(ClientRecord const& client_record);
+
+  bool initHolepunch(ClientRecord const& peer_record);
 
   unsigned int id = -1;
 
@@ -46,9 +49,12 @@ class Client {
   std::map<Packet::Message, bool> mutable proc_response_ready;
   std::map<Packet::Message, std::vector<uint8_t>> mutable proc_response_data;
 
-  inet::IPConnection::ConnectionHandler connection_handler;
+  inet::IPConnection::ConnectionHandler server_connection_handler;
   inet::TCPConnection server_connection;
   std::string server_address;
+
+  inet::UDPConnection holepunch;
+  inet::IPConnection::ConnectionHandler holepunch_handler;
 };
 }  // namespace nathp
 

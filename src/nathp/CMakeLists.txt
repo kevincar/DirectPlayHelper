@@ -11,6 +11,7 @@ add_library(nathp
 	Server.cpp
 	Client.cpp
 	Packet.cpp
+  #ConnectionRecord.cpp
 	ClientRecord.cpp
 	)
 

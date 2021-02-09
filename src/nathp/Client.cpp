@@ -2,6 +2,7 @@
 #include "nathp/Client.hpp"
 
 #include <sstream>
+#include <utility>
 #include <g3log/g3log.hpp>
 
 #include "nathp/Packet.hpp"
@@ -18,8 +19,9 @@ Client::Client(std::string server_ip_address, int port, bool start) {
   }
 
   // Setup a thread to handle communication with the server
-  this->connection_handler =
-      std::bind(&Client::connectionHandler, this, std::placeholders::_1);
+  this->server_connection_handler =
+      std::bind(&Client::connectionHandler, this,
+          std::placeholders::_1);
 }
 
 void Client::connect(void) {
@@ -48,7 +50,7 @@ void Client::connect(void) {
     throw std::runtime_error("Failed to connect client to server");
   }
 
-  this->server_connection.startHandlerProcess(this->connection_handler);
+  this->server_connection.startHandlerProcess(this->server_connection_handler);
   this->id = this->requestClientID();
   this->server_connection.setPublicAddress(this->requestPublicAddress());
   this->requestRegisterPrivateAddress();
@@ -92,7 +94,7 @@ std::vector<nathp::ClientRecord> Client::requestClientList(
   return result;
 }
 
-bool Client::connectToPeer(ClientRecord const& client_record) const noexcept {
+bool Client::connectToPeer(ClientRecord const& client_record) noexcept {
   LOG(DEBUG) << "connectToPeer";
   bool holepunch_succeeded = this->createHolepunch(type::UDP, client_record);
   if (holepunch_succeeded) return true;
@@ -101,8 +103,8 @@ bool Client::connectToPeer(ClientRecord const& client_record) const noexcept {
   return true;
 }
 
-bool Client::createHolepunch(type holepunch_type, ClientRecord const& client_record)
-  const {
+bool Client::createHolepunch(type holepunch_type,
+                             ClientRecord const& client_record) {
     bool result = false;
     switch(holepunch_type) {
       case type::UDP: {
@@ -138,20 +140,31 @@ bool Client::connectionHandler(inet::IPConnection const& connection) {
   Packet packet{buffer};
   LOG(DEBUG) << "Recieved a packet " << packet.size() << " bytes long";
 
-  this->processPacket(packet);
+  if (packet.type == Packet::Type::request) {
+    this->processRequestPacket(packet);
+  } else {
+    this->processResponsePacket(packet);
+  }
   return true;
 }
 
-void Client::processPacket(Packet const& packet) const noexcept {
+void Client::processRequestPacket(Packet const& packet) noexcept {
+  switch (packet.msg) {
+    case Packet::Message::udpHolepunch: {
+      ClientRecord peer_record (packet.getPayload<std::vector<uint8_t>>());
+      this->initHolepunch(peer_record);
+      break;
+    }
+    default:
+      LOG(WARNING)
+        << "Client received a NATHP packet with an uncrecongized request";
+  }
+}
+
+void Client::processResponsePacket(Packet const& packet) const noexcept {
   this->clearProcResponseData();
 
   std::lock_guard<std::mutex> proc_response_lock{this->proc_response_mutex};
-  if (packet.type != Packet::Type::response) {
-    LOG(WARNING) << "Client received a NATHP request packet and should have "
-                    "received a response packet! "
-                 << packet.type << " ≠ " << Packet::Type::response;
-    return;
-  }
 
   switch (packet.msg) {
     case Packet::Message::getClientId:
@@ -259,7 +272,7 @@ void Client::requestRegisterPrivateAddress(void) const noexcept {
   LOG(DEBUG) << "Client " << this->id << " registered private address";
 }
 
-bool Client::requestUDPHolepunch(ClientRecord const& client_record) const {
+bool Client::requestUDPHolepunch(ClientRecord const& client_record) {
   Packet packet;
   packet.sender_id = this->id;
   packet.recipient_id = 0;
@@ -277,6 +290,15 @@ bool Client::requestUDPHolepunch(ClientRecord const& client_record) const {
   this->awaitResponse(&packet);
   std::string response = packet.getPayload<std::string>();
   if (response != "OK") return false;
+  return this->initHolepunch(client_record);
+}
+
+bool Client::initHolepunch(ClientRecord const& peer_record) {
+  std::unique_ptr<inet::UDPConnection> p_peer_connection =
+    std::make_unique<inet::UDPConnection>();
+
+  //std::lock_guard lock(this->peer_conn_mutex);
+  //this->peer_connections.push_back(std::move(p_peer_connection));
   return true;
 }
 }  // namespace nathp

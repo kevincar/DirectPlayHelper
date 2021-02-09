@@ -4,23 +4,15 @@
 
 #include <string>
 #include <vector>
+#include "ConnectionRecord.hpp"
 
 namespace nathp {
-#pragma pack(push, 1)
-struct _address {
-  uint8_t _1;
-  uint8_t _2;
-  uint8_t _3;
-  uint8_t _4;
-  uint16_t port;
-};
-#pragma pack(pop)
 #pragma pack(push, 1)
 struct _ClientRecord {
   unsigned int id;
   unsigned char state;
-  _address private_address;
-  _address public_address;
+  _ConnectionRecord tcp;
+  _ConnectionRecord udp;
 };
 #pragma pack(pop)
 

@@ -49,6 +49,7 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/inet/MasterConnection_test.cpp
 
 	./src/nathp/Packet_test.cpp
+  ./src/nathp/ConnectionRecord_test.cpp
 	./src/nathp/ClientRecord_test.cpp
 	./src/nathp/Protocol_test.cpp
 	)

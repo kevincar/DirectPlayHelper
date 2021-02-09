@@ -7,25 +7,38 @@
 
 namespace nathp {
 namespace asset {
-class lock_pack {
+
+template <typename T>
+class lock_var {
  public:
-  std::string* status;
-  std::mutex* status_mutex;
-  std::condition_variable* status_cv;
+  lock_var(T const& val);
+  void wait(T const& val);
+  void operator=(T const& other);
+ private:
+  T value;
+  std::mutex value_mutex;
+  std::condition_variable value_cv;
 };
 
-void waitForStatus(std::shared_ptr<lock_pack> p_lock_pack, std::string const& status) {
-  std::unique_lock<std::mutex> status_lock{*p_lock_pack->status_mutex};
-  p_lock_pack->status_cv->wait(
-      status_lock, [&] { return *p_lock_pack->status == status; });
-  status_lock.unlock();
+typedef lock_var<std::string> lock_string;
+
+template<typename T>
+lock_var<T>::lock_var(T const& val) : value(val) {}
+
+template <typename T>
+void lock_var<T>::wait(T const& val) {
+  std::unique_lock<std::mutex> value_lock(this->value_mutex);
+  this->value_cv.wait(
+      value_lock, [&] { return this->value == val; });
+  value_lock.unlock();
 }
 
-void setStatus(std::shared_ptr<lock_pack> p_lock_pack, std::string const& status) {
-  { std::lock_guard<std::mutex> status_lock{*p_lock_pack->status_mutex};
-    *p_lock_pack->status = status;
+template <typename T>
+void lock_var<T>::operator=(T const& other) {
+  { std::lock_guard<std::mutex> value_lock{this->value_mutex};
+    this->value = other;
   }
-  p_lock_pack->status_cv->notify_all();
+  this->value_cv.notify_all();
 }
 
 }  // namespace asset

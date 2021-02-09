@@ -27,14 +27,15 @@ bool processHandler(char const* buffer, unsigned int size) {
   return true;
 }
 
-bool start(int id, std::shared_ptr<lock_pack> p_lock_pack) {
+bool start(int id, std::shared_ptr<lock_string> p_lock_string) {
   // Create the nathp server
   nathp::Server server{acceptHandler, processHandler};
 
   // Wait for Clients to finish
   LOG(DEBUG) << "Waiting for clients to finish";
-  waitForStatus(p_lock_pack, "Clients Done");
+  p_lock_string->wait("Clients Done");
 
+  LOG(DEBUG) << "Server Done!";
   return true;
 }
 }  // namespace server

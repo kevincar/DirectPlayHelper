@@ -182,24 +182,14 @@
 //}
 
 TEST(NATHPTest, Connection) {
-  std::string status{};
-  std::mutex status_mutex{};
-  std::condition_variable status_cv{};
 
-  nathp::asset::lock_pack lp{};
-  lp.status = &status;
-  lp.status_mutex = &status_mutex;
-  lp.status_cv = &status_cv;
-
-  // Capture the lock_pack in a shared pointer. Don't let the shared_ptr object
-  // delete lp though because it will be deleted by this scope
-  std::shared_ptr<nathp::asset::lock_pack> p_lock_pack{&lp, [](auto p) {}};
+  std::shared_ptr<nathp::asset::lock_string> p_lock_string = std::make_shared<nathp::asset::lock_string>("HI");
 
   ctpl::thread_pool p(3);
-  std::future<bool> r = p.push(nathp::asset::server::start, p_lock_pack);
-  std::future<bool> rc = p.push(nathp::asset::client::start, p_lock_pack,
+  std::future<bool> r = p.push(nathp::asset::server::start, p_lock_string);
+  std::future<bool> rc = p.push(nathp::asset::client::start, p_lock_string,
                                 nathp::asset::client::red);
-  std::future<bool> rc2 = p.push(nathp::asset::client::start, p_lock_pack,
+  std::future<bool> rc2 = p.push(nathp::asset::client::start, p_lock_string,
                                  nathp::asset::client::gold);
 
   EXPECT_EQ(rc2.get(), true);

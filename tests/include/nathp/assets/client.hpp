@@ -18,8 +18,9 @@ bool done = false;
 std::mutex done_mutex;
 std::condition_variable done_cv;
 int n_clients = 0;
+lock_string client_lock_string(std::string(""));
 
-bool start(int id, std::shared_ptr<lock_pack> p_lock_pack,
+bool start(int id, std::shared_ptr<lock_string> p_lock_string,
            std::function<void(nathp::Client* client)> f) {
   n_clients++;
 
@@ -37,7 +38,7 @@ bool start(int id, std::shared_ptr<lock_pack> p_lock_pack,
   n_clients--;
 
   if (n_clients <= 0) {
-    setStatus(p_lock_pack, "Clients Done");
+    *p_lock_string = "Clients Done";
   }
   LOG(DEBUG) << "Client " << client.getClientRecord().id << " finished...";
   return true;
@@ -71,9 +72,16 @@ void red(nathp::Client* client) {
 
   // Connect to peer
   client->connectToPeer(other);
+
+  client_lock_string = "Red Done";
 }
 
-void gold(nathp::Client* client) { LOG(INFO) << "GOLD CLIENT HERE :)"; }
+void gold(nathp::Client* client) { 
+  LOG(INFO) << "GOLD CLIENT HERE :)"; 
+
+  client_lock_string.wait("Red Done");
+  LOG(INFO) << "Gold client done";
+}
 
 }  // namespace client
 }  // namespace asset

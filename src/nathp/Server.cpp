@@ -262,7 +262,7 @@ void Server::processUDPHolepunch(inet::TCPConnection const& connection,
   forward_packet.setPayload(client->container());
   int result = this->sendPacketTo(forward_packet, *requested_client);
   if (result < 0) {
-    LOG(WARNING) << "Failed to send getClientList resopnse";
+    LOG(WARNING) << "Failed to send processUDPHolepunch forwarding packet";
     return;
   }
 
@@ -274,7 +274,7 @@ void Server::processUDPHolepunch(inet::TCPConnection const& connection,
   return_packet.setPayload(response);
   result = this->sendPacketTo(return_packet, connection);
   if (result < 0) {
-    LOG(WARNING) << "Failed to send getClientList resopnse";
+    LOG(WARNING) << "Failed to send processUDPHolepunch resopnse";
     return;
   }
 }

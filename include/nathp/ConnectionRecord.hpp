@@ -43,8 +43,20 @@ class ConnectionRecord {
   std::string public_address;
 
  private:
+  void setFromData(void);
+  _ConnectionRecord structFromData(void) const;
+  std::string stringFromStruct(_address const& addr) const;
+
   std::vector<uint8_t> mutable data_;
 };
+template <typename T>
+void ConnectionRecord::assign(T const& start, T const& end) {
+  this->data_.assign(start, end);
+  this->setFromData();
 }
-
+template <typename T>
+ConnectionRecord& ConnectionRecord::operator=(T const& data) {
+  this->assign(data.begin(), data.end());
+}
+}
 #endif  // INCLUDE_NATHP_CONNECTIONRECORD_HPP_

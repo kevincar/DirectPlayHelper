@@ -9,11 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 #####################################################################
-#																	#
-#						DEPENDENCIES								#
-#																	#
+#																	                                  #
+#						DEPENDENCIES								                            #
+#																	                                  #
 #####################################################################
 
+# G3LOG
 ExternalProject_Add(g3log_project
 	GIT_REPOSITORY https://github.com/KjellKod/g3log
 	GIT_TAG master
@@ -31,6 +32,11 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
 
+# experimental::net
+execute_process(
+  COMMAND git clone https://github.com/chriskohlhoff/networking-ts-impl "${CMAKE_CURRENT_BINARY_DIR}/deps/networking-ts-impl"
+  )
+set(NETWORK_TS_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/networking-ts-impl/include")
 #####################################################################
 #																	#
 #							PROGRAM									#
@@ -49,10 +55,12 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC
 		include
 		"${install_dir}/include"
+    "${NETWORK_TS_INCLUDES}"
 		)
 
 # build the inet library
 add_subdirectory(src/inet)
+add_subdirectory(src/dppl)
 
 # Link dependencies
 if(WIN32)
@@ -63,6 +71,7 @@ target_link_libraries("${PROJECT_NAME}"
 		g3log
 		"${ws2_32}"
 		inet
+    dppl
 		)
 
 # Oh yeah, and add the tests

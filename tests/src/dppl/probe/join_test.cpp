@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "experimental/net"
+
 #include "gtest/gtest.h"
 
 bool hardware_test_check(void) {
@@ -10,8 +12,10 @@ bool hardware_test_check(void) {
 }
 
 TEST(ProbeJoinTest, check) {
-  if (hardware_test_check()) SUCCEED();
-  dppl::probe::join join_probe;
+  if (!hardware_test_check()) return SUCCEED();
+
+  std::experimental::net::io_context io_context;
+  dppl::probe::join join_probe(&io_context);
   bool attempting_join = join_probe.test();
   ASSERT_EQ(attempting_join, false);
 

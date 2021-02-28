@@ -48,6 +48,7 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 		./include
 		"${gtest_SOURCE_DIR}/include"
 		"${install_dir}/include"
+    "${NETWORK_TS_INCLUDES}"
 		)
 
 # Link dependencies
@@ -56,4 +57,5 @@ target_link_libraries("${TEST_PROJECT_NAME}"
 		g3log
 		"${ws2_32}"
 		inet
+    dppl
 		gtest_main)

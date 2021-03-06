@@ -24,4 +24,5 @@ TEST(ProbeJoinTest, check) {
   std::cin >> input;
   attempting_join = join_probe.test();
   ASSERT_EQ(attempting_join, true);
+
 }

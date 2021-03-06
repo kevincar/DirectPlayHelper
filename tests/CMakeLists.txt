@@ -31,12 +31,6 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/main_test.cpp
 	./src/DPServer_test.cpp
 	./src/ArgParser_test.cpp
-	./src/inet/Socket_test.cpp
-	./src/inet/ServiceAddress_test.cpp
-	./src/inet/TCPConnection_test.cpp
-	./src/inet/UDPConnection_test.cpp
-	./src/inet/TCPAcceptor_test.cpp
-	./src/inet/MasterConnection_test.cpp
 
 	./src/nathp/Packet_test.cpp
 	./src/nathp/ClientRecord_test.cpp

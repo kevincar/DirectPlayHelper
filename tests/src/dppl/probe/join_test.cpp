@@ -21,7 +21,7 @@ TEST(ProbeJoinTest, check) {
 
   std::cout << "\n\nPlease attempt to join... then hit enter" << std::endl;
   std::string input;
-  std::cin >> input;
+  std::getline(std::cin, input, '\n');
   attempting_join = join_probe.test();
   ASSERT_EQ(attempting_join, true);
 

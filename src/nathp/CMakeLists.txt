@@ -8,10 +8,10 @@ include(CheckIncludeFiles)
 
 # NATHP Librari
 add_library(nathp
-	Server.cpp
-	Client.cpp
-	Packet.cpp
-	ClientRecord.cpp
+	#Server.cpp
+	#Client.cpp
+	#Packet.cpp
+	#ClientRecord.cpp
 	)
 
 target_include_directories(nathp BEFORE

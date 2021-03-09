@@ -32,9 +32,10 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/DPServer_test.cpp
 	./src/ArgParser_test.cpp
 
-	./src/nathp/Packet_test.cpp
-	./src/nathp/ClientRecord_test.cpp
-	./src/nathp/Server_test.cpp
+	#./src/nathp/Packet_test.cpp
+	#./src/nathp/ClientRecord_test.cpp
+	#./src/nathp/Server_test.cpp
+  ./src/nathp/Message_test.cpp
 	)
 
 # Includes
@@ -44,6 +45,7 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 		./include
 		"${gtest_SOURCE_DIR}/include"
 		"${install_dir}/include"
+    "${NETWORK_TS_INCLUDES}"
 		)
 
 # Link dependencies
@@ -51,6 +53,5 @@ target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		g3log
 		"${ws2_32}"
-		inet
-		nathp
+		#nathp
 		gtest_main)

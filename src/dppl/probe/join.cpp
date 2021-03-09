@@ -14,12 +14,5 @@ join::join(std::experimental::net::io_context* io_context)
       std::experimental::net::socket_base::broadcast(true));
 }
 
-void join::timeout(std::error_code const& ec) {
-  if (!ec) {
-    std::cout << "Timeout..." << std::endl;
-    this->socket_.cancel();
-  }
-}
-
 }  // namespace probe
 }  // namespace dppl

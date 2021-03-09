@@ -69,11 +69,12 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC
 		include
 		"${install_dir}/include"
-        ${NETWORK_TS_INCLUDES}
+    ${NETWORK_TS_INCLUDES}
 		)
 
 # build the libraries
-add_subdirectory(src/nathp)
+add_subdirectory(src/dppl)
+#add_subdirectory(src/nathp)
 
 # Link dependencies
 if(NOT WIN32)
@@ -86,7 +87,8 @@ target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		g3log
     "${PTHREAD_LIB}"
-		nathp
+		#nathp
+    dppl
 		)
 
 # Oh yeah, and add the tests

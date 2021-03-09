@@ -1,10 +1,16 @@
 
-#ifndef INET_TCP_ACCEPTOR_TEST
-#define INET_TCP_ACCEPTOR_TEST
+#ifndef TESTS_INCLUDE_INET_TCPACCEPTOR_TEST_HPP_
+#define TESTS_INCLUDE_INET_TCPACCEPTOR_TEST_HPP_
 
+#include <memory>
+#include <string>
 #include <thread>
 
-std::unique_ptr<std::thread> startTestServer(std::string& serviceAddress, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV);
-std::unique_ptr<std::thread> startTestClient(std::string& serviceAddress, std::string& status, std::mutex& statusMutex, std::condition_variable& statusCV);
+std::unique_ptr<std::thread> startTestServer(
+    std::string const& serviceAddress, std::string const& status,
+    std::mutex const& statusMutex, std::condition_variable const& statusCV);
+std::unique_ptr<std::thread> startTestClient(
+    std::string const& serviceAddress, std::string const& status,
+    std::mutex const& statusMutex, std::condition_variable const& statusCV);
 
-#endif /* INET_TCP_ACCEPTOR_TEST */
+#endif  // TESTS_INCLUDE_INET_TCPACCEPTOR_TEST_HPP_

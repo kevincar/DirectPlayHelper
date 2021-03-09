@@ -1,9 +1,9 @@
 #include "DPServer.hpp"
 
-#include <g3log/g3log.hpp>
 #include <iostream>
 #include <regex>
 
+#include <g3log/g3log.hpp>
 #include "ArgParser.hpp"
 
 DPServer::DPServer(int argc, char const* argv[]) : nArgs(argc) {
@@ -90,14 +90,15 @@ void DPServer::usage(void) const {
             << "Arguments"
             << "\n"
             << "\n"
-            << "	-s | --server			Start the application as a server"
+            << "    -s | --server            Start the application "
+               "as a server"
             << "\n"
-            << "	-c | --client <host>	Start the application as a client. "
-               "Host is the IP Address of the server to connect to."
+            << "    -c | --client <host>    Start the application as a "
+               "client. Host is the IP Address of the server to connect to."
             << "\n"
             << "\n"
-            << "	-p | --port <portnum>	Set the server-client connection "
-               "port to <portnum>"
+            << "    -p | --port <portnum>    Set the server-client "
+               "connection port to <portnum>"
             << "\n"
             << std::endl;
 

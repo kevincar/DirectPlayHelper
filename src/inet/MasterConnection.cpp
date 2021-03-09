@@ -78,7 +78,7 @@ unsigned int MasterConnection::getNumConnections(void) const {
   return result;
 }
 
-unsigned int MasterConnection::createTCPAcceptor(
+TCPAcceptor* MasterConnection::createTCPAcceptor(
     TCPAcceptor::AcceptHandler const& pAcceptPH,
     TCPAcceptor::ProcessHandler const& pChildPH) {
   std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
@@ -86,7 +86,7 @@ unsigned int MasterConnection::createTCPAcceptor(
   std::unique_ptr<TCPAcceptor> pAcceptor{std::move(acceptor)};
   this->acceptors.push_back(std::move(pAcceptor));
 
-  return 0;
+  return this->acceptors.back().get();
 }
 
 std::vector<TCPAcceptor const*> MasterConnection::getAcceptors(void) const {
@@ -121,21 +121,20 @@ void MasterConnection::removeTCPAcceptor(unsigned int acceptorID) {
   }
 }
 
-unsigned int MasterConnection::createUDPConnection(
-    std::unique_ptr<ProcessHandler>& pPH) {
+UDPConnection* MasterConnection::createUDPConnection(
+    std::unique_ptr<ProcessHandler>&& process_handler) {
   std::unique_ptr<UDPConnection> newConnection =
       std::make_unique<UDPConnection>();
 
   std::scoped_lock locks{this->udp_mutex, this->proc_mutex};
 
   UDPConnection const* pConn = newConnection.get();
-  unsigned int connectionID = static_cast<unsigned int>(*pConn);
+  const unsigned int kConnFd = static_cast<unsigned int>(*pConn);
   this->udpConnections.push_back(std::move(newConnection));
 
-  std::unique_ptr<ProcessHandler> ph = std::move(pPH);
-  this->processHandlers.emplace(connectionID, std::move(ph));
+  this->processHandlers.emplace(kConnFd, std::move(process_handler));
 
-  return 0;
+  return this->udpConnections.back().get();
 }
 
 std::vector<UDPConnection const*> MasterConnection::getUDPConnections(
@@ -156,8 +155,8 @@ void MasterConnection::removeUDPConnection(unsigned int connID) {
   std::scoped_lock locks{this->udp_mutex, this->proc_mutex};
 
   // remove procedures firts
-  for (std::map<unsigned, std::unique_ptr<ProcessHandler>>::iterator it =
-           this->processHandlers.begin();
+  for (std::map<const unsigned int, std::unique_ptr<ProcessHandler>>::iterator
+           it = this->processHandlers.begin();
        it != this->processHandlers.end();) {
     std::pair<unsigned const, std::unique_ptr<ProcessHandler> const&> curPair =
         *it;
@@ -201,6 +200,14 @@ void MasterConnection::setListeningState(bool state) {
 void MasterConnection::beginListening() {
   // Check for a new connection every 5 seconds
   while (this->isListening()) {
+    /*
+     * On windows, this thread can run through fast enough that mutex
+     * locks aren't released for a long enough time for other threads
+     * to utilize shared resources. This delay allows a small window
+     * for shared resources to be aquired by other threads that need
+     * them. This is not the most elegant solution but works for now.
+     */
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     this->checkAndProcessConnections();
   }
 }
@@ -214,7 +221,7 @@ void MasterConnection::startListening() {
 }
 
 void MasterConnection::checkAndProcessConnections() {
-  fd_set fdSet;
+  fd_set mc_fd_set;
   unsigned int nConnections = 0;
 
   // Only continue if there are connections to check
@@ -230,10 +237,10 @@ void MasterConnection::checkAndProcessConnections() {
 
   // LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - loading
   // fd_set connections";
-  this->loadFdSetConnections(fdSet);
+  this->loadFdSetConnections(&mc_fd_set);
   // LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - calling
   // select...";
-  int connectionsWaiting = this->waitForFdSetConnections(fdSet);
+  int connectionsWaiting = this->waitForFdSetConnections(&mc_fd_set);
   // LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - select
   // finished";
 
@@ -247,19 +254,19 @@ void MasterConnection::checkAndProcessConnections() {
   // TCPAcceptors
   // LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and
   // processing TCP Connections";
-  this->checkAndProcessTCPConnections(fdSet);
+  this->checkAndProcessTCPConnections(&mc_fd_set);
 
   // UDPConnections
   // LOG(DEBUG) << "MasterConnection::checkAndProcessConnections - checking and
   // processing UDP Connections";
-  this->checkAndProcessUDPConnections(fdSet);
+  this->checkAndProcessUDPConnections(&mc_fd_set);
 
   return;
 }
 
-bool MasterConnection::loadFdSetConnections(fd_set& fdSet) const {
-  // Clear the set
-  FD_ZERO(&fdSet);
+bool MasterConnection::loadFdSetConnections(fd_set* fdSet) const {
+  // Clear the se
+  FD_ZERO(fdSet);
 
   // Add all sockets to the set
   this->loadFdSetTCPConnections(fdSet);
@@ -268,8 +275,8 @@ bool MasterConnection::loadFdSetConnections(fd_set& fdSet) const {
   return true;
 }
 
-bool MasterConnection::loadFdSetTCPConnections(fd_set& fdSet) const {
-  std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
+bool MasterConnection::loadFdSetTCPConnections(fd_set* fdSet) const {
+  std::lock_guard<std::mutex> acceptor_lock{this->acceptor_mutex};
   for (std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors) {
     acceptor->loadFdSetConnections(fdSet);
   }
@@ -277,17 +284,17 @@ bool MasterConnection::loadFdSetTCPConnections(fd_set& fdSet) const {
   return true;
 }
 
-bool MasterConnection::loadFdSetUDPConnections(fd_set& fdSet) const {
+bool MasterConnection::loadFdSetUDPConnections(fd_set* fdSet) const {
   std::lock_guard<std::mutex> udpConnectionLock{this->udp_mutex};
   for (std::unique_ptr<UDPConnection> const& udpConnection :
        this->udpConnections) {
-    int fd = static_cast<int>(*udpConnection);
-    FD_SET(fd, &fdSet);
+    const int kFd = static_cast<int>(*udpConnection);
+    FD_SET(kFd, fdSet);
   }
   return true;
 }
 
-int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const {
+int MasterConnection::waitForFdSetConnections(fd_set* fdSet) const {
   struct timeval tv;
   int largestFD = this->getLargestSocket();
 
@@ -300,7 +307,7 @@ int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const {
   tv.tv_sec = seconds;
   tv.tv_usec = microseconds;
 
-  int retval = ::select(largestFD + 1, &fdSet, nullptr, nullptr, &tv);
+  int retval = ::select(largestFD + 1, fdSet, nullptr, nullptr, &tv);
 
   if (retval == -1) {
     throw std::logic_error(
@@ -312,25 +319,25 @@ int MasterConnection::waitForFdSetConnections(fd_set& fdSet) const {
   return retval;
 }
 
-void MasterConnection::checkAndProcessTCPConnections(fd_set& fdSet) {
+void MasterConnection::checkAndProcessTCPConnections(fd_set* fdSet) {
   std::lock_guard<std::mutex> acceptorLock{this->acceptor_mutex};
   for (std::unique_ptr<TCPAcceptor> const& acceptor : this->acceptors) {
-    acceptor->checkAndProcessConnections(fdSet);
+    acceptor->checkAndProcessConnections(*fdSet);
   }
   return;
 }
 
-void MasterConnection::checkAndProcessUDPConnections(fd_set& fdSet) {
+void MasterConnection::checkAndProcessUDPConnections(fd_set* fdSet) {
   {
     std::scoped_lock locks{this->udp_mutex, this->proc_mutex};
     for (std::vector<std::unique_ptr<UDPConnection>>::iterator it =
              this->udpConnections.begin();
          it != this->udpConnections.end();) {
       std::unique_ptr<UDPConnection> const& udpConnection = *it;
-      unsigned fd = static_cast<unsigned>(*udpConnection);
-      if (FD_ISSET(fd, &fdSet) != false) {
+      const int kFd = static_cast<unsigned>(*udpConnection);
+      if (FD_ISSET(kFd, fdSet) != false) {
         std::unique_ptr<ProcessHandler> const& curProcHandler =
-            this->processHandlers.at(fd);
+            this->processHandlers.at(kFd);
         bool keepConnection = (*curProcHandler)(*udpConnection);
         if (!keepConnection) {
           it = this->udpConnections.erase(it);

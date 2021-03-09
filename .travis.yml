@@ -5,13 +5,21 @@ os:
     - windows
 
 before_install:
+    - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then choco install python3 ; fi
+    - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then export PATH=/c/Python39:/c/Python39/Scripts:$PATH ; fi
+
+install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then sh ./scripts/osx/install-dependencies.sh ; fi
     - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then ./scripts/windows/install-dependencies.bat ; fi
 
-install:
+before_script:
+    - python -m pip install cpplint
+    - cpplint --filter=-build/c++11,-legal/copyright ./include/**/* ./src/**/* ./tests/**/*
+
+script:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then sh ./scripts/osx/build.sh ; fi
     - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then ./scripts/windows/build.bat ; fi
 
-script:
+after_script:
     - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then ./build/tests/DirectPlayHelperTest ; fi
     - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then ./build/tests/Release/DirectPlayHelperTest.exe ; fi

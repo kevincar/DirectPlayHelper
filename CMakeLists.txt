@@ -9,15 +9,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 #####################################################################
-#																	                                  #
-#						DEPENDENCIES								                            #
-#																	                                  #
+#                                                                   #
+#                           DEPENDENCIES                            #
+#                                                                   #
 #####################################################################
 
 # G3LOG
 ExternalProject_Add(g3log_project
 	GIT_REPOSITORY https://github.com/KjellKod/g3log
-	GIT_TAG master
+	GIT_TAG 1.3.4
 	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/g3log"
 	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/g3log -DG3_SHARED_LIB=OFF -DUSE_DYNAMIC_LOGGING_LEVELS=ON
 	)
@@ -32,15 +32,29 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
 
-# experimental::net
+# experimental/net
 execute_process(
   COMMAND git clone https://github.com/chriskohlhoff/networking-ts-impl "${CMAKE_CURRENT_BINARY_DIR}/deps/networking-ts-impl"
   )
 set(NETWORK_TS_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/networking-ts-impl/include")
+macro(get_WIN32_WINNT version)
+    if (WIN32 AND CMAKE_SYSTEM_VERSION)
+        set(ver ${CMAKE_SYSTEM_VERSION})
+        string(REPLACE "." "" ver ${ver})
+        string(REGEX REPLACE "([0-9])" "0\\1" ver ${ver})
+
+		set(${version} "0x${ver}")
+    endif()
+endmacro()
+if(WIN32)
+	get_WIN32_WINNT(ver)
+	add_definitions(-D_WIN32_WINNT=${ver})
+endif()
+
 #####################################################################
-#																	#
-#							PROGRAM									#
-#																	#
+#                                                                   #
+#                           PROGRAM                                 #
+#                                                                   #
 #####################################################################
 
 # build the app
@@ -55,23 +69,24 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC
 		include
 		"${install_dir}/include"
-    "${NETWORK_TS_INCLUDES}"
+        ${NETWORK_TS_INCLUDES}
 		)
 
-# build the inet library
-add_subdirectory(src/inet)
-add_subdirectory(src/dppl)
+# build the libraries
+add_subdirectory(src/nathp)
 
 # Link dependencies
-if(WIN32)
-	set(ws2_32 ws2_32.lib)
+if(NOT WIN32)
+	set(PTHREAD_LIB "pthread")
+else()
+	set(PTHREAD_LIB "")
 endif()
+
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		g3log
-		"${ws2_32}"
-		inet
-    dppl
+    "${PTHREAD_LIB}"
+		nathp
 		)
 
 # Oh yeah, and add the tests

@@ -1,6 +1,6 @@
 
-#ifndef DPS_ARGPARSER_HPP
-#define DPS_ARGPARSER_HPP
+#ifndef INCLUDE_ARGPARSER_HPP_
+#define INCLUDE_ARGPARSER_HPP_
 
 #include <string>
 #include <vector>
@@ -18,4 +18,4 @@ class ArgParser {
   std::vector<std::string> args;
 };
 
-#endif /* DPS_ARGPARSER_HPP */
+#endif  // INCLUDE_ARGPARSER_HPP_

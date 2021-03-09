@@ -6,7 +6,7 @@ TCPConnection::TCPConnection(void) : IPConnection(SOCK_STREAM, 0) {}
 
 TCPConnection::TCPConnection(int captureRawSocket,
                              IPConnection const& parentConnection,
-                             sockaddr_in& destAddr)
+                             sockaddr_in const& destAddr)
     : IPConnection(captureRawSocket, SOCK_STREAM, 0, parentConnection,
                    destAddr) {}
 }  // namespace inet

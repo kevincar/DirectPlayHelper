@@ -171,7 +171,11 @@ Standard:        Auto
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
+<<<<<<< HEAD
 TabWidth:        4
+=======
+TabWidth:        8
+>>>>>>> develop
 UseCRLF:         false
 UseTab:          Never
 WhitespaceSensitiveMacros:

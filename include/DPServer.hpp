@@ -1,6 +1,6 @@
 
-#ifndef DPS_DPSERVER_HPP
-#define DPS_DPSERVER_HPP
+#ifndef INCLUDE_DPSERVER_HPP_
+#define INCLUDE_DPSERVER_HPP_
 
 #include <string>
 #include <vector>
@@ -31,4 +31,4 @@ class DPServer {
   bool setAppState(APPSTATE as);
 };
 
-#endif /* DPS_DPSERVER_HPP */
+#endif  // INCLUDE_DPSERVER_HPP_

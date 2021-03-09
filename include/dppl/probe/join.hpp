@@ -22,9 +22,10 @@ class join {
                   std::chrono::duration<T> timeout = std::chrono::seconds(10));
 
  private:
-  int const kPort_ = 47624;
+  static int const kPort_ = 47624;
   bool joining = false;
   std::vector<char> recv_buf_;
+  std::experimental::net::steady_timer timer_;
   std::experimental::net::io_context *io_context_;
   std::experimental::net::ip::udp::socket socket_;
 };
@@ -65,17 +66,24 @@ bool join::test(std::chrono::duration<T> timeout) {
 template <typename T>
 void join::async_test(std::function<void(bool)> callback,
                       std::chrono::duration<T> timeout) {
-  //this->recv_buf_.clear();
-  //this->recv_buf_.resize(512, '\0');
+  this->recv_buf_.clear();
+  this->recv_buf_.resize(512, '\0');
   std::experimental::net::ip::udp::endpoint remote_endpoint;
-  std::experimental::net::steady_timer timer(*this->io_context_, timeout);
+  this->timer_.expires_after(timeout);
+  this->timer_.async_wait([&](std::error_code const &ec) {
+    if (!ec) {
+      this->socket_.cancel();
+      callback(false);
+    } else {
+      std::cout << "error: " << ec.message() << std::endl;
+    }
+  });
 
   this->socket_.async_receive_from(
       std::experimental::net::buffer(this->recv_buf_), remote_endpoint,
-      [this, &callback, &timer](std::error_code const &ec, std::size_t length) {
-        std::cout << "hmph" << std::endl;
+      [this, &callback](std::error_code const &ec, std::size_t length) {
         if (!ec) {
-          timer.cancel();
+          this->timer_.cancel();
           DPMSG_HEADER *header =
               reinterpret_cast<DPMSG_HEADER *>(this->recv_buf_.data());
           if (header->cbSize > 0) {
@@ -85,17 +93,6 @@ void join::async_test(std::function<void(bool)> callback,
           callback(false);
         }
       });
-
-  std::cout << "Timer set" << std::endl;
-  timer.async_wait([this, &callback](std::error_code const &ec) {
-    if (!ec) {
-      this->socket_.cancel();
-      std::cout << "Timer" << std::endl;
-      callback(false);
-      } else {
-      std::cout << "error: " << ec.message() << std::endl;
-      }
-  });
 }
 }  // namespace probe
 }  // namespace dppl

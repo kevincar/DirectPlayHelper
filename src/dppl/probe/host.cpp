@@ -12,7 +12,7 @@ host::host(std::experimental::net::io_context* io_context, GUID app_guid)
       broadcast_socket_(*io_context,
                         std::experimental::net::ip::udp::endpoint(
                             std::experimental::net::ip::udp::v4(), 0)),
-      broadcast_endpoint_(std::experimental::net::ip::udp::v4(), kPort_),
+      broadcast_endpoint_(std::experimental::net::ip::address_v4::broadcast(), kPort_),
       dp_acceptor_(*io_context_, std::experimental::net::ip::tcp::endpoint(
                                      std::experimental::net::ip::tcp::v4(), 0)),
       dp_socket_(*io_context_, std::experimental::net::ip::tcp::endpoint(
@@ -68,9 +68,8 @@ void host::prepare_packet() {
   std::size_t addrlen = acceptor_endpoint.size();
 
   DPMSG_HEADER* header = reinterpret_cast<DPMSG_HEADER*>(&(*this->buf_.begin()));
-  std::cout << "Header size: " << sizeof(DPMSG_HEADER) << std::endl;
-  std::cout << "msg size: " << sizeof(DPMSG_ENUMSESSIONS) << std::endl;
-  header->cbSize = 0xFAB00000 + sizeof(DPMSG_HEADER) + sizeof(DPMSG_ENUMSESSIONS);
+  header->cbSize = sizeof(DPMSG_HEADER) + sizeof(DPMSG_ENUMSESSIONS);
+  header->token = 0xfab;
   std::copy(addr, addr + addrlen, &header->saddr);
   std::copy(signature.begin(), signature.end(),
             reinterpret_cast<char*>(&header->signature));
@@ -81,7 +80,7 @@ void host::prepare_packet() {
       reinterpret_cast<DPMSG_ENUMSESSIONS*>(reinterpret_cast<char*>(header) + sizeof(DPMSG_HEADER));
   msg->guidApplication = this->app_guid_;
   msg->dwPasswordOffset = 0x0;
-  msg->dwFlags = 0x0;
+  msg->dwFlags = ENUMSESSIONSFLAGS::allsessions | ENUMSESSIONSFLAGS::passwordprotectedsessions;
 }
 }  // namespace probe
 }  // namespace dppl

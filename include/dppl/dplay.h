@@ -40,10 +40,8 @@ typedef struct {
  */
 #pragma pack(push, 1)
 typedef struct {
-  union {
-    DWORD cbSize;     //  Indicates the size of the message
-    DWORD token;      //  Describes high-level message
-  };
+  DWORD cbSize  : 20; //  Indicates the size of the message
+  DWORD token   : 12; //  Describes high-level message
                       //  characteristics:
                       //    0xFAB = Indicates that the message
                       //            was received from a remote
@@ -364,8 +362,11 @@ typedef struct {
                            //  contains the password.
 } DPMSG_ENUMSESSIONS;
 #pragma pack(pop)
-enum ENUMSESSION_FLAGS {
-  kAV = 0x1               //  Enumerate sessions that can be joined
+enum ENUMSESSIONSFLAGS {
+  joinablesessions = 0x1,         //  Enumerate sessions that can be joined
+  allsessions = 0x2,      //  Enumerate sessions even if they cannot be joined
+  unksessions = 0x10,     //  Unknown but used
+  passwordprotectedsessions = 0x40  // Enumerate sessions even if they are password protected
 };
 
 /*

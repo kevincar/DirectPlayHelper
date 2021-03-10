@@ -46,16 +46,15 @@ bool join::test(std::chrono::duration<T> timeout) {
   // loop check the timer and the first two bytes from the message
   DPMSG_HEADER *header =
       reinterpret_cast<DPMSG_HEADER *>(this->recv_buf_.data());
-  uint32_t *message_size = &header->cbSize;
   while (timer.expiry() > std::chrono::steady_clock::now() &&
-         *message_size == 0) {
+         header->cbSize == 0) {
     try {
       std::size_t retval = this->socket_.receive_from(
           std::experimental::net::buffer(this->recv_buf_), remote_endpoint);
     } catch (std::exception const &e) {
     }
   }
-  if (*message_size == 0) {
+  if (header->cbSize == 0) {
     // Timer must have expired
     return false;
   }

@@ -23,7 +23,6 @@ class join {
 
  private:
   static int const kPort_ = 47624;
-  bool joining = false;
   std::vector<char> recv_buf_;
   std::experimental::net::steady_timer timer_;
   std::experimental::net::io_context *io_context_;
@@ -47,7 +46,7 @@ bool join::test(std::chrono::duration<T> timeout) {
   // loop check the timer and the first two bytes from the message
   DPMSG_HEADER *header =
       reinterpret_cast<DPMSG_HEADER *>(this->recv_buf_.data());
-  uint16_t *message_size = &header->cbSize;
+  uint32_t *message_size = &header->cbSize;
   while (timer.expiry() > std::chrono::steady_clock::now() &&
          *message_size == 0) {
     try {

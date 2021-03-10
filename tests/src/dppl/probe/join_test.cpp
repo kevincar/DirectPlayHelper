@@ -3,13 +3,9 @@
 #include <chrono>
 #include <string>
 
+#include "dppl/hardware_test.hpp"
 #include "experimental/net"
 #include "gtest/gtest.h"
-
-bool hardware_test_check(void) {
-  char* env = std::getenv("HARDWARE_TEST");
-  return env != nullptr;
-}
 
 TEST(ProbeJoinTest, check) {
   if (!hardware_test_check()) return SUCCEED();

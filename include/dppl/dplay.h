@@ -40,8 +40,10 @@ typedef struct {
  */
 #pragma pack(push, 1)
 typedef struct {
-  WORD cbSize;        //  Indicates the size of the message
-  WORD token;         //  Describes high-level message
+  union {
+    DWORD cbSize;     //  Indicates the size of the message
+    DWORD token;      //  Describes high-level message
+  };
                       //  characteristics:
                       //    0xFAB = Indicates that the message
                       //            was received from a remote
@@ -354,14 +356,17 @@ typedef struct {
 typedef struct {
   GUID guidApplication;    //  MUST be set to the application
                            //  identifier for the session.
-  DWORD lpPasswordOffset;  //  MUST be set to the offset, in octets,
+  DWORD dwPasswordOffset;  //  MUST be set to the offset, in octets,
                            //  of the password from the beginning of
                            //  the message.
   DWORD dwFlags;           //  AV, AL, X, PR, Y
-  WSTR szPassword[];       //  a null-terminated Unicode string that
+  //WSTR szPassword[];     //  a null-terminated Unicode string that
                            //  contains the password.
 } DPMSG_ENUMSESSIONS;
 #pragma pack(pop)
+enum ENUMSESSION_FLAGS {
+  kAV = 0x1               //  Enumerate sessions that can be joined
+};
 
 /*
  * DPMSG__ENUMPLAYERSREPLY

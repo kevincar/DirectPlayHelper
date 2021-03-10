@@ -5,6 +5,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Dependencies
 add_library(dppl
   ./probe/join.cpp
+  ./probe/host.cpp
 	)
 
 target_include_directories(dppl BEFORE

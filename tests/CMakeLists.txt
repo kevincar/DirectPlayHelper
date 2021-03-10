@@ -36,7 +36,9 @@ add_executable("${TEST_PROJECT_NAME}"
 	#./src/nathp/ClientRecord_test.cpp
 	#./src/nathp/Server_test.cpp
 
+  ./src/dppl/hardware_test.cpp
   ./src/dppl/probe/join_test.cpp
+  ./src/dppl/probe/host_test.cpp
 	)
 
 # Includes

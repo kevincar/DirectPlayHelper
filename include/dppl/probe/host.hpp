@@ -46,10 +46,13 @@ class host {
 template <typename T>
 bool host::test(std::chrono::duration<T> timeout) {
   this->hosting = false;
+  this->io_context_->restart();
+  this->accept_dp_connections();
   this->timer_.expires_after(timeout);
   this->timer_.async_wait([this](std::error_code const &ec) {
     if (!ec) {
       this->broadcast_socket_.cancel();
+      this->dp_acceptor_.cancel();
       this->io_context_->stop();
     } else {
       std::cout << "Timer Error: " << ec.message() << std::endl;
@@ -69,7 +72,6 @@ bool host::test(std::chrono::duration<T> timeout) {
       });
 
   this->io_context_->run();
-  this->io_context_->restart();
   return this->hosting;
 }
 }  // namespace probe

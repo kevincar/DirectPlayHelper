@@ -7,8 +7,6 @@
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
-#include <netinet/ip.h>
-#include <sys/socket.h>
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
@@ -18,6 +16,21 @@ typedef unsigned long QWORD;
 typedef unsigned char STR, *LPSTR;
 typedef char16_t WSTR, *LPWSTR;
 #endif  // define(WIN32)
+
+/*
+ * dpsockaddr
+ * Thanks to macOS, the socakkdr_in structure has a sin_len at the beginning
+ * that messes up the byte order of the sin_family value. Thus, this is an
+ * os-independent use
+ */
+#pragma pack(push, 1)
+typedef struct {
+  uint16_t sin_family;
+  uint16_t sin_port;
+  uint32_t sin_addr;
+  uint8_t sin_zero[8];
+} dpsockaddr;
+#pragma pack(pop)
 
 /*
  * GUID
@@ -40,24 +53,24 @@ typedef struct {
  */
 #pragma pack(push, 1)
 typedef struct {
-  DWORD cbSize  : 20; //  Indicates the size of the message
-  DWORD token   : 12; //  Describes high-level message
-                      //  characteristics:
-                      //    0xFAB = Indicates that the message
-                      //            was received from a remote
-                      //            DirectPlay machine.
-                      //    0xCAB = Indicates that the message
-                      //            will be forwarded to all
-                      //            registered servers.
-                      //    0xBAB = Indicates that the message
-                      //            was received from a
-                      //            DirectPlay server.
-  sockaddr_in saddr;  //  16 bytes of data containing the sockets
-  STR signature[4];   //  MUST be set to the value 0x79616c70
-                      //  (ASCII 'play')
-  WORD command;       //  For messages below
-  WORD version;       //  MUST be set to the version number of
-                      //  the protocol
+  DWORD cbSize : 20;    //  Indicates the size of the message
+  DWORD token : 12;     //  Describes high-level message
+                        //  characteristics:
+                        //    0xFAB = Indicates that the message
+                        //            was received from a remote
+                        //            DirectPlay machine.
+                        //    0xCAB = Indicates that the message
+                        //            will be forwarded to all
+                        //            registered servers.
+                        //    0xBAB = Indicates that the message
+                        //            was received from a
+                        //            DirectPlay server.
+  dpsockaddr sockAddr;  //  16 bytes of data containing the sockets
+  STR signature[4];     //  MUST be set to the value 0x79616c70
+                        //  (ASCII 'play')
+  WORD command;         //  For messages below
+  WORD version;         //  MUST be set to the version number of
+                        //  the protocol
 } DPMSG_HEADER;
 #pragma pack(pop)
 
@@ -358,15 +371,16 @@ typedef struct {
                            //  of the password from the beginning of
                            //  the message.
   DWORD dwFlags;           //  AV, AL, X, PR, Y
-  //WSTR szPassword[];     //  a null-terminated Unicode string that
-                           //  contains the password.
+  // WSTR szPassword[];     //  a null-terminated Unicode string that
+  //  contains the password.
 } DPMSG_ENUMSESSIONS;
 #pragma pack(pop)
 enum ENUMSESSIONSFLAGS {
-  joinablesessions = 0x1,         //  Enumerate sessions that can be joined
-  allsessions = 0x2,      //  Enumerate sessions even if they cannot be joined
-  unksessions = 0x10,     //  Unknown but used
-  passwordprotectedsessions = 0x40  // Enumerate sessions even if they are password protected
+  joinablesessions = 0x1,  //  Enumerate sessions that can be joined
+  allsessions = 0x2,       //  Enumerate sessions even if they cannot be joined
+  unksessions = 0x10,      //  Unknown but used
+  passwordprotectedsessions =
+      0x40  // Enumerate sessions even if they are password protected
 };
 
 /*

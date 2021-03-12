@@ -1,5 +1,6 @@
 #ifndef INCLUDE_DPPL_DPMESSAGE_HPP_
 #define INCLUDE_DPPL_DPMESSAGE_HPP_
+#include <vector>
 #include "dppl/dplay.h"
 namespace dppl {
 class DPMessage {
@@ -7,9 +8,13 @@ class DPMessage {
   template <typename T>
   explicit DPMessage(T* message_data);
 
+  template <typename T>
+  explicit DPMessage(std::vector<T> message_data);
+
   DPMSG_HEADER* header();
 
-  void set_return_addr(sockaddr_in const& addr);
+  template <typename T>
+  void set_return_addr(T endpoint);
 
   void set_signature();
 
@@ -27,7 +32,20 @@ class DPMessage {
 
 template <typename T>
 DPMessage::DPMessage(T* message_data)
-    : data_(reinterpret_cast<char*>(message_data)){};
+    : data_(reinterpret_cast<char*>(message_data)) {}
+
+template <typename T>
+DPMessage::DPMessage(std::vector<T> message_data)
+    : data_(reinterpret_cast<char*>(&(*message_data.begin()))) {}
+
+template <typename T>
+void DPMessage::set_return_addr(T endpoint) {
+  sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(endpoint.data());
+  dpsockaddr* paddr = &this->header()->sockAddr;
+  paddr->sin_family = addr->sin_family;
+  paddr->sin_port = addr->sin_port;
+  paddr->sin_addr = addr->sin_addr.s_addr;
+}
 
 template <typename T>
 T* DPMessage::message() {

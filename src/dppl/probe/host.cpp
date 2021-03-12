@@ -36,7 +36,7 @@ void host::accept_handler(std::error_code const& ec,
     this->dp_socket_ = std::move(socket);
     this->read_dp_message();
   } else {
-    std::cout << "Accept Error: " << ec.message() << std::endl;
+    LOG(WARNING) << "Accept Error: " << ec.message();
     if (ec == std::experimental::net::error::operation_aborted) {
       return;
     }
@@ -68,7 +68,7 @@ void host::read_handler(std::error_code const& ec, std::size_t bytes_received) {
       this->stop();
     }
   } else {
-    std::cout << "Read Error: " << ec.message() << std::endl;
+    LOG(WARNING) << "Read Error: " << ec.message();
   }
 }
 
@@ -83,14 +83,12 @@ void host::prepare_packet() {
   this->buf_.clear();
   this->buf_.resize(kBufSize_, '\0');
 
-  sockaddr_in* ret_addr = reinterpret_cast<sockaddr_in*>(
-      this->dp_acceptor_.local_endpoint().data());
   DPEnumSessions message(&(*this->buf_.begin()), this->app_guid_,
                          ENUMSESSIONSFLAGS::allsessions |
                              ENUMSESSIONSFLAGS::passwordprotectedsessions |
                              ENUMSESSIONSFLAGS::unksessions,
                          "");
-  message.set_return_addr(*ret_addr);
+  message.set_return_addr(this->dp_acceptor_.local_endpoint());
 
   this->buf_.resize(message.header()->cbSize);
 }

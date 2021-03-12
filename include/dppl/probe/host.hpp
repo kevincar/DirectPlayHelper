@@ -4,6 +4,8 @@
 #include <functional>
 #include <iostream>
 
+#include <g3log/g3log.hpp>
+
 #include "dppl/dplay.h"
 #include "experimental/net"
 
@@ -74,7 +76,7 @@ void host::async_test(std::function<void(bool)> callback,
       this->callback_(this->hosting);
       this->stop();
     } else {
-      std::cout << "Timer Error: " << ec.message() << std::endl;
+      LOG(WARNING) << "Timer Error: " << ec.message();
     }
   });
 
@@ -84,7 +86,7 @@ void host::async_test(std::function<void(bool)> callback,
       std::experimental::net::buffer(this->buf_), this->broadcast_endpoint_,
       [this](std::error_code const &ec, std::size_t bytes_transmitted) {
         if (ec) {
-          std::cout << "Write Error: " << ec.message() << std::endl;
+          LOG(WARNING) << "Write Error: " << ec.message();
         }
       });
 }

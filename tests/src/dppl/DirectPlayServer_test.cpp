@@ -7,7 +7,7 @@ TEST(DirectPlayServerTest, constructor) {
   if (!(hardware_test_check() || test_check("TEST_DPSRVR"))) return SUCCEED();
 
   std::experimental::net::io_context io_context;
-  dppl::DirectPlayServer dps(&io_context, [&dps](std::vector<char> buffer) {
+  dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     dppl::DPMessage message(&buffer);
     EXPECT_GT(message.header()->token, 0);
     dps.stop();

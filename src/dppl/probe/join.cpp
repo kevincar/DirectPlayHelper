@@ -14,5 +14,9 @@ join::join(std::experimental::net::io_context* io_context)
   this->socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
 }
+
+std::vector<char> join::get_buffer() {
+  return this->recv_buf_;
+}
 }  // namespace probe
 }  // namespace dppl

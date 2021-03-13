@@ -17,9 +17,11 @@ class join {
   template <typename T = int64_t>
   bool test(std::chrono::duration<T> timeout = std::chrono::seconds(10));
 
-  template <typename T = int64_t>
-  void async_test(std::function<void(bool)> callback,
+  template <typename T = int64_t, typename F>
+  void async_test(F callback,
                   std::chrono::duration<T> timeout = std::chrono::seconds(10));
+
+  std::vector<char> get_buffer();
 
  private:
   static int const kPort_ = 47624;
@@ -61,8 +63,8 @@ bool join::test(std::chrono::duration<T> timeout) {
   return true;
 }
 
-template <typename T>
-void join::async_test(std::function<void(bool)> callback,
+template <typename T, typename F>
+void join::async_test(F callback,
                       std::chrono::duration<T> timeout) {
   this->recv_buf_.clear();
   this->recv_buf_.resize(512, '\0');

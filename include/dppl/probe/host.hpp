@@ -18,9 +18,11 @@ class host {
   template <typename T = int64_t>
   bool test(std::chrono::duration<T> timeout = std::chrono::seconds(10));
 
-  template <typename T = int64_t>
-  void async_test(std::function<void(bool)> callback,
+  template <typename T = int64_t, typename F>
+  void async_test(F callback,
                   std::chrono::duration<T> timeout = std::chrono::seconds(10));
+
+  std::experimental::net::ip::tcp::socket release_dp_socket();
 
  private:
   void accept_dp_connections();
@@ -57,8 +59,8 @@ bool host::test(std::chrono::duration<T> timeout) {
   return this->hosting;
 }
 
-template <typename T>
-void host::async_test(std::function<void(bool)> callback,
+template <typename T, typename F>
+void host::async_test(F callback,
                       std::chrono::duration<T> timeout) {
   this->callback_ = callback;
   if (this->io_context_->stopped()) {

@@ -20,8 +20,14 @@ host::host(std::experimental::net::io_context* io_context, GUID app_guid)
                                    std::experimental::net::ip::tcp::v4(), 0)) {
   this->broadcast_socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
+  this->broadcast_socket_.set_option(
+      std::experimental::net::socket_base::reuse_address(true));
 
   this->accept_dp_connections();
+}
+
+std::experimental::net::ip::tcp::socket host::release_dp_socket() {
+  return std::move(this->dp_socket_);
 }
 
 void host::accept_dp_connections() {

@@ -13,7 +13,8 @@ install:
     - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then ./scripts/windows/install-dependencies.bat ; fi
 
 before_script:
-    - python3 -m pip install cpplint
+    - if [ "$TRAVIS_OS_NAME" = "osx" ] ; then python3 -m pip install cpplint ; fi
+    - if [ "$TRAVIS_OS_NAME" = "windows" ] ; then python -m pip install cpplint ; fi
     - cpplint --filter=-build/c++11,-legal/copyright ./include/**/* ./src/**/* ./tests/**/*
 
 script:

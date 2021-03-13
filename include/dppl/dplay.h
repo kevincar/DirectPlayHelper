@@ -13,9 +13,23 @@ typedef uint16_t WORD;
 typedef uint32_t DWORD;
 typedef uint64_t QWORD;
 
+/*
+ * GUID
+ * Global Unique Identifier
+ */
+#pragma pack(push, 1)
+typedef struct {
+  DWORD Data1;
+  WORD Data2;
+  WORD Data3;
+  BYTE Data4[8];
+} GUID;
+#pragma pack(pop)
+
+#endif  // define(WIN32)
+
 typedef unsigned char STR, *LPSTR;
 typedef char16_t WSTR, *LPWSTR;
-#endif  // define(WIN32)
 
 /*
  * dpsockaddr
@@ -30,19 +44,6 @@ typedef struct {
   uint32_t sin_addr;
   uint8_t sin_zero[8];
 } dpsockaddr;
-#pragma pack(pop)
-
-/*
- * GUID
- * Global Unique Identifier
- */
-#pragma pack(push, 1)
-typedef struct {
-  DWORD Data1;
-  WORD Data2;
-  WORD Data3;
-  BYTE Data4[8];
-} GUID;
 #pragma pack(pop)
 
 /*

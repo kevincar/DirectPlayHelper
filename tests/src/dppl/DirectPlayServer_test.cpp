@@ -10,7 +10,7 @@ TEST(DirectPlayServerTest, constructor) {
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     dppl::DPMessage message(&buffer);
     EXPECT_GT(message.header()->token, 0);
-    dps.stop();
+    io_context.stop();
   });
 
   std::cout << "Please attempt to join a game then press enter";

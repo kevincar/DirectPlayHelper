@@ -6,7 +6,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(dppl
   ./DPMessage.cpp
   ./DPEnumSessions.cpp
+  ./interceptor.cpp
   ./proxy.cpp
+  ./DirectPlayServer.cpp
   ./probe/join.cpp
   ./probe/host.cpp
 	)

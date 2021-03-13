@@ -1,6 +1,9 @@
 #ifndef INCLUDE_DPPL_DPMESSAGE_HPP_
 #define INCLUDE_DPPL_DPMESSAGE_HPP_
+#include <experimental/net>
+#include <iostream>
 #include <vector>
+
 #include "dppl/dplay.h"
 namespace dppl {
 class DPMessage {
@@ -9,12 +12,14 @@ class DPMessage {
   explicit DPMessage(T* message_data);
 
   template <typename T>
-  explicit DPMessage(std::vector<T> message_data);
+  explicit DPMessage(std::vector<T>* message_data);
 
   DPMSG_HEADER* header();
 
   template <typename T>
   void set_return_addr(T endpoint);
+  template <typename T>
+  T get_return_addr();
 
   void set_signature();
 
@@ -35,8 +40,8 @@ DPMessage::DPMessage(T* message_data)
     : data_(reinterpret_cast<char*>(message_data)) {}
 
 template <typename T>
-DPMessage::DPMessage(std::vector<T> message_data)
-    : data_(reinterpret_cast<char*>(&(*message_data.begin()))) {}
+DPMessage::DPMessage(std::vector<T>* message_data)
+    : data_(reinterpret_cast<char*>(&(*message_data->begin()))) {}
 
 template <typename T>
 void DPMessage::set_return_addr(T endpoint) {
@@ -45,6 +50,17 @@ void DPMessage::set_return_addr(T endpoint) {
   paddr->sin_family = addr->sin_family;
   paddr->sin_port = addr->sin_port;
   paddr->sin_addr = addr->sin_addr.s_addr;
+}
+
+template <typename T>
+T DPMessage::get_return_addr() {
+  dpsockaddr* paddr = &this->header()->sockAddr;
+  uint16_t port = paddr->sin_port;
+  uint32_t ad = paddr->sin_addr;
+  port = ((port & 0xff00) >> 8) | ((port & 0xff) << 8);
+  ad = ((ad & 0xff000000) >> 24) | ((ad & 0xff0000) >> 8) |
+       ((ad & 0xff00) << 8) | ((ad & 0xff) << 24);
+  return T(std::experimental::net::ip::address_v4(ad), port);
 }
 
 template <typename T>

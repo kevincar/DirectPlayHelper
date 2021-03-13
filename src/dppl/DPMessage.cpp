@@ -1,6 +1,6 @@
-#include "dppl/DPMessage.hpp"
-
 #include <string>
+
+#include "dppl/DPMessage.hpp"
 
 namespace dppl {
 DPMSG_HEADER* DPMessage::header() {

@@ -1,6 +1,6 @@
 
-#ifndef DPPL_DPLAY_H_
-#define DPPL_DPLAY_H_
+#ifndef INCLUDE_DPPL_DPLAY_H_
+#define INCLUDE_DPPL_DPLAY_H_
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include <windows.h>
@@ -8,10 +8,10 @@
 #else
 #include <netinet/in.h>
 
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned int DWORD;
-typedef unsigned long QWORD;
+typedef uint8_t BYTE;
+typedef uint16_t WORD;
+typedef uint32_t DWORD;
+typedef uint64_t QWORD;
 
 typedef unsigned char STR, *LPSTR;
 typedef char16_t WSTR, *LPWSTR;
@@ -370,7 +370,6 @@ typedef struct {
                                  //  beginning of the message in
                                  //  szSessionName
   WSTR szSessionName[];          //  Name of the session
-
 } DPMSG_ENUMSESSIONSREPLY;
 #pragma pack(pop)
 
@@ -1418,4 +1417,4 @@ typedef struct {
 } DPMSG_CREATEPLAYERVERIFY;
 #pragma pack(pop)
 
-#endif  // DPPL_DPLAY_H_
+#endif  // INCLUDE_DPPL_DPLAY_H_

@@ -3,11 +3,11 @@
 #include <chrono>
 #include <functional>
 #include <iostream>
-
-#include <g3log/g3log.hpp>
+#include <vector>
 
 #include "dppl/dplay.h"
 #include "experimental/net"
+#include "g3log/g3log.hpp"
 
 namespace dppl {
 namespace probe {
@@ -52,16 +52,13 @@ class host {
 
 template <typename T>
 bool host::test(std::chrono::duration<T> timeout) {
-  this->async_test([this](bool val){
-      this->hosting = val;
-      }, timeout);
+  this->async_test([this](bool val) { this->hosting = val; }, timeout);
   this->io_context_->run();
   return this->hosting;
 }
 
 template <typename T, typename F>
-void host::async_test(F callback,
-                      std::chrono::duration<T> timeout) {
+void host::async_test(F callback, std::chrono::duration<T> timeout) {
   this->callback_ = callback;
   if (this->io_context_->stopped()) {
     this->io_context_->restart();

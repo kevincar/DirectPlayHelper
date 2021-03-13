@@ -1,12 +1,14 @@
 #ifndef INCLUDE_DPPL_INTERCEPTOR_HPP_
 #define INCLUDE_DPPL_INTERCEPTOR_HPP_
-#include <experimental/net>
+#include <memory>
 #include <set>
+#include <vector>
 
 #include "dppl/dplay.h"
 #include "dppl/probe/host.hpp"
 #include "dppl/probe/join.hpp"
 #include "dppl/proxy.hpp"
+#include "experimental/net"
 namespace dppl {
 class interceptor {
  public:

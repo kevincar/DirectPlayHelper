@@ -10,9 +10,10 @@ DirectPlayServer::DirectPlayServer(
     std::function<void(std::vector<char>)> forward)
     : io_context_(io_context),
       forward_(forward),
-      dpsrvr_socket_(*io_context,
-                     std::experimental::net::ip::udp::endpoint(
-                         std::experimental::net::ip::address_v4({127, 0, 0, 1}), kPort_)) {
+      dpsrvr_socket_(
+          *io_context,
+          std::experimental::net::ip::udp::endpoint(
+              std::experimental::net::ip::address_v4({127, 0, 0, 1}), kPort_)) {
   this->dpsrvr_socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
   this->dpsrvr_socket_.set_option(

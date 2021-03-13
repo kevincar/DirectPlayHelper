@@ -1,6 +1,7 @@
 #ifndef INCLUDE_DPPL_PROXY_HPP_
 #define INCLUDE_DPPL_PROXY_HPP_
 #include <experimental/net>
+#include <vector>
 
 #include "dppl/DPMessage.hpp"
 

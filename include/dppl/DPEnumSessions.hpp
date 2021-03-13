@@ -1,5 +1,6 @@
 #ifndef INCLUDE_DPPL_DPENUMSESSIONS_HPP_
 #define INCLUDE_DPPL_DPENUMSESSIONS_HPP_
+#include <algorithm>
 #include <string>
 
 #include "dppl/DPMessage.hpp"

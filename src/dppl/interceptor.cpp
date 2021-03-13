@@ -50,6 +50,5 @@ void interceptor::join_handler(bool joining) {
 
   this->host_proxy_ = std::make_shared<proxy>(
       this->io_context_, proxy::type::host, this->forward_);
-
 }
 }  // namespace dppl

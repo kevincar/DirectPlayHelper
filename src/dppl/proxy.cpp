@@ -171,7 +171,7 @@ void proxy::data_receive_handler(std::error_code const& ec,
   if (!ec) {
     DPMessage packet(&this->data_recv_buf_);
     switch (packet.header()->command) {
-      // TODO: Add more
+      // TODO(kevincar): Add more
       default:
         this->data_default_receive_handler();
     }

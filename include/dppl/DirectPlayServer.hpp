@@ -1,5 +1,5 @@
-#ifndef INCLUDLE_DPPL_DIRECTPLAYSERVER_HPP_
-#define INCLUDLE_DPPL_DIRECTPLAYSERVER_HPP_
+#ifndef INCLUDE_DPPL_DIRECTPLAYSERVER_HPP_
+#define INCLUDE_DPPL_DIRECTPLAYSERVER_HPP_
 #include <experimental/net>
 #include <functional>
 #include <vector>
@@ -24,4 +24,4 @@ class DirectPlayServer {
   std::experimental::net::ip::udp::socket dpsrvr_socket_;
 };
 }  // namespace dppl
-#endif  // INCLUDLE_DPPL_DIRECTPLAYSERVER_HPP_
+#endif  // INCLUDE_DPPL_DIRECTPLAYSERVER_HPP_

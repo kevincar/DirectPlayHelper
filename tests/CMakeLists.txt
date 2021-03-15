@@ -49,7 +49,7 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 		../include
 		./include
 		"${gtest_SOURCE_DIR}/include"
-		"${install_dir}/include"
+		"${g3log_dir}/include"
     "${NETWORK_TS_INCLUDES}"
 		)
 
@@ -58,6 +58,6 @@ target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		g3log
 		"${ws2_32}"
-    dppl
+		dppl
 		#nathp
 		gtest_main)

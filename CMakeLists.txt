@@ -18,19 +18,36 @@ set(CMAKE_CXX_EXTENSIONS ON)
 ExternalProject_Add(g3log_project
 	GIT_REPOSITORY https://github.com/KjellKod/g3log
 	GIT_TAG 1.3.4
-	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/g3log"
-	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/g3log -DG3_SHARED_LIB=OFF -DUSE_DYNAMIC_LOGGING_LEVELS=ON
+	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/deps/g3log"
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/deps/g3log -DG3_SHARED_LIB=OFF -DUSE_DYNAMIC_LOGGING_LEVELS=ON
 	)
 ExternalProject_Get_Property(g3log_project install_dir)
-message(STATUS "g3log installation directory: ${install_dir}")
-set(g3log_LOC "${install_dir}/lib/libg3log.a")
+set(g3log_dir "${install_dir}")
+message(STATUS "g3log installation directory: ${g3log_dir}")
+set(g3log_LOC "${g3log_dir}/lib/libg3log.a")
 if(MSVC)
-	set(g3log_LOC "${install_dir}/lib/g3log.lib")
+	set(g3log_LOC "${g3log_dir}/lib/g3log.lib")
 endif()
 add_library(g3log STATIC IMPORTED)
 set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
+
+# libtins
+ExternalProject_Add(libtins_project
+	GIT_REPOSITORY https://github.com/mfontanini/libtins
+	GIT_TAG v4.2
+	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/deps/libtins"
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/deps/libtins -DLIBTINS_ENABLE_CXX11=1 -DTINS_STATIC=1 -DLIBTINS_ENABLE_WPA2=0 -DLIBTINS_BUILD_SHARED=0
+	)
+ExternalProject_Get_Property(libtins_project install_dir)
+set(libtins_dir "${install_dir}")
+message(STATUS "libtins installation directory: ${libtins_dir}")
+set(libtins_LOC "${libtins_dir}/lib/libtins.a")
+add_library(libtins STATIC IMPORTED)
+set_property(TARGET libtins PROPERTY IMPORTED_LOCATION
+	"${libtins_LOC}")
+add_dependencies(libtins libtins_project)
 
 # experimental/net
 execute_process(
@@ -68,8 +85,8 @@ add_executable("${PROJECT_NAME}"
 target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC
 		include
-		"${install_dir}/include"
-    ${NETWORK_TS_INCLUDES}
+		"${g3log_dir}/include"
+		${NETWORK_TS_INCLUDES}
 		)
 
 # build the libraries
@@ -86,9 +103,10 @@ endif()
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		g3log
-    "${PTHREAD_LIB}"
+		libtins
+		"${PTHREAD_LIB}"
 		#nathp
-    dppl
+		dppl
 		)
 
 # Oh yeah, and add the tests

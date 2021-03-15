@@ -16,6 +16,6 @@ add_library(dppl
 target_include_directories(dppl BEFORE
 	PUBLIC
 		../../include
-		${install_dir}/include
-    "${NETWORK_TS_INCLUDES}"
+		"${g3log_dir}/include"
+		"${NETWORK_TS_INCLUDES}"
 		)

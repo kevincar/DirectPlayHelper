@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(dppl
   ./DPMessage.cpp
   ./DPEnumSessions.cpp
+  ./PacketSniffer.cpp
   ./interceptor.cpp
   ./proxy.cpp
   ./DirectPlayServer.cpp
@@ -16,6 +17,7 @@ add_library(dppl
 target_include_directories(dppl BEFORE
 	PUBLIC
 		../../include
-		"${g3log_dir}/include"
-		"${NETWORK_TS_INCLUDES}"
+		${g3log_dir}/include
+		${libtins_dir}/include
+		${NETWORK_TS_INCLUDES}
 		)

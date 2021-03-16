@@ -33,12 +33,23 @@ set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
 
+# win_pcak (for lib tins on windows)
+if(MSCV)
+	message(STATUS "Downloading WinPcap Development Pack")
+	set(winpcap_dir ${CMAKE_CURRENT_BINARY_DIR}/deps/winpcap)
+	set(winpcapzip ${winpcap_dir}/WpdPack.zip)
+	file(DOWNLOAD "https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip" ${winpcapzip})
+	file(ARCHIVE_EXTRACT INPUT ${winpcapzip})
+	set(wpdpack ${winpcap_dir}/WpdPack)
+	set(WINCMAKEARGS -DLIBTINS_BUILD_TESTS=OFF -DPCAP_ROOT_DIR=${wpdpack})
+endif()
+
 # libtins
 ExternalProject_Add(libtins_project
 	GIT_REPOSITORY https://github.com/mfontanini/libtins
-	GIT_TAG v4.2
+	GIT_TAG v4.3
 	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/deps/libtins"
-	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/deps/libtins -DLIBTINS_ENABLE_CXX11=1 -DTINS_STATIC=1 -DLIBTINS_ENABLE_WPA2=0 -DLIBTINS_BUILD_SHARED=0
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/deps/libtins -DLIBTINS_ENABLE_CXX11=1 -DTINS_STATIC=1 -DLIBTINS_ENABLE_WPA2=0 -DLIBTINS_BUILD_SHARED=0 ${WINCMAKEARGS}
 	)
 ExternalProject_Get_Property(libtins_project install_dir)
 set(libtins_dir "${install_dir}")

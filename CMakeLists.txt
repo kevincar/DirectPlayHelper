@@ -42,6 +42,8 @@ if(MSVC)
 	file(ARCHIVE_EXTRACT INPUT ${winpcapzip} DESTINATION ${winpcap_dir})
 	set(wpdpack ${winpcap_dir}/WpdPack)
 	set(WINCMAKEARGS -DLIBTINS_BUILD_TESTS=OFF -DPCAP_ROOT_DIR=${wpdpack})
+else()
+	set(PCAP "pcap")
 endif()
 
 # libtins
@@ -116,6 +118,7 @@ endif()
 
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
+		${PCAP}
 		g3log
 		libtins
 		"${PTHREAD_LIB}"

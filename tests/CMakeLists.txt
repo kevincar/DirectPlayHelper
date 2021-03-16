@@ -57,7 +57,8 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		g3log
-    libtins
+		${PCAP}
+		libtins
 		"${ws2_32}"
 		dppl
 		#nathp

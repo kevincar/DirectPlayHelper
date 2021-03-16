@@ -72,7 +72,8 @@ TEST(ProxyTest, join) {
 }
 
 TEST(ProxyTest, host) {
-  if (!(hardware_test_check() || test_check("TEST_PROXY_HOST"))) return SUCCEED();
+  if (!(hardware_test_check() || test_check("TEST_PROXY_HOST")))
+    return SUCCEED();
   // Ensure that the DirectPlayServer Doesn't interfere with hosting.
 
   std::experimental::net::io_context io_context;

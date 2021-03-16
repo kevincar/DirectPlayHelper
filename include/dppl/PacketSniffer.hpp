@@ -3,9 +3,10 @@
 
 #include <functional>
 #include <memory>
-#include <tins/tins.h>
+#include <vector>
 
 #include "experimental/net"
+#include "tins/tins.h"
 
 namespace dppl {
 class PacketSniffer {

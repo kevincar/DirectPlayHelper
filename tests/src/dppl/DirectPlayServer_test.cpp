@@ -10,7 +10,8 @@ TEST(DirectPlayServerTest, constructor) {
   std::experimental::net::io_context io_context;
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     dppl::DPMessage message(&buffer);
-    EXPECT_EQ(message.header()->cbSize, sizeof(DPMSG_HEADER)+sizeof(DPMSG_ENUMSESSIONS));
+    EXPECT_EQ(message.header()->cbSize,
+              sizeof(DPMSG_HEADER) + sizeof(DPMSG_ENUMSESSIONS));
     io_context.stop();
   });
 

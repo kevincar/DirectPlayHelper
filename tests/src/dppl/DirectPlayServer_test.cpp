@@ -1,6 +1,7 @@
 #include "dppl/DPMessage.hpp"
 #include "dppl/DirectPlayServer.hpp"
 #include "dppl/hardware_test.hpp"
+#include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
 TEST(DirectPlayServerTest, constructor) {
@@ -9,7 +10,7 @@ TEST(DirectPlayServerTest, constructor) {
   std::experimental::net::io_context io_context;
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     dppl::DPMessage message(&buffer);
-    EXPECT_GT(message.header()->token, 0);
+    EXPECT_EQ(message.header()->cbSize, sizeof(DPMSG_HEADER)+sizeof(DPMSG_ENUMSESSIONS));
     io_context.stop();
   });
 

@@ -17,7 +17,8 @@ add_library(dppl
 target_include_directories(dppl BEFORE
 	PUBLIC
 		../../include
-		${g3log_dir}/include
-		${libtins_dir}/include
+		${PCAP_INCLUDE_DIR}
+		${G3LOG_INCLUDE_DIR}
+		${LIBTINS_INCLUDE_DIR}
 		${NETWORK_TS_INCLUDES}
 		)

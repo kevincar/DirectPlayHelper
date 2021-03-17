@@ -32,8 +32,9 @@ add_library(g3log STATIC IMPORTED)
 set_property(TARGET g3log PROPERTY IMPORTED_LOCATION
 	"${g3log_LOC}")
 add_dependencies(g3log g3log_project)
+set(G3LOG_INCLUDE_DIR ${g3log_dir}/include)
 
-# win_pcak (for lib tins on windows)
+# pcap
 if(MSVC)
 	message(STATUS "Downloading WinPcap Development Pack")
 	set(winpcap_dir ${CMAKE_CURRENT_BINARY_DIR}/deps/winpcap)
@@ -42,8 +43,14 @@ if(MSVC)
 	file(ARCHIVE_EXTRACT INPUT ${winpcapzip} DESTINATION ${winpcap_dir})
 	set(wpdpack ${winpcap_dir}/WpdPack)
 	set(WINCMAKEARGS -DLIBTINS_BUILD_TESTS=OFF -DPCAP_ROOT_DIR=${wpdpack})
-else()
-	set(PCAP "pcap")
+	set(PCAP_INCLUDE_DIR ${wpdpack}/Include)
+	set(PCAP_LIBRARY ${wpdpack}/Lib/x64/wpcap.lib)
+	add_library(wpcap STATIC IMPORTED)
+	set_property(TARGET wpcap PROPERTY IMPORTED_LOCATION ${PCAP_LIBRARY})
+	add_library(packet STATIC IMPORTED)
+	set_property(TARGET packet PROPERTY IMPORTED_LOCATION ${wpdpack}/Lib/x64/Packet.lib)
+	add_library(pcap INTERFACE IMPORTED)
+	set_property(TARGET pcap PROPERTY INTERFACE_LINK_LIBRARIES wpcap packet)
 endif()
 
 # libtins
@@ -64,6 +71,8 @@ add_library(libtins STATIC IMPORTED)
 set_property(TARGET libtins PROPERTY IMPORTED_LOCATION
 	"${libtins_LOC}")
 add_dependencies(libtins libtins_project)
+set(LIBTINS_INCLUDE_DIR ${libtins_dir}/include)
+add_compile_definitions(TINS_STATIC=1)
 
 # experimental/net
 execute_process(
@@ -101,7 +110,7 @@ add_executable("${PROJECT_NAME}"
 target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC
 		include
-		"${g3log_dir}/include"
+		${G3LOG_INCLUDE_DIR}
 		${NETWORK_TS_INCLUDES}
 		)
 
@@ -111,17 +120,18 @@ add_subdirectory(src/dppl)
 
 # Link dependencies
 if(NOT WIN32)
-	set(PTHREAD_LIB "pthread")
+	set(PTHREAD_LIBRARY "pthread")
 else()
-	set(PTHREAD_LIB "")
+	set(TINS_DEPS Ws2_32.lib Iphlpapi.lib)
 endif()
 
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
-		${PCAP}
+		pcap
 		g3log
 		libtins
-		"${PTHREAD_LIB}"
+		${TINS_DEPS}
+		${PTHREAD_LIB}
 		#nathp
 		dppl
 		)

@@ -48,18 +48,20 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 	PUBLIC
 		../include
 		./include
+		${PCAP_INCLUDE_DIR}
+		${G3LOG_INCLUDE_DIR}
+		${LIBTINS_INCLUDE_DIR}
 		"${gtest_SOURCE_DIR}/include"
-		"${g3log_dir}/include"
-    "${NETWORK_TS_INCLUDES}"
+		"${NETWORK_TS_INCLUDES}"
 		)
 
 # Link dependencies
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
+		pcap
 		g3log
-		${PCAP}
 		libtins
-		"${ws2_32}"
+		${TINS_DEPS}
 		dppl
 		#nathp
 		gtest_main)

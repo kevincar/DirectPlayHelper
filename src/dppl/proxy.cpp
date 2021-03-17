@@ -120,7 +120,15 @@ void proxy::dp_send_enumsessionreply_handler() {
     std::error_code ec;
     this->dp_send_socket_.connect(this->app_dp_endpoint_, ec);
     if (ec) {
-      LOG(WARNING) << "DP Connect Error: " << ec.message();
+      if (ec == std::experimental::net::error::connection_reset) {
+        LOG(WARNING) << "Connection resetting";
+        this->dp_send_socket_.cancel();
+        this->dp_send_socket_ = std::experimental::net::ip::tcp::socket(
+            *this->io_context_, std::experimental::net::ip::tcp::endpoint(
+                                    std::experimental::net::ip::tcp::v4(), 0));
+      } else {
+        LOG(WARNING) << "DP Connect Error: " << ec.message();
+      }
       return;
     }
   }

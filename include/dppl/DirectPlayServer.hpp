@@ -13,15 +13,16 @@ class DirectPlayServer {
                    std::function<void(std::vector<char>)> forward);
 
  private:
-  bool receive_handler(std::vector<char> data);
+  void receive();
+  void receive_handler(std::error_code const& ec,
+                       std::size_t bytes_transmitted);
 
-  static int const kPort_ = 47624;
   static int const kBufSize_ = 512;
   std::vector<char> buf_;
   std::function<void(std::vector<char>)> forward_;
   std::experimental::net::io_context* io_context_;
-  // std::experimental::net::ip::udp::endpoint app_endpoint_;
-  // std::experimental::net::ip::udp::socket dpsrvr_socket_;
+  std::experimental::net::ip::udp::endpoint sniffer_endpoint_;
+  std::experimental::net::ip::udp::socket sniffer_socket_;
   PacketSniffer sniffer_;
 };
 }  // namespace dppl

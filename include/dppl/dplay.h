@@ -455,6 +455,13 @@ typedef struct {
   //  bits 4-31 = 0
 } DPMSG_REQUESTPLAYERID;
 #pragma pack(pop)
+enum REQUESTPLAYERIDFLAGS {
+  issystemplayer = 0x1,
+  isnameserver = 0x2,
+  islocalplayer = 0x4,
+  unknown = 0x8,
+  issecuresession = 0x200
+};
 
 /*
  * DPMSG_REQUESTGROUPID

@@ -18,7 +18,7 @@ class PacketSniffer {
  private:
   void start_sniffing();
   void stop_sniffing();
-  bool sniff_handler(Tins::PDU& pdu);
+  bool sniff_handler(Tins::PDU& pdu);  // NOLINT
 
   int const kPort_ = 47624;
   std::vector<char> data_;

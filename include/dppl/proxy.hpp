@@ -15,6 +15,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
 
   void stop();
 
+  std::experimental::net::ip::tcp::endpoint const get_return_addr();
   void set_return_addr(
       std::experimental::net::ip::tcp::endpoint const& app_endpoint);
   void deliver(std::vector<char> const& data);
@@ -29,6 +30,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
                           std::size_t bytes_transmitted);
   void dp_default_receive_handler();
   void dp_send();
+  void dp_assert_connection();
+  void dp_send_enumsession_handler();
   void dp_send_enumsessionreply_handler();
   void dp_default_send_handler();
   void dp_receipt_handler(std::error_code const& ec,
@@ -58,6 +61,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
   std::experimental::net::ip::tcp::acceptor dp_acceptor_;
   std::experimental::net::ip::tcp::socket dp_send_socket_;
   std::experimental::net::ip::tcp::socket dp_recv_socket_;
+  std::experimental::net::ip::udp::socket dpsrvr_socket_;
   std::experimental::net::ip::udp::socket data_socket_;
 
   std::function<void(std::vector<char>)> forward_;

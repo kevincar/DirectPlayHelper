@@ -15,8 +15,13 @@ proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
       dp_send_socket_(*io_context,
                       std::experimental::net::ip::tcp::endpoint(
                           std::experimental::net::ip::tcp::v4(), 0)),
+      dpsrvr_socket_(*io_context,
+                     std::experimental::net::ip::udp::endpoint(
+                         std::experimental::net::ip::udp::v4(), 0)),
       data_socket_(*io_context, std::experimental::net::ip::udp::endpoint(
                                     std::experimental::net::ip::udp::v4(), 0)) {
+  this->dpsrvr_socket_.set_option(
+      std::experimental::net::socket_base::broadcast(true));
   this->dp_accept();
 }
 
@@ -25,6 +30,10 @@ void proxy::stop() {
   this->dp_recv_socket_.cancel();
   this->dp_send_socket_.cancel();
   this->data_socket_.cancel();
+}
+
+std::experimental::net::ip::tcp::endpoint const proxy::get_return_addr() {
+  return this->dp_acceptor_.local_endpoint();
 }
 
 void proxy::set_return_addr(
@@ -100,19 +109,22 @@ void proxy::dp_send() {
   LOG(DEBUG) << "DP Sending message";
   DPMessage packet(&this->dp_send_buf_);
   switch (packet.header()->command) {
+    case DPSYS_ENUMSESSIONS:
+      this->dp_send_enumsession_handler();
+      break;
     case DPSYS_ENUMSESSIONSREPLY:
       this->dp_send_enumsessionreply_handler();
+      break;
+    case DPSYS_REQUESTPLAYERID:
+      this->dp_assert_connection();
+      this->dp_default_send_handler();
       break;
     default:
       this->dp_default_send_handler();
   }
 }
 
-void proxy::dp_send_enumsessionreply_handler() {
-  LOG(DEBUG) << "DP Sending ENUMSESSIONREPLY";
-
-  // Received information from a host pass it on to the app
-  bool connected = false;
+void proxy::dp_assert_connection() {
   std::error_code ec;
   this->dp_send_socket_.remote_endpoint(ec);
   if (ec) {
@@ -132,7 +144,36 @@ void proxy::dp_send_enumsessionreply_handler() {
       return;
     }
   }
+}
 
+void proxy::dp_send_enumsession_handler() {
+  LOG(DEBUG) << "DP(SRVR) sending ENUMSESSIONS";
+
+  std::error_code ec;
+  this->dpsrvr_socket_.remote_endpoint(ec);
+  if (ec) {
+    LOG(DEBUG) << "DPSRVR socket connecting";
+    this->dpsrvr_socket_.connect(
+        std::experimental::net::ip::udp::endpoint(
+            std::experimental::net::ip::address_v4::broadcast(), 47624),
+        ec);
+    if (ec) {
+      LOG(WARNING) << "DPSRVR Failed to connect: " << ec.message();
+    }
+  }
+  DPMessage packet(&this->dp_send_buf_);
+  packet.set_return_addr(this->dp_acceptor_.local_endpoint());
+  auto handler = std::bind(&proxy::dp_receipt_handler, this->shared_from_this(),
+                           std::placeholders::_1, std::placeholders::_2);
+  this->dpsrvr_socket_.async_send(
+      std::experimental::net::buffer(this->dp_send_buf_), handler);
+}
+
+void proxy::dp_send_enumsessionreply_handler() {
+  LOG(DEBUG) << "DP Sending ENUMSESSIONREPLY";
+
+  // Received information from a host pass it on to the app
+  this->dp_assert_connection();
   this->dp_default_send_handler();
 }
 

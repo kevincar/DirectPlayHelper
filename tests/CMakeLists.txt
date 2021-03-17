@@ -58,10 +58,9 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 # Link dependencies
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
-		g3log
-		libtins
-		pcap
-		${TINS_DEPS}
-		dppl
 		#nathp
-		gtest_main)
+		dppl
+		gtest_main
+		g3log
+		${LIBTINS_LIBRARY}
+		)

@@ -14,7 +14,12 @@ add_library(dppl
   ./probe/host.cpp
 	)
 
-add_dependencies(dppl g3log libtins)
+target_link_libraries(dppl
+	PUBLIC
+		${LIBTINS_LIBRARY}
+		g3log
+		)
+
 
 target_include_directories(dppl BEFORE
 	PUBLIC

@@ -66,12 +66,16 @@ message(STATUS "libtins installation directory: ${libtins_dir}")
 set(libtins_LOC "${libtins_dir}/lib/libtins.a")
 if(MSVC)
 	set(libtins_LOC "${libtins_dir}/lib/tins.lib")
+	set(libtins_deps pcap W2_32.lib Iphlpapi.lib)
+else()
+	set(libtins_deps pcap)
 endif()
 add_library(libtins STATIC IMPORTED)
 set_property(TARGET libtins PROPERTY IMPORTED_LOCATION
 	"${libtins_LOC}")
 add_dependencies(libtins libtins_project)
 set(LIBTINS_INCLUDE_DIR ${libtins_dir}/include)
+set(LIBTINS_LIBRARY libtins ${libtins_deps})
 add_compile_definitions(TINS_STATIC=1)
 
 # experimental/net
@@ -124,19 +128,15 @@ add_subdirectory(src/dppl)
 # Link dependencies
 if(NOT WIN32)
 	set(PTHREAD_LIBRARY "pthread")
-else()
-	set(TINS_DEPS Ws2_32.lib Iphlpapi.lib)
 endif()
 
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
-		pcap
-		g3log
-		libtins
-		${TINS_DEPS}
-		${PTHREAD_LIB}
 		#nathp
 		dppl
+		${LIBTINS_LIBRARY}
+		g3log
+		${PTHREAD_LIB}
 		)
 
 # Oh yeah, and add the tests

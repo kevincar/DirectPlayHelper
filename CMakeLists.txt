@@ -106,6 +106,9 @@ add_executable("${PROJECT_NAME}"
 	src/ArgParser.cpp
 	)
 
+# Add dependency targets to this main target
+add_dependencies("${PROJECT_NAME}" g3log libtins)
+
 # Includes
 target_include_directories("${PROJECT_NAME}" BEFORE
 	PUBLIC

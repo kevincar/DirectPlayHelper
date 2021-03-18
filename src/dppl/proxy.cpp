@@ -46,6 +46,17 @@ void proxy::deliver(std::vector<char> const& data) {
   this->dp_send();
 }
 
+bool proxy::operator==(proxy const& rhs) {
+  return this->localID == rhs.localID;
+}
+
+bool proxy::operator<(proxy const& rhs) {
+  return this->localID < rhs.localID;
+}
+
+proxy::operator int() {
+  return this->localID;
+}
 /*
  ******************************************************************************
  *                                                                            *

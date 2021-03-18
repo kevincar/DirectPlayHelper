@@ -20,6 +20,10 @@ class proxy : public std::enable_shared_from_this<proxy> {
       std::experimental::net::ip::tcp::endpoint const& app_endpoint);
   void deliver(std::vector<char> const& data);
 
+  bool operator==(proxy const& rhs);
+  bool operator<(proxy const& rhs);
+  operator int();
+
  private:
   /* Direct Play Socket Processes */
   void dp_accept();
@@ -66,6 +70,5 @@ class proxy : public std::enable_shared_from_this<proxy> {
 
   std::function<void(std::vector<char>)> forward_;
 };
-
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_PROXY_HPP_

@@ -1,42 +1,40 @@
 #ifndef INCLUDE_DPPL_INTERCEPTOR_HPP_
 #define INCLUDE_DPPL_INTERCEPTOR_HPP_
 #include <memory>
-#include <set>
 #include <vector>
 
+#include "dppl/DirectPlayServer.hpp"
 #include "dppl/dplay.h"
-#include "dppl/probe/host.hpp"
-#include "dppl/probe/join.hpp"
 #include "dppl/proxy.hpp"
 #include "experimental/net"
 namespace dppl {
 class interceptor {
  public:
-  enum state { None, Hosting, Joining };
+  interceptor(std::experimental::net::io_context* io_context,
+              std::function<void(std::vector<char> const&)> forward);
 
-  interceptor(std::experimental::net::io_context* io_context, GUID app_guid,
-              std::function<void(std::vector<char>)> forward);
+  void deliver(std::vector<char> const& buffer);
 
  private:
-  void start();
-
+  /* Proxy Helper Funcs */
   inline bool has_proxies();
-  void analyze_app_state();
-  void host_handler(bool hosting);
-  void join_handler(bool joining);
+  std::shared_ptr<proxy> find_peer_proxy(int const& id);
+  bool has_free_peer_proxy();
+  std::shared_ptr<proxy> get_free_peer_proxy();
+  void direct_play_server_callback(std::vector<char> const& buffer);
+  void proxy_callback(std::vector<char> const& buffer);
 
-  GUID app_guid_;
-  bool hosting_ = false;
-  bool joining_ = false;
-  state app_state_ = state::None;
-  std::function<void(std::vector<char>)> forward_;
+  /* handlers for messages from above */
+  void enumsessions_from_server_handler();
+
+  std::vector<char> send_buf_;
+  std::vector<char> recv_buf_;
+  std::function<void(std::vector<char> const&)> forward_;
   std::experimental::net::io_context* io_context_;
 
-  probe::host host_probe_;
-  probe::join join_probe_;
-
+  DirectPlayServer dps;
   std::shared_ptr<proxy> host_proxy_;
-  std::set<std::shared_ptr<proxy>> peer_proxies_;
+  std::vector<std::shared_ptr<proxy>> peer_proxies_;
 };
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_INTERCEPTOR_HPP_

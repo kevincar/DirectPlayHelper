@@ -10,8 +10,6 @@ add_library(dppl
   ./interceptor.cpp
   ./proxy.cpp
   ./DirectPlayServer.cpp
-  ./probe/join.cpp
-  ./probe/host.cpp
 	)
 
 target_link_libraries(dppl

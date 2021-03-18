@@ -39,8 +39,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dppl/hardware_test.cpp
   ./src/dppl/DirectPlayServer_test.cpp
   ./src/dppl/proxy_test.cpp
-  #./src/dppl/probe/join_test.cpp
-  #./src/dppl/probe/host_test.cpp
+  ./src/dppl/interceptor_test.cpp
 	)
 
 # Includes

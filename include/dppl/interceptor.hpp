@@ -26,6 +26,8 @@ class interceptor {
 
   /* handlers for messages from above */
   void enumsessions_from_server_handler();
+  void superenumplayersreply_from_server_handler();
+  std::size_t register_player(DPLAYI_SUPERPACKEDPLAYER* player);
 
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;

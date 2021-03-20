@@ -1,7 +1,6 @@
 #ifndef INCLUDE_DPPL_DPSUPERPACKEDPLAYER_HPP_
 #define INCLUDE_DPPL_DPSUPERPACKEDPLAYER_HPP_
 #include "experimental/net"
-#include "g3log/g3log.hpp"
 #include "dppl/dplay.h"
 namespace dppl {
 class DPSuperPackedPlayer {
@@ -57,26 +56,12 @@ class DPSuperPackedPlayer {
 
 template <typename T>
 void DPSuperPackedPlayer::setEndpoint(int n, T endpoint) {
-  LOG(DEBUG) << "Hold up?";
   sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(endpoint.data());
-  if (addr == nullptr) {
-    LOG(DEBUG) << "Addr is null!";
-  }
-  LOG(DEBUG) << "Got our addr";
   dpsockaddr* dpaddr = this->getServiceProviders();
-  if (dpaddr == nullptr) {
-    LOG(DEBUG) << "dpaddr is null!";
-  }
-  LOG(DEBUG) << "Got our dpaddr";
-  LOG(DEBUG) << "N = " << n;
   dpaddr += n;
-  LOG(DEBUG) << "Setting family";
   dpaddr->sin_family = addr->sin_family;
-  LOG(DEBUG) << "Setting port";
   dpaddr->sin_port = addr->sin_port;
-  LOG(DEBUG) << "Setting address";
   dpaddr->sin_addr = addr->sin_addr.s_addr;
-  LOG(DEBUG) << "done";
 }
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_SUPERPACKEDPLAYER_HPP_

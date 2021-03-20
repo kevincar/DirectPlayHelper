@@ -15,9 +15,13 @@ class proxy : public std::enable_shared_from_this<proxy> {
 
   void stop();
 
+  int const get_host_system_id();
+
   std::experimental::net::ip::tcp::endpoint const get_return_addr();
   void set_return_addr(
       std::experimental::net::ip::tcp::endpoint const& app_endpoint);
+  void register_player(DPLAYI_SUPERPACKEDPLAYER* player, bool is_host = false);
+
   void deliver(std::vector<char> const& data);
 
   bool operator==(proxy const& rhs);
@@ -32,11 +36,13 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void dp_receive();
   void dp_receive_handler(std::error_code const& ec,
                           std::size_t bytes_transmitted);
+  void dp_receive_addforwardrequest_handler();
   void dp_default_receive_handler();
   void dp_send();
   void dp_assert_connection();
   void dp_send_enumsession_handler();
   void dp_send_enumsessionreply_handler();
+  void dp_send_requestplayerreply_handler();
   void dp_default_send_handler();
   void dp_receipt_handler(std::error_code const& ec,
                           std::size_t bytes_transmitted);
@@ -51,9 +57,14 @@ class proxy : public std::enable_shared_from_this<proxy> {
                          std::size_t bytes_transmitted);
 
   /* Proxy Attributes */
-  int localID = -1;  // the ID on the local application
-  int realID = -1;   // the ID that is used from upstream messages
+  int system_id_ = -1;
+  int player_id_ = -1;  // the ID that is used from upstream messages
+  int recent_request_flags_;
   type proxy_type_;
+
+  /* For type::host use only */
+  int host_system_id_ = -1;
+  int host_player_id_ = -1;
 
   static int const kBufSize_ = 512;
   std::vector<char> dp_recv_buf_;

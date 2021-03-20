@@ -29,6 +29,9 @@ class DPMessage {
   template <typename T>
   T* property_data(int offset);
 
+  template <typename T>
+  static T flip(T value);
+
   static int const kSignatureOffset = sizeof(DWORD) + sizeof(sockaddr_in);
 
  private:
@@ -57,9 +60,8 @@ T DPMessage::get_return_addr() {
   dpsockaddr* paddr = &this->header()->sockAddr;
   uint16_t port = paddr->sin_port;
   uint32_t ad = paddr->sin_addr;
-  port = ((port & 0xff00) >> 8) | ((port & 0xff) << 8);
-  ad = ((ad & 0xff000000) >> 24) | ((ad & 0xff0000) >> 8) |
-       ((ad & 0xff00) << 8) | ((ad & 0xff) << 24);
+  port = this->flip(port);
+  ad = this->flip(ad);
   return T(std::experimental::net::ip::address_v4(ad), port);
 }
 
@@ -73,6 +75,19 @@ T* DPMessage::property_data(int offset) {
   return reinterpret_cast<T*>(this->data_ + this->kSignatureOffset + offset);
 }
 
+template <typename T>
+T DPMessage::flip(T value) {
+  int len = sizeof(T);
+
+  if (len == 2) {
+    return ((value & 0xff00) >> 8) | ((value & 0xff) << 8);
+  }
+  if (len == 4) {
+    return ((value & 0xff000000) >> 24) | ((value & 0xff0000) >> 8) |
+         ((value & 0xff00) << 8) | ((value & 0xff) << 24);
+  }
+  return 0;
+}
 }  // namespace dppl
 
 #endif  // INCLUDE_DPPL_DPMESSAGE_HPP_

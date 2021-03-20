@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(dppl
   ./DPMessage.cpp
   ./DPEnumSessions.cpp
+  ./DPSuperPackedPlayer.cpp
   ./PacketSniffer.cpp
   ./interceptor.cpp
   ./proxy.cpp

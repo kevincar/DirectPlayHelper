@@ -37,6 +37,7 @@ add_executable("${TEST_PROJECT_NAME}"
 	#./src/nathp/Server_test.cpp
 
   ./src/dppl/hardware_test.cpp
+  ./src/dppl/DPSuperPackedPlayer_test.cpp
   ./src/dppl/DirectPlayServer_test.cpp
   ./src/dppl/proxy_test.cpp
   ./src/dppl/interceptor_test.cpp

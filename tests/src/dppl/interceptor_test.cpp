@@ -4,17 +4,117 @@
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
-TEST(interceptorTest, join) {
-  if (!(hardware_test_check() || test_check("TEST_INTER_JOIN")))
-    return SUCCEED();
-  std::vector<char> response_data(512, '\0');
-  std::shared_ptr<std::function<void(std::vector<char> const&)>>
-      send_to_internet;
-
+// Helper function for tests below
+std::vector<char> process_message(std::vector<char> const& buffer) {
+  LOG(DEBUG) << "Processing message";
+  std::vector<char> retval(buffer.begin(), buffer.end());
   GUID instance = {0x87cdc14a, 0x15f0, 0x4721, 0x8f, 0x94, 0x76,
                    0xc8,       0x4c,   0xef,   0x3c, 0xbb};
   GUID app = {0xbf0613c0, 0xde79, 0x11d0, 0x99, 0xc9, 0x00,
               0xa0,       0x24,   0x76,   0xad, 0x4b};
+  dppl::DPMessage packet(&retval);
+  std::u16string session_name = u"Sample Session Name:JK1MP:m10.jkl";
+  int session_name_byte_length =
+      (session_name.size() + 1) * sizeof(std::u16string::value_type);
+
+  switch (packet.header()->command) {
+    case DPSYS_ENUMSESSIONS: {
+      LOG(DEBUG) << "Handing ENUMSESSIONS";
+      dppl::DPMessage response(&retval);
+      response.header()->cbSize = sizeof(DPMSG_HEADER) +
+                                  sizeof(DPMSG_ENUMSESSIONSREPLY) +
+                                  session_name_byte_length;
+      response.header()->token = 0xfab;
+      // retrn addr doesn't matter here since it will need to be
+      // replaced anyway
+      response.set_signature();
+      response.header()->command = DPSYS_ENUMSESSIONSREPLY;
+      response.header()->version = 0xe;
+      DPMSG_ENUMSESSIONSREPLY* msg =
+          response.message<DPMSG_ENUMSESSIONSREPLY>();
+      DPSESSIONDESC2* session_desc = reinterpret_cast<DPSESSIONDESC2*>(msg);
+      session_desc->dwSize = sizeof(DPSESSIONDESC2);
+      session_desc->dwFlags =
+          DPSESSIONDESCFLAGS::useping | DPSESSIONDESCFLAGS::noplayerupdates;
+      session_desc->guidInstance = instance;
+      session_desc->guidApplication = app;
+      session_desc->dwMaxPlayers = 4;
+      session_desc->dpSessionID = 0x0195fda9;
+      session_desc->dwUser1 = 0x005200a4;
+      session_desc->dwUser3 = 0x0008000a;
+      session_desc->dwUser4 = 0xb4;
+      msg->dwNameOffset = 92;
+      std::copy(session_name.begin(), session_name.end() + 1,
+                reinterpret_cast<char16_t*>(&msg->szSessionName));
+      retval.resize(response.header()->cbSize);
+    } break;
+    case DPSYS_REQUESTPLAYERID: {
+      retval.resize(512, '\0');
+      LOG(DEBUG) << "Handling REQUESTPLAYERID";
+      dppl::DPMessage response(&retval);
+      response.header()->cbSize =
+          sizeof(DPMSG_HEADER) + sizeof(DPMSG_REQUESTPLAYERREPLY);
+      response.header()->token = 0xfab;
+      response.set_signature();
+      response.header()->command = DPSYS_REQUESTPLAYERREPLY;
+      response.header()->version = 0xe;
+      DPMSG_REQUESTPLAYERREPLY* msg =
+          response.message<DPMSG_REQUESTPLAYERREPLY>();
+      msg->dwID = 0x197fdad;
+      retval.resize(response.header()->cbSize);
+    } break;
+    case DPSYS_ADDFORWARDREQUEST: {
+      LOG(DEBUG) << "Handling ADDFORWARDREQUEST";
+      std::vector<uint8_t> data = {
+          0x69, 0x01, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
+          0x61, 0x79, 0x29, 0x00, 0x0e, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x24, 0x00, 0x00, 0x00, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x50, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x4a, 0xc1,
+          0xcd, 0x87, 0xf0, 0x15, 0x21, 0x47, 0x8f, 0x94, 0x76, 0xc8, 0x4c,
+          0xef, 0x3c, 0xbb, 0xc0, 0x13, 0x06, 0xbf, 0x79, 0xde, 0xd0, 0x11,
+          0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b, 0x04, 0x00, 0x00,
+          0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0xa9, 0xfd, 0x95, 0x01, 0x00, 0x00, 0x00, 0x00, 0xa4,
+          0x00, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x08, 0x00,
+          0xb4, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x65, 0x00, 0x76, 0x00, 0x69,
+          0x00, 0x6e, 0x00, 0x27, 0x00, 0x73, 0x00, 0x20, 0x00, 0x47, 0x00,
+          0x61, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x3a, 0x00, 0x4a, 0x00, 0x4b,
+          0x00, 0x31, 0x00, 0x4d, 0x00, 0x50, 0x00, 0x3a, 0x00, 0x6d, 0x00,
+          0x31, 0x00, 0x30, 0x00, 0x2e, 0x00, 0x6a, 0x00, 0x6b, 0x00, 0x6c,
+          0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
+          0xad, 0xfd, 0x97, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
+          0x00, 0x20, 0x02, 0x00, 0x08, 0xfc, 0xc0, 0xa8, 0x01, 0x47, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e,
+          0xc0, 0xa8, 0x01, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x10, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0xa9, 0xfd,
+          0x94, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x20,
+          0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+          0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0xa8, 0xfd, 0x94, 0x01,
+          0x05, 0x00, 0x00, 0x00, 0xa9, 0xfd, 0x94, 0x01, 0x4b, 0x00, 0x65,
+          0x00, 0x76, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x00, 0x00, 0x20, 0x02,
+          0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      retval.assign(data.begin(), data.end());
+    } break;
+    default:
+      LOG(WARNING) << "Unhandled Command: " << packet.header()->command;
+  }
+  return retval;
+}
+
+TEST(interceptorTest, join) {
+  if (!(hardware_test_check() || test_check("TEST_INTER_JOIN")))
+    return SUCCEED();
+  std::vector<char> request_data(512, '\0');
+  std::vector<char> response_data(512, '\0');
+  std::shared_ptr<std::function<void(std::vector<char> const&)>>
+      send_to_internet;
+
   std::experimental::net::io_context io_context;
   std::experimental::net::steady_timer timer(io_context,
                                              std::chrono::milliseconds(100));
@@ -32,47 +132,17 @@ TEST(interceptorTest, join) {
   send_to_internet =
       std::make_shared<std::function<void(std::vector<char> const&)>>(
           [&](std::vector<char> const& buffer) {
+            LOG(DEBUG) << "Sending to the internet :)";
+            request_data = buffer;
             timer.async_wait([&](std::error_code const& ec) {
               if (ec) {
                 LOG(DEBUG) << "Timer failed: " << ec.message();
                 return;
               }
-
-              std::u16string session_name =
-                  u"Sample Session Name:JK1MP:m10.jkl";
-              int session_name_byte_length = (session_name.size() + 1) *
-                                             sizeof(std::u16string::value_type);
-              dppl::DPMessage response(&response_data);
-              response.header()->cbSize = sizeof(DPMSG_HEADER) +
-                                          sizeof(DPMSG_ENUMSESSIONSREPLY) +
-                                          session_name_byte_length;
-              response.header()->token = 0xfab;
-              // retrn addr doesn't matter here since it will need to be
-              // replaced anyway
-              response.set_signature();
-              response.header()->command = DPSYS_ENUMSESSIONSREPLY;
-              response.header()->version = 0xe;
-              DPMSG_ENUMSESSIONSREPLY* msg =
-                  response.message<DPMSG_ENUMSESSIONSREPLY>();
-              DPSESSIONDESC2* session_desc =
-                  reinterpret_cast<DPSESSIONDESC2*>(msg);
-              session_desc->dwSize = sizeof(DPSESSIONDESC2);
-              session_desc->dwFlags = DPSESSIONDESCFLAGS::useping |
-                                      DPSESSIONDESCFLAGS::noplayerupdates;
-              session_desc->guidInstance = instance;
-              session_desc->guidApplication = app;
-              session_desc->dwMaxPlayers = 4;
-              session_desc->dpSessionID = 0x0195fda9;
-              session_desc->dwUser1 = 0x005200a4;
-              session_desc->dwUser3 = 0x0008000a;
-              session_desc->dwUser4 = 0xb4;
-              msg->dwNameOffset = 92;
-              std::copy(session_name.begin(), session_name.end() + 1,
-                        reinterpret_cast<char16_t*>(&msg->szSessionName));
-              response_data.resize(response.header()->cbSize);
+              response_data = process_message(request_data);
+              LOG(DEBUG) << "Got a response from the internet";
               interceptor.deliver(response_data);
-              timer.expires_at(timer.expiry() +
-                               std::chrono::milliseconds(100));
+              timer.expires_at(timer.expiry() + std::chrono::milliseconds(100));
             });
           });
 

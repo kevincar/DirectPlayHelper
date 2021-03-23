@@ -22,7 +22,8 @@ class interceptor {
   bool has_free_peer_proxy();
   std::shared_ptr<proxy> get_free_peer_proxy();
   void direct_play_server_callback(std::vector<char> const& buffer);
-  void proxy_callback(std::vector<char> const& buffer);
+  void proxy_dp_callback(std::vector<char> const& buffer);
+  void proxy_data_callback(std::vector<char> const& buffer);
 
   /* handlers for messages from above */
   void enumsessions_from_server_handler();

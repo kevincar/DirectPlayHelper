@@ -11,7 +11,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   enum type { host, peer };
 
   proxy(std::experimental::net::io_context* io_context, type proxy_type,
-        std::function<void(std::vector<char>)> forward);
+        std::function<void(std::vector<char>)> dp_callback,
+        std::function<void(std::vector<char>)> data_callback);
 
   void stop();
 
@@ -81,7 +82,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   std::experimental::net::ip::udp::socket dpsrvr_socket_;
   std::experimental::net::ip::udp::socket data_socket_;
 
-  std::function<void(std::vector<char>)> forward_;
+  std::function<void(std::vector<char>)> dp_callback_;
+  std::function<void(std::vector<char>)> data_callback_;
 };
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_PROXY_HPP_

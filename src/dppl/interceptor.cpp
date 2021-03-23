@@ -62,9 +62,12 @@ bool interceptor::has_free_peer_proxy() {
 std::shared_ptr<proxy> interceptor::get_free_peer_proxy() {
   if (!this->has_free_peer_proxy()) {
     LOG(DEBUG) << "Creating a temporary Proxy";
+    auto dp_handler =
+        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
+                                  std::placeholders::_1);
     this->peer_proxies_.emplace_back(std::make_shared<proxy>(
-        this->io_context_, proxy::type::peer,
-        std::bind(&interceptor::proxy_callback, this, std::placeholders::_1)));
+        this->io_context_, proxy::type::peer, dp_handler, data_handler));
   }
 
   return this->find_peer_proxy(-1);
@@ -79,18 +82,25 @@ void interceptor::direct_play_server_callback(std::vector<char> const& buffer) {
   // Joining peers should not have any peers
   if (this->peer_proxies_.size() > 0) return;
   if (this->host_proxy_ == nullptr) {
-    auto handler =
-        std::bind(&interceptor::proxy_callback, this, std::placeholders::_1);
-    this->host_proxy_ =
-        std::make_shared<proxy>(this->io_context_, proxy::type::host, handler);
+    auto dp_handler =
+        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
+                                  std::placeholders::_1);
+    this->host_proxy_ = std::make_shared<proxy>(
+        this->io_context_, proxy::type::host, dp_handler, data_handler);
     this->host_proxy_->set_return_addr(
         request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
   }
   this->forward_(buffer);
 }
 
-void interceptor::proxy_callback(std::vector<char> const& buffer) {
-  LOG(DEBUG) << "Interceptor received data from a proxy :)";
+void interceptor::proxy_dp_callback(std::vector<char> const& buffer) {
+  LOG(DEBUG) << "Interceptor received data from a proxy dp :)";
+  this->forward_(buffer);
+}
+
+void interceptor::proxy_data_callback(std::vector<char> const& buffer) {
+  LOG(DEBUG) << "Interceptor received data from a proxy data socket :)";
   this->forward_(buffer);
 }
 
@@ -167,9 +177,12 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   std::u16string uname(superpack.getShortName(), superpack.getShortNameSize());
   std::string name(uname.begin(), uname.end());
   LOG(INFO) << "New player: " << name;
+  auto dp_handler =
+      std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+  auto data_handler =
+      std::bind(&interceptor::proxy_data_callback, this, std::placeholders::_1);
   this->peer_proxies_.push_back(std::make_shared<proxy>(
-      this->io_context_, proxy::type::peer,
-      std::bind(&interceptor::proxy_callback, this, std::placeholders::_1)));
+      this->io_context_, proxy::type::peer, dp_handler, data_handler));
   peer->register_player(player);
   return superpack.size();
 }

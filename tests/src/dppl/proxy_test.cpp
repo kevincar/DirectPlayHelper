@@ -21,7 +21,7 @@ TEST(ProxyTest, constructor_host) {
     std::function<void(std::vector<char>)> callback =
         [](std::vector<char> buf) {};
     std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
-        &io_context, dppl::proxy::type::host, callback);
+        &io_context, dppl::proxy::type::host, callback, callback);
 
     dppl::AppSimulator app(&io_context, false);
 
@@ -42,7 +42,7 @@ TEST(ProxyTest, constructor_peer) {
     std::function<void(std::vector<char>)> callback =
         [](std::vector<char> buf) {};
     std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
-        &io_context, dppl::proxy::type::peer, callback);
+        &io_context, dppl::proxy::type::peer, callback, callback);
 
     dppl::AppSimulator app(&io_context, true);
 
@@ -73,23 +73,22 @@ TEST(ProxyTest, dp_initialization_host) {
   std::function<void(std::error_code const&)> dpsrvr_timer_callback;
   std::function<void(std::error_code const&)> internet_timer_callback;
   std::function<void(std::vector<char> const&)> send_to_server;
-  std::function<void(std::vector<char>)> proxy_callback = [&](std::vector<char>
+  std::function<void(std::vector<char>)> proxy_dp_callback = [&](std::vector<char>
                                                                   buf) {
     // We'll use the AppSimulator::process_message to simulate a response
     // over the internet
     LOG(DEBUG) << "Proxy received message from the app";
-    dppl::DPMessage request(&buf);
-    if (request.header()->token != 0xFAB && request.header()->token != 0xCAB &&
-        request.header()->token != 0xBAB) {
-      LOG(DEBUG)
-          << "Not a DirectPlay protocol meassage. Assuming this is uplay data";
-      DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
-      ASSERT_EQ(*ptr, proxy->get_host_player_id());
-      io_context.stop();
-    }
+
     LOG(DEBUG) << "Simulating sending this data over the internet to the "
                   "server/other player";
     send_to_server(buf);
+  };
+
+  std::function<void(std::vector<char>)> proxy_data_callback = [&](std::vector <char> buf) {
+    LOG(DEBUG) << "Proxy_test received a data message from the app";
+    DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
+    ASSERT_EQ(*ptr, proxy->get_host_player_id());
+    std::experimental::net::defer([&](){io_context.stop();});
   };
 
   dpsrvr_timer_callback = [&](std::error_code const& ec) {
@@ -131,7 +130,7 @@ TEST(ProxyTest, dp_initialization_host) {
   };
 
   proxy = std::make_shared<dppl::proxy>(&io_context, dppl::proxy::type::peer,
-                                        proxy_callback);
+                                        proxy_dp_callback, proxy_data_callback);
 
   dppl::AppSimulator app(&io_context, true);
 
@@ -155,7 +154,9 @@ TEST(ProxyTest, join) {
         EXPECT_EQ(request.header()->command, 0x5);
         host_proxy->stop();
         std::experimental::net::defer(io_context, [&]() { io_context.stop(); });
-      });
+        }, [&](std::vector <char> buffer){
+
+        });
 
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     LOG(DEBUG) << "Direct Play Message Received";
@@ -248,6 +249,8 @@ TEST(ProxyTest, host) {
             io_context.stop();
             break;
         }
+      }, [&](std::vector<char> buffer){
+
       });
 
   // Ensure that the DirectPlayServer Doesn't interfere with hosting.

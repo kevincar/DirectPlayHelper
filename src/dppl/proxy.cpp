@@ -6,10 +6,12 @@
 
 namespace dppl {
 proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
-             std::function<void(std::vector<char>)> forward)
+             std::function<void(std::vector<char>)> dp_callback,
+             std::function<void(std::vector<char>)> data_callback)
     : io_context_(io_context),
       proxy_type_(proxy_type),
-      forward_(forward),
+      dp_callback_(dp_callback),
+      data_callback_(data_callback),
       dp_acceptor_(*io_context, std::experimental::net::ip::tcp::endpoint(
                                     std::experimental::net::ip::tcp::v4(), 0)),
       dp_recv_socket_(*io_context),
@@ -189,7 +191,7 @@ void proxy::dp_receive_addforwardrequest_handler() {
 
 void proxy::dp_default_receive_handler() {
   LOG(DEBUG) << "DP Received Default handler";
-  this->forward_(this->dp_recv_buf_);
+  this->dp_callback_(this->dp_recv_buf_);
 }
 
 // SENDING
@@ -361,7 +363,7 @@ void proxy::data_receive_handler(std::error_code const& ec,
 }
 
 void proxy::data_default_receive_handler() {
-  this->forward_(this->data_recv_buf_);
+  this->data_callback_(this->data_recv_buf_);
 }
 
 void proxy::data_send_handler(std::error_code const& ec,

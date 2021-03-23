@@ -528,6 +528,7 @@ typedef struct {
 typedef struct {
   DWORD dwIDTo;          //  ID Player to whom the
                          //  message is being sent.
+  DWORD dwID;            //  ID Player from where it was sent
   DWORD dwGroupID;       //  GroupID (4 bytes): Ignored
   DWORD dwCreateOffset;  //  Offset of the PlayerInfo field. = 28
   DWORD dwPasswordOffset;

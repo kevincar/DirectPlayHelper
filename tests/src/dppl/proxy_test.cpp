@@ -1,13 +1,143 @@
+#include "dppl/proxy.hpp"
+
 #include <experimental/net>
 
+#include "dppl/AppSimulator.hpp"
 #include "dppl/DirectPlayServer.hpp"
 #include "dppl/hardware_test.hpp"
-#include "dppl/proxy.hpp"
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
-GUID app = {0xbf0613c0, 0xde79, 0x11d0, 0x99, 0xc9, 0x00,
-            0xa0,       0x24,   0x76,   0xad, 0x4b};
+TEST(ProxyTest, constructor_host) {
+  // Simply ensure that initializing a host or peer proxy doesn't cause any
+  // issues. Because these will asynchronously start waiting for data, we'll
+  // create a 750ms timer that will shut everything down
+
+  ASSERT_NO_THROW({
+    std::experimental::net::io_context io_context;
+    std::experimental::net::steady_timer timer(io_context,
+                                               std::chrono::milliseconds(750));
+
+    std::function<void(std::vector<char>)> callback =
+        [](std::vector<char> buf) {};
+    std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
+        &io_context, dppl::proxy::type::host, callback);
+
+    dppl::AppSimulator app(&io_context, false);
+
+    timer.async_wait([&](std::error_code const& ec) {
+      ASSERT_EQ(ec.value(), 0);
+      io_context.stop();
+    });
+    io_context.run();
+  });
+}
+
+TEST(ProxyTest, constructor_peer) {
+  ASSERT_NO_THROW({
+    std::experimental::net::io_context io_context;
+    std::experimental::net::steady_timer timer(io_context,
+                                               std::chrono::milliseconds(750));
+
+    std::function<void(std::vector<char>)> callback =
+        [](std::vector<char> buf) {};
+    std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
+        &io_context, dppl::proxy::type::peer, callback);
+
+    dppl::AppSimulator app(&io_context, true);
+
+    timer.async_wait([&](std::error_code const& ec) {
+      ASSERT_EQ(ec.value(), 0);
+      io_context.stop();
+    });
+    io_context.run();
+  });
+}
+
+TEST(ProxyTest, dp_initialization_host) {
+  // This test ensures that at host proxy can guide an app all the way through
+  // to the DirectPlay protocol initialization
+  // Once we receive the DPSYS_CREATEPLAYER message, we've succesffully
+  // navigated initialization
+  std::experimental::net::io_context io_context;
+
+  std::vector<char> recv_buf(255, '\0');
+  std::vector<char> send_buf(255, '\0');
+  std::shared_ptr<dppl::proxy> proxy;
+  auto const dpsrvr_timer_delay = std::chrono::seconds(5);
+  auto const simulated_internet_delay = std::chrono::milliseconds(750);
+  std::experimental::net::steady_timer internet_timer(io_context,
+                                                      simulated_internet_delay);
+  std::experimental::net::steady_timer dpsrvr_timer(io_context,
+                                                    dpsrvr_timer_delay);
+  std::function<void(std::error_code const&)> dpsrvr_timer_callback;
+  std::function<void(std::error_code const&)> internet_timer_callback;
+  std::function<void(std::vector<char> const&)> send_to_server;
+  std::function<void(std::vector<char>)> proxy_callback = [&](std::vector<char>
+                                                                  buf) {
+    // We'll use the AppSimulator::process_message to simulate a response
+    // over the internet
+    LOG(DEBUG) << "Proxy received message from the app";
+    dppl::DPMessage request(&buf);
+    if (request.header()->token != 0xFAB && request.header()->token != 0xCAB &&
+        request.header()->token != 0xBAB) {
+      LOG(DEBUG)
+          << "Not a DirectPlay protocol meassage. Assuming this is uplay data";
+      DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
+      ASSERT_EQ(*ptr, proxy->get_host_player_id());
+      io_context.stop();
+    }
+    LOG(DEBUG) << "Simulating sending this data over the internet to the "
+                  "server/other player";
+    send_to_server(buf);
+  };
+
+  dpsrvr_timer_callback = [&](std::error_code const& ec) {
+    if (!ec) {
+      LOG(DEBUG) << "dpsrvr timer: simulating ENUMSESSIONS request";
+      std::vector<uint8_t> data = {
+          0x34, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
+          0x61, 0x79, 0x02, 0x00, 0x0e, 0x00, 0xc0, 0x13, 0x06, 0xbf, 0x79,
+          0xde, 0xd0, 0x11, 0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b,
+          0x00, 0x00, 0x00, 0x00, 0x52, 0x00, 0x00, 0x00,
+      };
+      send_buf.assign(data.begin(), data.end());
+      proxy->deliver(send_buf);
+      dpsrvr_timer.expires_at(dpsrvr_timer.expiry() + dpsrvr_timer_delay);
+      dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    } else {
+      LOG(WARNING) << "Timer error: " << ec.message();
+    }
+  };
+
+  internet_timer_callback = [&](std::error_code const& ec) {
+    if (!ec) {
+      dpsrvr_timer.cancel();
+      send_buf = dppl::AppSimulator::process_message(recv_buf);
+      LOG(DEBUG) << "Received response from simulated player, delivering back "
+                    "to the app through proxy";
+      proxy->deliver(send_buf);
+    } else {
+      LOG(WARNING) << "Timer error: " << ec.message();
+    }
+  };
+
+  send_to_server = [&](std::vector<char> const& data) {
+    recv_buf.assign(data.begin(), data.end());
+    internet_timer.expires_at(std::chrono::steady_clock::now() +
+                              simulated_internet_delay);
+    internet_timer.async_wait(internet_timer_callback);
+  };
+
+  proxy = std::make_shared<dppl::proxy>(&io_context, dppl::proxy::type::peer,
+                                        proxy_callback);
+
+  dppl::AppSimulator app(&io_context, true);
+
+  dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+  io_context.run();
+}
 
 TEST(ProxyTest, join) {
   if (!(hardware_test_check() || test_check("TEST_PROXY_JOIN")))
@@ -54,7 +184,7 @@ TEST(ProxyTest, join) {
     session_desc->dwFlags =
         DPSESSIONDESCFLAGS::useping | DPSESSIONDESCFLAGS::noplayerupdates;
     session_desc->guidInstance = instance;
-    session_desc->guidApplication = app;
+    session_desc->guidApplication = dppl::AppSimulator::app;
     session_desc->dwMaxPlayers = 4;
     session_desc->dpSessionID = 0x0195fda9;
     session_desc->dwUser1 = 0x005200a4;
@@ -136,7 +266,7 @@ TEST(ProxyTest, host) {
           request.header()->command = DPSYS_ENUMSESSIONS;
           request.header()->version = 0xe;
           DPMSG_ENUMSESSIONS* msg = request.message<DPMSG_ENUMSESSIONS>();
-          msg->guidApplication = app;
+          msg->guidApplication = dppl::AppSimulator::app;
           msg->dwFlags = ENUMSESSIONSFLAGS::allsessions |
                          ENUMSESSIONSFLAGS::passwordprotectedsessions;
 

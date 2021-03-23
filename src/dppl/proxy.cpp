@@ -33,9 +33,8 @@ void proxy::stop() {
   this->data_socket_.cancel();
 }
 
-int const proxy::get_host_system_id() {
-  return this->host_system_id_;
-}
+int const proxy::get_host_system_id() { return this->host_system_id_; }
+int const proxy::get_host_player_id() { return this->host_player_id_; }
 
 std::experimental::net::ip::tcp::endpoint const proxy::get_return_addr() {
   return this->dp_acceptor_.local_endpoint();
@@ -47,7 +46,6 @@ void proxy::set_return_addr(
 }
 
 void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player, bool is_host) {
-  LOG(DEBUG) << "Beginning registration process";
   DPSuperPackedPlayer superpack = DPSuperPackedPlayer(player);
   int system_id = -1;
   int player_id = -1;
@@ -55,44 +53,32 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player, bool is_host) {
   if (player->dwFlags &
       static_cast<DWORD>(SUPERPACKEDPLAYERFLAGS::issystemplayer)) {
     system_id = player->ID;
-    LOG(DEBUG) << "System player detected " << std::hex << system_id;
   } else {
     system_id = player->dwSystemPlayerID;
     player_id = player->ID;
-    LOG(DEBUG) << "Non-System player detected " << std::hex << system_id;
   }
 
   if (this->proxy_type_ == type::host) {
     // If we're here, the player is either a reference to the host or our self
     // connection
-    LOG(DEBUG) << "Registering details for the host proxy";
     if (is_host) {
-      LOG(DEBUG) << "Registering details for the actual host player";
-      this->host_system_id_ = this->host_system_id_ == -1 ? system_id : this->host_system_id_;
-      LOG(DEBUG) << "Host System id set to " << std::hex << this->host_system_id_;
-      this->host_player_id_ = this->host_player_id_ == -1 ? player_id : this->host_player_id_;
-      LOG(DEBUG) << "Host player id set to " << std::hex << this->host_player_id_;
-      std::experimental::net::ip::tcp::endpoint dre = this->dp_recv_socket_.local_endpoint();
-      LOG(DEBUG) << "Setting the stream endponit to " << dre;
+      this->host_system_id_ =
+          this->host_system_id_ == -1 ? system_id : this->host_system_id_;
+      this->host_player_id_ =
+          this->host_player_id_ == -1 ? player_id : this->host_player_id_;
       superpack.setStreamEndpoint(this->dp_recv_socket_.local_endpoint());
-      std::experimental::net::ip::udp::endpoint de = this->data_socket_.local_endpoint();
-      LOG(DEBUG) << "Setting the data endponit to " << de;
       superpack.setDataEndpoint(this->data_socket_.local_endpoint());
-    }
-    else {
-      LOG(DEBUG) << "Registerin details for the local player";
+    } else {
       // It's the player that this proxy connects to
       superpack.setStreamEndpoint(this->dp_send_socket_.remote_endpoint());
       superpack.setDataEndpoint(this->data_socket_.remote_endpoint());
     }
-  }
-  else {
+  } else {
     this->system_id_ = this->system_id_ == -1 ? system_id : this->system_id_;
     this->player_id_ = this->player_id_ == -1 ? player_id : this->player_id_;
     superpack.setStreamEndpoint(this->dp_acceptor_.local_endpoint());
     superpack.setDataEndpoint(this->data_socket_.local_endpoint());
   }
-  LOG(DEBUG) << "Returning";
   return;
 }
 
@@ -153,6 +139,11 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     LOG(DEBUG) << "DP Received message: " << packet.header()->command;
     switch (packet.header()->command) {
+      case DPSYS_ENUMSESSIONSREPLY:
+        this->app_dp_endpoint_ =
+            packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
+        this->dp_default_receive_handler();
+        break;
       case DPSYS_REQUESTPLAYERID: {
         DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
         this->recent_request_flags_ = msg->dwFlags;
@@ -168,6 +159,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     LOG(WARNING) << "DP Receive Error: " << ec.message();
   }
   this->dp_receive();
+  this->data_receive();
 }
 
 void proxy::dp_receive_addforwardrequest_handler() {
@@ -219,6 +211,8 @@ void proxy::dp_send() {
     case DPSYS_REQUESTPLAYERREPLY:
       this->dp_send_requestplayerreply_handler();
       break;
+    case DPSYS_CREATEPLAYER:
+      this->dp_send_createplayer_handler();
     default:
       this->dp_default_send_handler();
   }
@@ -297,6 +291,21 @@ void proxy::dp_send_requestplayerreply_handler() {
   this->dp_default_send_handler();
 }
 
+void proxy::dp_send_createplayer_handler() {
+  LOG(DEBUG) << "dp send CREATEPLAYER";
+  DPMessage packet(&this->dp_send_buf_);
+  DPMSG_CREATEPLAYER* msg = packet.message<DPMSG_CREATEPLAYER>();
+  DPLAYI_PACKEDPLAYER* player =
+      packet.property_data<DPLAYI_PACKEDPLAYER>(msg->dwCreateOffset);
+  dpsockaddr* stream_sock = reinterpret_cast<dpsockaddr*>(
+      reinterpret_cast<char*>(player->data) + player->dwShortNameLength +
+      player->dwLongNameLength);
+  dpsockaddr* data_sock = stream_sock + 1;
+  *stream_sock = DPMessage::to_dpaddr(this->dp_acceptor_.local_endpoint());
+  *data_sock = DPMessage::to_dpaddr(this->data_socket_.local_endpoint());
+  this->dp_default_send_handler();
+}
+
 void proxy::dp_default_send_handler() {
   DPMessage packet(&this->dp_send_buf_);
   packet.set_return_addr(this->dp_acceptor_.local_endpoint());
@@ -321,6 +330,7 @@ void proxy::dp_receipt_handler(std::error_code const& ec,
  ******************************************************************************
  */
 void proxy::data_receive() {
+  this->data_recv_buf_.resize(512, '\0');
   auto handler =
       std::bind(&proxy::data_receive_handler, this->shared_from_this(),
                 std::placeholders::_1, std::placeholders::_2);

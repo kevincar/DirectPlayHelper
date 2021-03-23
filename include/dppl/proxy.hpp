@@ -16,6 +16,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void stop();
 
   int const get_host_system_id();
+  int const get_host_player_id();
 
   std::experimental::net::ip::tcp::endpoint const get_return_addr();
   void set_return_addr(
@@ -43,6 +44,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void dp_send_enumsession_handler();
   void dp_send_enumsessionreply_handler();
   void dp_send_requestplayerreply_handler();
+  void dp_send_createplayer_handler();
   void dp_default_send_handler();
   void dp_receipt_handler(std::error_code const& ec,
                           std::size_t bytes_transmitted);

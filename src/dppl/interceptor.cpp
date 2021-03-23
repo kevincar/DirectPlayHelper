@@ -45,23 +45,27 @@ inline bool interceptor::has_proxies() {
 }
 
 std::shared_ptr<proxy> interceptor::find_peer_proxy(int const& id) {
+  LOG(DEBUG) << "Searching for Proxy " << id;
   for (auto peer_proxy : this->peer_proxies_) {
-    if (static_cast<int>(*peer_proxy) == id) return peer_proxy;
+    int cur_proxy_id = static_cast<int>(*peer_proxy);
+    LOG(DEBUG) << "Found Proxy id " << cur_proxy_id;
+    if (cur_proxy_id == id) return peer_proxy;
   }
   return nullptr;
 }
 
 bool interceptor::has_free_peer_proxy() {
   if (this->peer_proxies_.size() == 0) return false;
-  if (this->find_peer_proxy(-1) == nullptr) return false;
-  return false;
+  return this->find_peer_proxy(-1) != nullptr;
 }
 
 std::shared_ptr<proxy> interceptor::get_free_peer_proxy() {
-  if (!this->has_free_peer_proxy())
+  if (!this->has_free_peer_proxy()) {
+    LOG(DEBUG) << "Creating a temporary Proxy";
     this->peer_proxies_.emplace_back(std::make_shared<proxy>(
         this->io_context_, proxy::type::peer,
         std::bind(&interceptor::proxy_callback, this, std::placeholders::_1)));
+  }
 
   return this->find_peer_proxy(-1);
 }
@@ -71,6 +75,9 @@ void interceptor::direct_play_server_callback(std::vector<char> const& buffer) {
   this->recv_buf_ = buffer;
   DPMessage request(&this->recv_buf_);
   if (request.header()->command != DPSYS_ENUMSESSIONS) return;
+
+  // Joining peers should not have any peers
+  if (this->peer_proxies_.size() > 0) return;
   if (this->host_proxy_ == nullptr) {
     auto handler =
         std::bind(&interceptor::proxy_callback, this, std::placeholders::_1);
@@ -110,18 +117,14 @@ void interceptor::superenumplayersreply_from_server_handler() {
   DPLAYI_SUPERPACKEDPLAYER* player =
       response.property_data<DPLAYI_SUPERPACKEDPLAYER>(msg->dwPackedOffset);
   for (int i = 0; i < msg->dwPlayerCount; i++) {
-    LOG(DEBUG) << "Found Player Data " << i;
     std::size_t len = this->register_player(player);
     char* next_player_ptr = reinterpret_cast<char*>(player) + len;
     player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(next_player_ptr);
-    LOG(DEBUG) << "proceeding to next player if there is one";
   }
-  LOG(DEBUG) << "Sending registered data down";
   this->host_proxy_->deliver(this->send_buf_);
 }
 
 std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
-  LOG(DEBUG) << "Restering Player";
   DPSuperPackedPlayer superpack = DPSuperPackedPlayer(player);
   int system_id = -1;
   int player_id = -1;
@@ -137,22 +140,18 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   // Check if this is the host system player
   if (player->dwFlags &
       static_cast<DWORD>(SUPERPACKEDPLAYERFLAGS::isnameserver)) {
-    LOG(DEBUG) << "Registering Host System Player";
     this->host_proxy_->register_player(player, true);
     return superpack.size();
   }
 
   // Chceck if this is the host player
   if (system_id == this->host_proxy_->get_host_system_id()) {
-    LOG(DEBUG) << "Registering Host Player";
     this->host_proxy_->register_player(player, true);
-    LOG(DEBUG) << "All set";
     return superpack.size();
   }
 
   // Check if this is the current player
   if (system_id == static_cast<int>(*this->host_proxy_)) {
-    LOG(DEBUG) << "Registering Our Player";
     this->host_proxy_->register_player(player);
     return superpack.size();
   }
@@ -160,7 +159,6 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   // check if this is another peer
   std::shared_ptr<proxy> peer = this->find_peer_proxy(system_id);
   if (peer != nullptr) {
-    LOG(DEBUG) << "Regstring / Updating Peer Player";
     peer->register_player(player);
     return superpack.size();
   }

@@ -11,7 +11,8 @@ namespace dppl {
 class interceptor {
  public:
   interceptor(std::experimental::net::io_context* io_context,
-              std::function<void(std::vector<char> const&)> forward);
+              std::function<void(std::vector<char> const&)> dp_forward,
+              std::function<void(std::vector<char> const&)> data_forward);
 
   void deliver(std::vector<char> const& buffer);
 
@@ -32,7 +33,8 @@ class interceptor {
 
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;
-  std::function<void(std::vector<char> const&)> forward_;
+  std::function<void(std::vector<char> const&)> dp_forward_;
+  std::function<void(std::vector<char> const&)> data_forward_;
   std::experimental::net::io_context* io_context_;
 
   DirectPlayServer dps;

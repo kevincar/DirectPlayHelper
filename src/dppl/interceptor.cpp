@@ -7,9 +7,11 @@
 
 namespace dppl {
 interceptor::interceptor(std::experimental::net::io_context* io_context,
-                         std::function<void(std::vector<char> const&)> forward)
+                         std::function<void(std::vector<char> const&)> dp_forward,
+                         std::function<void(std::vector<char> const&)> data_forward)
     : io_context_(io_context),
-      forward_(forward),
+      dp_forward_(dp_forward),
+      data_forward_(data_forward),
       dps(io_context, std::bind(&interceptor::direct_play_server_callback, this,
                                 std::placeholders::_1)) {}
 
@@ -91,17 +93,17 @@ void interceptor::direct_play_server_callback(std::vector<char> const& buffer) {
     this->host_proxy_->set_return_addr(
         request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
   }
-  this->forward_(buffer);
+  this->dp_forward_(buffer);
 }
 
 void interceptor::proxy_dp_callback(std::vector<char> const& buffer) {
   LOG(DEBUG) << "Interceptor received data from a proxy dp :)";
-  this->forward_(buffer);
+  this->dp_forward_(buffer);
 }
 
 void interceptor::proxy_data_callback(std::vector<char> const& buffer) {
   LOG(DEBUG) << "Interceptor received data from a proxy data socket :)";
-  this->forward_(buffer);
+  this->data_forward_(buffer);
 }
 
 /*

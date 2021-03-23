@@ -159,7 +159,9 @@ TEST(interceptorTest, join) {
 
         // Simulate sending this off to the internet
         (*send_to_internet)(buffer);
-      });
+        }, [&](std::vector<char> const& buffer){
+
+        });
 
   send_to_internet =
       std::make_shared<std::function<void(std::vector<char> const&)>>(
@@ -220,7 +222,9 @@ TEST(interceptorTest, host) {
 
         // Sned off to the interet
         (*send_to_internet)(buffer);
-      });
+        }, [&](std::vector<char> const& buffer){
+
+        });
 
   // function to send stuff off to the internet
   send_to_internet =

@@ -1,5 +1,6 @@
-#include "dppl/DPMessage.hpp"
 #include "dppl/DPSuperPackedPlayer.hpp"
+
+#include "dppl/DPMessage.hpp"
 #include "gtest/gtest.h"
 
 std::vector<uint8_t> raw_packet_data = {
@@ -157,7 +158,8 @@ TEST(SuperPackedPlayerTest, setStreamEndpoint) {
 
 TEST(SuperPackedPlayerTest, setDataEndpoint) {
   int new_port = 9876;
-  std::experimental::net::ip::udp::endpoint endpoint(std::experimental::net::ip::udp::v4(), new_port);
+  std::experimental::net::ip::udp::endpoint endpoint(
+      std::experimental::net::ip::udp::v4(), new_port);
   packedplayer2.setDataEndpoint(endpoint);
   dpsockaddr* dpaddr = packedplayer2.getServiceProviders();
   dpaddr++;

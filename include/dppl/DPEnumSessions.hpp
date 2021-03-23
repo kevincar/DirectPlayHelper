@@ -31,7 +31,7 @@ DPEnumSessions::DPEnumSessions(T* data, GUID guidApplication, int flags,
   if (password.size() > 0) {
     std::u16string upassword(password.begin(), password.end());
     int password_byte_length =
-        (upassword.size()+1) * sizeof(std::u16string::value_type);
+        (upassword.size() + 1) * sizeof(std::u16string::value_type);
     char* pPassword = reinterpret_cast<char*>(&(*upassword.begin()));
 
     this->header()->cbSize = sizeof(DPMSG_HEADER) + sizeof(DPMSG_ENUMSESSIONS) +

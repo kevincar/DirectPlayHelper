@@ -1,7 +1,7 @@
 #ifndef INCLUDE_DPPL_DPSUPERPACKEDPLAYER_HPP_
 #define INCLUDE_DPPL_DPSUPERPACKEDPLAYER_HPP_
-#include "experimental/net"
 #include "dppl/dplay.h"
+#include "experimental/net"
 namespace dppl {
 class DPSuperPackedPlayer {
  public:
@@ -64,4 +64,4 @@ void DPSuperPackedPlayer::setEndpoint(int n, T endpoint) {
   dpaddr->sin_addr = addr->sin_addr.s_addr;
 }
 }  // namespace dppl
-#endif  // INCLUDE_DPPL_SUPERPACKEDPLAYER_HPP_
+#endif  // INCLUDE_DPPL_DPSUPERPACKEDPLAYER_HPP_

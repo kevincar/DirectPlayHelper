@@ -32,6 +32,12 @@ class DPMessage {
   template <typename T>
   static T flip(T value);
 
+  template <typename T>
+  static dpsockaddr to_dpaddr(T endpoint);
+
+  template <typename T>
+  static T from_dpaddr(dpsockaddr* paddr);
+
   static int const kSignatureOffset = sizeof(DWORD) + sizeof(sockaddr_in);
 
  private:
@@ -87,6 +93,23 @@ T DPMessage::flip(T value) {
          ((value & 0xff00) << 8) | ((value & 0xff) << 24);
   }
   return 0;
+}
+
+template <typename T>
+dpsockaddr DPMessage::to_dpaddr(T endpoint) {
+  dpsockaddr ret;
+  sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(endpoint.data());
+  ret.sin_family = addr->sin_family;
+  ret.sin_port = addr->sin_port;
+  ret.sin_addr = addr->sin_addr.s_addr;
+  return ret;
+}
+
+template <typename T>
+T DPMessage::from_dpaddr(dpsockaddr* paddr) {
+  uint32_t addr = DPMessage::flip(paddr->sin_addr);
+  uint16_t port = DPMessage::flip(paddr->sin_port);
+  return T(std::experimental::net::ip::address_v4(addr), port);
 }
 }  // namespace dppl
 

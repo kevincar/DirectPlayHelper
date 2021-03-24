@@ -42,7 +42,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dppl/DirectPlayServer_test.cpp
   ./src/dppl/AppSimulator.cpp
   ./src/dppl/proxy_test.cpp
-  ./src/dppl/interceptor_test.cpp
+  #./src/dppl/interceptor_test.cpp
 	)
 
 # Includes

@@ -8,7 +8,7 @@ add_library(dppl
   ./DPEnumSessions.cpp
   ./DPSuperPackedPlayer.cpp
   ./PacketSniffer.cpp
-  ./interceptor.cpp
+  #./interceptor.cpp
   ./proxy.cpp
   ./DirectPlayServer.cpp
 	)

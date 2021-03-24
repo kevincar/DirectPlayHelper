@@ -151,7 +151,8 @@ TEST(interceptorTest, join) {
   std::experimental::net::steady_timer timer(io_context,
                                              std::chrono::milliseconds(100));
   dppl::interceptor interceptor(
-      &io_context, [&](std::vector<char> const& buffer) {
+      &io_context,
+      [&](std::vector<char> const& buffer) {
         std::vector<char> buf = buffer;
         dppl::DPMessage packet(&buf);
         LOG(DEBUG) << "ETHERIAL SPACE: RECEIVED DATA: MESSAGE ID: "
@@ -159,9 +160,9 @@ TEST(interceptorTest, join) {
 
         // Simulate sending this off to the internet
         (*send_to_internet)(buffer);
-        }, [&](std::vector<char> const& buffer){
-
-        });
+      },
+      [&](std::vector<char> const& buffer) {
+      });
 
   send_to_internet =
       std::make_shared<std::function<void(std::vector<char> const&)>>(
@@ -214,7 +215,8 @@ TEST(interceptorTest, host) {
 
   // Interceptor
   dppl::interceptor interceptor(
-      &io_context, [&](std::vector<char> const& buffer) {
+      &io_context,
+      [&](std::vector<char> const& buffer) {
         std::vector<char> buf = buffer;
         dppl::DPMessage packet(&buf);
         LOG(DEBUG) << "ETHERIAL SPACE: RECEIVED DATA: MESSAGE ID: "
@@ -222,9 +224,9 @@ TEST(interceptorTest, host) {
 
         // Sned off to the interet
         (*send_to_internet)(buffer);
-        }, [&](std::vector<char> const& buffer){
-
-        });
+      },
+      [&](std::vector<char> const& buffer) {
+      });
 
   // function to send stuff off to the internet
   send_to_internet =

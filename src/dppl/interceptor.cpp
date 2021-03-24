@@ -1,14 +1,16 @@
+#include "dppl/interceptor.hpp"
+
 #include <experimental/net>
 
 #include "dppl/DPSuperPackedPlayer.hpp"
-#include "dppl/interceptor.hpp"
 #include "dppl/proxy.hpp"
 #include "g3log/g3log.hpp"
 
 namespace dppl {
-interceptor::interceptor(std::experimental::net::io_context* io_context,
-                         std::function<void(std::vector<char> const&)> dp_forward,
-                         std::function<void(std::vector<char> const&)> data_forward)
+interceptor::interceptor(
+    std::experimental::net::io_context* io_context,
+    std::function<void(std::vector<char> const&)> dp_forward,
+    std::function<void(std::vector<char> const&)> data_forward)
     : io_context_(io_context),
       dp_forward_(dp_forward),
       data_forward_(data_forward),

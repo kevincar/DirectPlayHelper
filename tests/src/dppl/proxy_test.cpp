@@ -1,3 +1,5 @@
+#include "dppl/proxy.hpp"
+
 #include <experimental/net>
 
 #include "dppl/AppSimulator.hpp"
@@ -5,7 +7,6 @@
 #include "dppl/DirectPlayServer.hpp"
 #include "dppl/dplay.h"
 #include "dppl/hardware_test.hpp"
-#include "dppl/proxy.hpp"
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
@@ -81,7 +82,8 @@ TEST(ProxyTest, dp_initialization_host) {
         // We'll use the AppSimulator::process_message to simulate a response
         // over the internet
         LOG(DEBUG) << "Proxy received message from the app";
-        // Handl messages with player data that needs to have socket info resolved
+        // Handl messages with player data that needs to have socket info
+        // resolved
         dppl::DPMessage response(&buf);
         switch (response.header()->command) {
           case DPSYS_SUPERENUMPLAYERSREPLY: {
@@ -97,22 +99,22 @@ TEST(ProxyTest, dp_initialization_host) {
                 LOG(DEBUG) << "Found system player";
                 if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
                   system_id = player->ID;
-                }
-                else {
+                } else {
                   proxy->register_player(player);
                 }
               } else {
                 LOG(DEBUG) << "Found Application Player";
                 if (player->dwSystemPlayerID == system_id) {
                   player_id = player->ID;
-                }
-                else {
+                } else {
                   proxy->register_player(player);
                 }
               }
               std::size_t cur_player_size = superpack.size();
-              char* next_player_ptr = reinterpret_cast<char*>(player) + cur_player_size;
-              player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(next_player_ptr);
+              char* next_player_ptr =
+                  reinterpret_cast<char*>(player) + cur_player_size;
+              player =
+                  reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(next_player_ptr);
             }
           } break;
         }
@@ -197,7 +199,6 @@ TEST(ProxyTest, join) {
         std::experimental::net::defer(io_context, [&]() { io_context.stop(); });
       },
       [&](std::vector<char> buffer) {
-
       });
 
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
@@ -294,7 +295,6 @@ TEST(ProxyTest, host) {
         }
       },
       [&](std::vector<char> buffer) {
-
       });
 
   // Ensure that the DirectPlayServer Doesn't interfere with hosting.

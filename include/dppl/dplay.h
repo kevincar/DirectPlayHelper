@@ -2,6 +2,8 @@
 #ifndef INCLUDE_DPPL_DPLAY_H_
 #define INCLUDE_DPPL_DPLAY_H_
 
+#include <stdint.h>
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include <winsock2.h>
 #include <windows.h>

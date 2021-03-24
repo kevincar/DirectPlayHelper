@@ -150,15 +150,14 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   }
 
   // Check if this is the host system player
-  if (player->dwFlags &
-      static_cast<DWORD>(SUPERPACKEDPLAYERFLAGS::isnameserver)) {
-    this->host_proxy_->register_player(player, true);
+  if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
+    this->host_proxy_->register_player(player);
     return superpack.size();
   }
 
   // Chceck if this is the host player
   if (system_id == this->host_proxy_->get_host_system_id()) {
-    this->host_proxy_->register_player(player, true);
+    this->host_proxy_->register_player(player);
     return superpack.size();
   }
 

@@ -1,10 +1,11 @@
-#include "dppl/proxy.hpp"
-
 #include <experimental/net>
 
 #include "dppl/AppSimulator.hpp"
+#include "dppl/DPSuperPackedPlayer.hpp"
 #include "dppl/DirectPlayServer.hpp"
+#include "dppl/dplay.h"
 #include "dppl/hardware_test.hpp"
+#include "dppl/proxy.hpp"
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
@@ -63,6 +64,8 @@ TEST(ProxyTest, dp_initialization_host) {
 
   std::vector<char> recv_buf(255, '\0');
   std::vector<char> send_buf(255, '\0');
+  int system_id = -1;
+  int player_id = -1;
   std::shared_ptr<dppl::proxy> proxy;
   auto const dpsrvr_timer_delay = std::chrono::seconds(5);
   auto const simulated_internet_delay = std::chrono::milliseconds(750);
@@ -73,23 +76,60 @@ TEST(ProxyTest, dp_initialization_host) {
   std::function<void(std::error_code const&)> dpsrvr_timer_callback;
   std::function<void(std::error_code const&)> internet_timer_callback;
   std::function<void(std::vector<char> const&)> send_to_server;
-  std::function<void(std::vector<char>)> proxy_dp_callback = [&](std::vector<char>
-                                                                  buf) {
-    // We'll use the AppSimulator::process_message to simulate a response
-    // over the internet
-    LOG(DEBUG) << "Proxy received message from the app";
+  std::function<void(std::vector<char>)> proxy_dp_callback =
+      [&](std::vector<char> buf) {
+        // We'll use the AppSimulator::process_message to simulate a response
+        // over the internet
+        LOG(DEBUG) << "Proxy received message from the app";
+        // Handl messages with player data that needs to have socket info resolved
+        dppl::DPMessage response(&buf);
+        switch (response.header()->command) {
+          case DPSYS_SUPERENUMPLAYERSREPLY: {
+            DPMSG_SUPERENUMPLAYERSREPLY* msg =
+                response.message<DPMSG_SUPERENUMPLAYERSREPLY>();
+            DPLAYI_SUPERPACKEDPLAYER* player =
+                response.property_data<DPLAYI_SUPERPACKEDPLAYER>(
+                    msg->dwPackedOffset);
+            for (int i = 0; i < msg->dwPlayerCount; i++) {
+              dppl::DPSuperPackedPlayer superpack(player);
+              // System player
+              if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::issystemplayer) {
+                LOG(DEBUG) << "Found system player";
+                if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
+                  system_id = player->ID;
+                }
+                else {
+                  proxy->register_player(player);
+                }
+              } else {
+                LOG(DEBUG) << "Found Application Player";
+                if (player->dwSystemPlayerID == system_id) {
+                  player_id = player->ID;
+                }
+                else {
+                  proxy->register_player(player);
+                }
+              }
+              std::size_t cur_player_size = superpack.size();
+              char* next_player_ptr = reinterpret_cast<char*>(player) + cur_player_size;
+              player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(next_player_ptr);
+            }
+          } break;
+        }
 
-    LOG(DEBUG) << "Simulating sending this data over the internet to the "
-                  "server/other player";
-    send_to_server(buf);
-  };
+        LOG(DEBUG) << "Simulating sending this data over the internet to the "
+                      "server/other player";
+        send_to_server(buf);
+      };
 
-  std::function<void(std::vector<char>)> proxy_data_callback = [&](std::vector <char> buf) {
-    LOG(DEBUG) << "Proxy_test received a data message from the app";
-    DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
-    ASSERT_EQ(*ptr, proxy->get_host_player_id());
-    std::experimental::net::defer([&](){io_context.stop();});
-  };
+  std::function<void(std::vector<char>)> proxy_data_callback =
+      [&](std::vector<char> buf) {
+        LOG(DEBUG) << "Proxy_test received a data message from the app";
+        DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
+        ASSERT_EQ(*ptr, player_id);
+        proxy->stop();
+        std::experimental::net::post([&]() { io_context.stop(); });
+      };
 
   dpsrvr_timer_callback = [&](std::error_code const& ec) {
     if (!ec) {
@@ -149,14 +189,16 @@ TEST(ProxyTest, join) {
 
   std::vector<char> response_data(512, '\0');
   std::shared_ptr<dppl::proxy> host_proxy = std::make_shared<dppl::proxy>(
-      &io_context, dppl::proxy::type::host, [&](std::vector<char> buffer) {
+      &io_context, dppl::proxy::type::host,
+      [&](std::vector<char> buffer) {
         dppl::DPMessage request(&buffer);
         EXPECT_EQ(request.header()->command, 0x5);
         host_proxy->stop();
         std::experimental::net::defer(io_context, [&]() { io_context.stop(); });
-        }, [&](std::vector <char> buffer){
+      },
+      [&](std::vector<char> buffer) {
 
-        });
+      });
 
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     LOG(DEBUG) << "Direct Play Message Received";
@@ -214,7 +256,8 @@ TEST(ProxyTest, host) {
   std::experimental::net::steady_timer timer(io_context,
                                              std::chrono::seconds(5));
   std::shared_ptr<dppl::proxy> peer_proxy = std::make_shared<dppl::proxy>(
-      &io_context, dppl::proxy::type::peer, [&](std::vector<char> buffer) {
+      &io_context, dppl::proxy::type::peer,
+      [&](std::vector<char> buffer) {
         LOG(DEBUG) << "Peer proxy received a response rom the app";
         dppl::DPMessage response(&buffer);
         peer_proxy->set_return_addr(
@@ -249,7 +292,8 @@ TEST(ProxyTest, host) {
             io_context.stop();
             break;
         }
-      }, [&](std::vector<char> buffer){
+      },
+      [&](std::vector<char> buffer) {
 
       });
 

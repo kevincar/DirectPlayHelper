@@ -342,6 +342,9 @@ enum class SUPERPACKEDPLAYERFLAGS {
   isingroup = 0x4,
   islocalplayer = 0x8
 };
+inline bool operator&(DWORD const& lhs, SUPERPACKEDPLAYERFLAGS const& rhs) {
+  return lhs & static_cast<DWORD>(rhs);
+}
 /*
  * DPSECURITYDESC
  *

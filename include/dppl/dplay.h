@@ -3,8 +3,8 @@
 #define INCLUDE_DPPL_DPLAY_H_
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
 #else
@@ -31,7 +31,6 @@ typedef struct {
 #pragma pack(pop)
 
 #endif  // define(WIN32)
-
 
 /*
  * dpsockaddr
@@ -104,7 +103,7 @@ typedef struct {
   DWORD dwUser1;      //  For application use
   DWORD dwUser2;
   DWORD dwUser3;
-  DWORD dwUser4;      // Max Rank
+  DWORD dwUser4;  // Max Rank
 } DPSESSIONDESC2;
 #pragma pack(pop)
 enum DPSESSIONDESCFLAGS {
@@ -162,112 +161,112 @@ typedef struct {
  */
 #pragma pack(push, 1)
 typedef struct {
-  DWORD dwSize;            //  The size of the fixed player header =
-                           //  16
-  DWORD dwFlags;           //  Player flags. Player Flags MUST be 0 or
-                           //  more of the following values:
-                           //    SP (1 bit): The player is the system
-                           //    player.
-                           //    NS (1 bit): The player is the name
-                           //    server (host). It MUST be combined
-                           //    with SP.
-                           //    PG (1 bit): The player belongs to a
-                           //    group. This flag MUST be set for
-                           //    system players, for other players
-                           //    that have been added to a group using
-                           //    DPMSG_ADDPLAYERTOGROUP, or for groups
-                           //    that have been added to a group using
-                           //    DPMSG_ADDSHORTCUTTOGROUP.
-                           //    PL (1 bit): The player is on the
-                           //    sending machine. This flag does not
-                           //    have meaning on other machines and
-                           //    MUST be ignored on receipt.
-                           //    X (28 bits): All bits that have this
-                           //    label SHOULD be set to zero when sent
-                           //    and MUST be ignored on receipt.
-  DWORD ID;                //  MUST contain the player ID of the
-                           //  player that is described in this
-                           //  structure.
-  struct {  //  A bit field that indicates which
-                           //  optional fields are present. The
-                           //  PlayerInfoMask field MUST be a bitmask
-                           //  that is composed of the following fields:
-    bool shortNamePresent : 1;       //    SN (1 bit): MUST be set if the
-                           //    ShortName field is present in the
-                           //    structure.
-    bool longNamePresent : 1;        //    LN (1 bit): MUST be set if the
-                           //    LongName field is present in the
-                           //    structure.
-    char serviceProviderLength : 2;        //    SL (2 bits): MUST be set if the
-                           //    ServiceProviderDataLength field is
-                           //    present in the structure. SL MUST be
-                           //    set to one of the following values.
-                           //      0x01 = If the
-                           //      ServiceProviderDataLength field
-                           //      occupies 1 byte.
-                           //      0x02 = If the
-                           //      ServiceProviderDataLength field
-                           //      occupies 2 bytes.
-                           //      0x03 = If the
-                           //      ServiceProviderDataLength field
-                           //      occupies 4 bytes.
-    char playerDataLength : 2;                       //    PD (2 bits): MUST be set if the
-                           //    PlayerDataLength field is present in
-                           //    the structure. PD MUST be set to one
-                           //    of the following values:
-                           //      0x01 = If the PlayerDataLength
-                           //      field occupies 1 byte.
-                           //      0x02 = If the PlayerDataLength
-                           //      field occupies 2 bytes.
-                           //      0x03 = If the PlayerDataLength
-                           //      field occupies 4 bytes.
-    char playerCountLength : 2;                       //    PC (2 bits): MUST be set if the
-                           //    PlayerCount field is present in the
-                           //    structure. PC MUST be set to one of
-                           //    the following values:
-                           //      0x01 = If the PlayerCount field
-                           //      occupies 1 byte.
-                           //      0x02 = If the PlayerCount field
-                           //      occupies 2 bytes.
-                           //      0x03 = If the PlayerCount field
-                           //      occupies 4 bytes.
-    bool parentIDPresent : 1;                       //    PI (1 bit): MUST be set if the
-                           //    ParentID field is present in the
-                           //    structure.
-    char shortcutCountLength : 2;                       //    SC (2 bits): MUST be set if the
-                           //    ShortcutCount field is present in the
-                           //    structure. SC MUST be set to one of
-                           //    the following values:
-                           //      0x01 = If the ShortcutCount field
-                           //      occupies 1 byte.
-                           //      0x02 = If the ShortcutCount field
-                           //      occupies 2 bytes.
-                           //      0x03 = If the ShortcutCount field
-                           //      occupies 4 bytes.
-    int x : 21;            //    X (21 bits): All bits with this label
-  } dwPlayerInfoMask;                       //    SHOULD be set to zero when sent and
-                           //    MUST be ignored on receipt.
-  DWORD dwSystemPlayerID;  //  If the DPLAYI_PLAYER_SYSPLAYER flag is
-                           //  set in the Flags field, this field MUST
-                           //  contain the protocol version for the
-                           //  machine hosting the protocol. If the
-                           //  DPLAYI_PLAYER_SYSPLAYER flag is not
-                           //  set, this field MUST contain the ID of
-                           //  the system player for this game.  When
-                           //  the protocol version is used for a
-                           //  system player, it will be one of the
-                           //  following values:
-                           //    9 = First version documented.
-                           //    10 = New Hosts send
-                           //    DPMSG_IAMNAMESERVER as first message
-                           //    when they become the new host.
-                           //    11 = No Change.
-                           //    12 = The version in which DirectPlay
-                           //    Voice was introduced. Does not affect
-                           //    any of the core logic.
-                           //    13 = Added DPMSG_CREATEPLAYERVERIFY
-                           //    message.
-                           //    14 = No Change.
+  DWORD dwSize;                 //  The size of the fixed player header =
+                                //  16
+  DWORD dwFlags;                //  Player flags. Player Flags MUST be 0 or
+                                //  more of the following values:
+                                //    SP (1 bit): The player is the system
+                                //    player.
+                                //    NS (1 bit): The player is the name
+                                //    server (host). It MUST be combined
+                                //    with SP.
+                                //    PG (1 bit): The player belongs to a
+                                //    group. This flag MUST be set for
+                                //    system players, for other players
+                                //    that have been added to a group using
+                                //    DPMSG_ADDPLAYERTOGROUP, or for groups
+                                //    that have been added to a group using
+                                //    DPMSG_ADDSHORTCUTTOGROUP.
+                                //    PL (1 bit): The player is on the
+                                //    sending machine. This flag does not
+                                //    have meaning on other machines and
+                                //    MUST be ignored on receipt.
+                                //    X (28 bits): All bits that have this
+                                //    label SHOULD be set to zero when sent
+                                //    and MUST be ignored on receipt.
+  DWORD ID;                     //  MUST contain the player ID of the
+                                //  player that is described in this
+                                //  structure.
+  struct {                      //  A bit field that indicates which
+                                //  optional fields are present. The
+                                //  PlayerInfoMask field MUST be a bitmask
+                                //  that is composed of the following fields:
+    bool shortNamePresent : 1;  //    SN (1 bit): MUST be set if the
+                                //    ShortName field is present in the
+                                //    structure.
+    bool longNamePresent : 1;   //    LN (1 bit): MUST be set if the
+                                //    LongName field is present in the
+                                //    structure.
+    char serviceProviderLength : 2;  //    SL (2 bits): MUST be set if the
+                                     //    ServiceProviderDataLength field is
+                                     //    present in the structure. SL MUST be
+                                     //    set to one of the following values.
+                                     //      0x01 = If the
+                                     //      ServiceProviderDataLength field
+                                     //      occupies 1 byte.
+                                     //      0x02 = If the
+                                     //      ServiceProviderDataLength field
+                                     //      occupies 2 bytes.
+                                     //      0x03 = If the
+                                     //      ServiceProviderDataLength field
+                                     //      occupies 4 bytes.
+    char playerDataLength : 2;       //    PD (2 bits): MUST be set if the
+                                     //    PlayerDataLength field is present in
+                                     //    the structure. PD MUST be set to one
+                                     //    of the following values:
+                                     //      0x01 = If the PlayerDataLength
+                                     //      field occupies 1 byte.
+                                     //      0x02 = If the PlayerDataLength
+                                     //      field occupies 2 bytes.
+                                     //      0x03 = If the PlayerDataLength
+                                     //      field occupies 4 bytes.
+    char playerCountLength : 2;      //    PC (2 bits): MUST be set if the
+                                     //    PlayerCount field is present in the
+                                     //    structure. PC MUST be set to one of
+                                     //    the following values:
+                                     //      0x01 = If the PlayerCount field
+                                     //      occupies 1 byte.
+                                     //      0x02 = If the PlayerCount field
+                                     //      occupies 2 bytes.
+                                     //      0x03 = If the PlayerCount field
+                                     //      occupies 4 bytes.
+    bool parentIDPresent : 1;        //    PI (1 bit): MUST be set if the
+                                     //    ParentID field is present in the
+                                     //    structure.
+    char shortcutCountLength : 2;    //    SC (2 bits): MUST be set if the
+                                     //    ShortcutCount field is present in the
+                                     //    structure. SC MUST be set to one of
+                                     //    the following values:
+                                     //      0x01 = If the ShortcutCount field
+                                     //      occupies 1 byte.
+                                     //      0x02 = If the ShortcutCount field
+                                     //      occupies 2 bytes.
+                                     //      0x03 = If the ShortcutCount field
+                                     //      occupies 4 bytes.
+    int x : 21;                      //    X (21 bits): All bits with this label
+  } dwPlayerInfoMask;                //    SHOULD be set to zero when sent and
+                                     //    MUST be ignored on receipt.
+  DWORD dwSystemPlayerID;            //  If the DPLAYI_PLAYER_SYSPLAYER flag is
+                                     //  set in the Flags field, this field MUST
+                                     //  contain the protocol version for the
+                                     //  machine hosting the protocol. If the
+                                     //  DPLAYI_PLAYER_SYSPLAYER flag is not
+                                     //  set, this field MUST contain the ID of
+                                     //  the system player for this game.  When
+                                     //  the protocol version is used for a
+                                     //  system player, it will be one of the
+                                     //  following values:
+                                     //    9 = First version documented.
+                                     //    10 = New Hosts send
+                                     //    DPMSG_IAMNAMESERVER as first message
+                                     //    when they become the new host.
+                                     //    11 = No Change.
+                                     //    12 = The version in which DirectPlay
+                                     //    Voice was introduced. Does not affect
+                                     //    any of the core logic.
+                                     //    13 = Added DPMSG_CREATEPLAYERVERIFY
+                                     //    message.
+                                     //    14 = No Change.
   BYTE data[];
   // WSTR  szShortName[];           //  If the SN bit in the PlayerInfoMask
   //  field is set, the ShortName field MUST

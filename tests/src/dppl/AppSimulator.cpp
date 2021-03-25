@@ -44,6 +44,7 @@ AppSimulator::AppSimulator(std::experimental::net::io_context* io_context,
   this->dpsrvr_socket_->set_option(
       std::experimental::net::socket_base::broadcast(true));
   this->dp_accept();
+  this->data_receive();
 }
 
 std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
@@ -211,6 +212,11 @@ std::vector<char> AppSimulator::handle_message(std::vector<char> raw_bytes) {
   // Preprocessing
   int command = request.header()->command;
   switch (command) {
+    case DPSYS_ENUMSESSIONSREPLY:
+      this->dpsrvr_timer_.cancel();
+      this->dp_endpoint_ =
+          request.get_return_addr<decltype(this->dp_endpoint_)>();
+      break;
     case DPSYS_CREATEPLAYER: {
       DPMSG_CREATEPLAYER* msg = request.message<DPMSG_CREATEPLAYER>();
       DPLAYI_PACKEDPLAYER* player =
@@ -307,6 +313,7 @@ void AppSimulator::dp_receive_handler(std::error_code const& ec,
 
 void AppSimulator::dp_connect(
     std::experimental::net::ip::tcp::endpoint const& endpoint) {
+  LOG(DEBUG) << "Connecting to: " << endpoint;
   std::error_code ec;
   this->dp_send_socket_.connect(endpoint, ec);
   if (ec) {
@@ -387,13 +394,16 @@ void AppSimulator::dpsrvr_timer_handler(std::error_code const& ec) {
     dp_message.set_return_addr(this->dp_acceptor_.local_endpoint());
     this->dpsrvr_send_buf_.assign(data.begin(), data.end());
     this->dpsrvr_send();
+    this->dpsrvr_timer_.expires_at(this->dpsrvr_timer_.expiry() +
+                                   k_dpsrvr_time_);
+    this->dpsrvr_timer_.async_wait(std::bind(
+        &AppSimulator::dpsrvr_timer_handler, this, std::placeholders::_1));
   } else {
     switch (ec.value()) {
       default:
         LOG(WARNING) << "DPSRVR timer error: " << ec.message();
     }
   }
-  this->dpsrvr_timer_.expires_at(this->dpsrvr_timer_.expiry() + k_dpsrvr_time_);
 }
 
 void AppSimulator::data_receive() {

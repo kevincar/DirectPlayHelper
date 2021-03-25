@@ -26,6 +26,8 @@ proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
   this->dpsrvr_socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
   this->dp_accept();
+  std::experimental::net::defer(*this->io_context_,
+                                [&]() { this->data_receive(); });
 }
 
 void proxy::stop() {
@@ -60,9 +62,14 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   return;
 }
 
-void proxy::deliver(std::vector<char> const& data) {
+void proxy::dp_deliver(std::vector<char> const& data) {
   this->dp_send_buf_ = data;
   this->dp_send();
+}
+
+void proxy::data_deliver(std::vector<char> const& data) {
+  this->data_send_buf_ = data;
+  this->data_send();
 }
 
 bool proxy::operator==(proxy const& rhs) {
@@ -91,11 +98,11 @@ void proxy::dp_accept_handler(
     std::error_code const& ec,
     std::experimental::net::ip::tcp::socket new_socket) {
   if (!ec) {
-    LOG(DEBUG) << "DP Accepted a new socket";
+    LOG(DEBUG) << "dp accepted a new socket";
     this->dp_recv_socket_ = std::move(new_socket);
     this->dp_receive();
   } else {
-    LOG(WARNING) << "DP Accept Error: " << ec.message();
+    LOG(WARNING) << "dp accept Error: " << ec.message();
   }
   this->dp_accept();
 }
@@ -117,7 +124,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    LOG(DEBUG) << "DP Received message: " << packet.header()->command;
+    LOG(DEBUG) << "dp received message: " << packet.header()->command;
     switch (packet.header()->command) {
       case DPSYS_REQUESTPLAYERID: {
         DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
@@ -134,14 +141,13 @@ void proxy::dp_receive_handler(std::error_code const& ec,
         this->dp_default_receive_handler();
     }
   } else {
-    LOG(WARNING) << "DP Receive Error: " << ec.message();
+    LOG(WARNING) << "dp receive error: " << ec.message();
   }
   this->dp_receive();
-  this->data_receive();
 }
 
 void proxy::dp_receive_requestplayerreply() {
-  LOG(DEBUG) << "DP receive REQUESTPLAYERREPLY";
+  LOG(DEBUG) << "dp receive REQUESTPLAYERREPLY";
   DPMessage packet(&this->dp_recv_buf_);
   DPMSG_REQUESTPLAYERREPLY* msg = packet.message<DPMSG_REQUESTPLAYERREPLY>();
   if (this->recent_request_flags_ & REQUESTPLAYERIDFLAGS::issystemplayer) {
@@ -153,7 +159,7 @@ void proxy::dp_receive_requestplayerreply() {
 }
 
 void proxy::dp_receive_addforwardrequest_handler() {
-  LOG(DEBUG) << "DP Receive handling ADDFORWARDREQUEST";
+  LOG(DEBUG) << "dp receive handling ADDFORWARDREQUEST";
   DPMessage packet(&this->dp_recv_buf_);
   DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
   DPLAYI_PACKEDPLAYER* player_data =
@@ -178,7 +184,7 @@ void proxy::dp_receive_addforwardrequest_handler() {
 }
 
 void proxy::dp_default_receive_handler() {
-  LOG(DEBUG) << "DP Received Default handler";
+  LOG(DEBUG) << "data received default handler";
   this->dp_callback_(this->dp_recv_buf_);
 }
 
@@ -186,7 +192,7 @@ void proxy::dp_default_receive_handler() {
 
 void proxy::dp_send() {
   DPMessage packet(&this->dp_send_buf_);
-  LOG(DEBUG) << "DP Sending message " << packet.header()->command;
+  LOG(DEBUG) << "dp sending message " << packet.header()->command;
   switch (packet.header()->command) {
     case DPSYS_ENUMSESSIONS:
       this->dp_send_enumsession_handler();
@@ -211,18 +217,18 @@ void proxy::dp_assert_connection() {
   std::error_code ec;
   this->dp_send_socket_.remote_endpoint(ec);
   if (ec) {
-    LOG(DEBUG) << "DP Socket connecting to " << this->app_dp_endpoint_;
+    LOG(DEBUG) << "dp socket connecting to " << this->app_dp_endpoint_;
     std::error_code ec;
     this->dp_send_socket_.connect(this->app_dp_endpoint_, ec);
     if (ec) {
       if (ec == std::experimental::net::error::connection_reset) {
-        LOG(WARNING) << "Connection resetting";
+        LOG(WARNING) << "connection resetting";
         this->dp_send_socket_.cancel();
         this->dp_send_socket_ = std::experimental::net::ip::tcp::socket(
             *this->io_context_, std::experimental::net::ip::tcp::endpoint(
                                     std::experimental::net::ip::tcp::v4(), 0));
       } else {
-        LOG(WARNING) << "DP Connect Error: " << ec.message();
+        LOG(WARNING) << "dp connect error: " << ec.message();
       }
       return;
     }
@@ -230,18 +236,18 @@ void proxy::dp_assert_connection() {
 }
 
 void proxy::dp_send_enumsession_handler() {
-  LOG(DEBUG) << "DP(SRVR) sending ENUMSESSIONS";
+  LOG(DEBUG) << "dpsrvr sending ENUMSESSIONS";
 
   std::error_code ec;
   this->dpsrvr_socket_.remote_endpoint(ec);
   if (ec) {
-    LOG(DEBUG) << "DPSRVR socket connecting";
+    LOG(DEBUG) << "dpsrvr socket connecting";
     this->dpsrvr_socket_.connect(
         std::experimental::net::ip::udp::endpoint(
             std::experimental::net::ip::address_v4::broadcast(), 47624),
         ec);
     if (ec) {
-      LOG(WARNING) << "DPSRVR Failed to connect: " << ec.message();
+      LOG(WARNING) << "dpsrvr Failed to connect: " << ec.message();
     }
   }
   DPMessage packet(&this->dp_send_buf_);
@@ -253,7 +259,7 @@ void proxy::dp_send_enumsession_handler() {
 }
 
 void proxy::dp_send_enumsessionreply_handler() {
-  LOG(DEBUG) << "DP Sending ENUMSESSIONREPLY";
+  LOG(DEBUG) << "dp sending ENUMSESSIONREPLY";
 
   // Received information from a host pass it on to the app
   this->dp_assert_connection();
@@ -261,7 +267,7 @@ void proxy::dp_send_enumsessionreply_handler() {
 }
 
 void proxy::dp_send_requestplayerid() {
-  LOG(DEBUG) << "DP sending REQUESTPLAYERID";
+  LOG(DEBUG) << "dp sending REQUESTPLAYERID";
   DPMessage packet(&this->dp_send_buf_);
   DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
   this->recent_request_flags_ = msg->dwFlags;
@@ -270,7 +276,7 @@ void proxy::dp_send_requestplayerid() {
 }
 
 void proxy::dp_send_addforwardrequest() {
-  LOG(DEBUG) << "DP sending ADDFORWARDREQUEST";
+  LOG(DEBUG) << "dp sending ADDFORWARDREQUEST";
   DPMessage packet(&this->dp_send_buf_);
   DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
   DPLAYI_PACKEDPLAYER* player =
@@ -311,7 +317,7 @@ void proxy::dp_default_send_handler() {
 void proxy::dp_receipt_handler(std::error_code const& ec,
                                std::size_t bytes_transmitted) {
   if (ec) {
-    LOG(WARNING) << "DP Send Error: " << ec.message();
+    LOG(WARNING) << "dp send error: " << ec.message();
   }
 }
 
@@ -348,7 +354,7 @@ void proxy::data_receive_handler(std::error_code const& ec,
         this->data_default_receive_handler();
     }
   } else {
-    LOG(WARNING) << "DATA Receive Error: " << ec.message();
+    LOG(WARNING) << "data receive error: " << ec.message();
   }
   this->data_receive();
 }
@@ -360,7 +366,7 @@ void proxy::data_default_receive_handler() {
 void proxy::data_send_handler(std::error_code const& ec,
                               std::size_t bytes_transmitted) {
   if (ec) {
-    LOG(WARNING) << "DATA Send Error: " << ec.message();
+    LOG(WARNING) << "data send error: " << ec.message();
   }
 }
 

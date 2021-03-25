@@ -21,7 +21,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
       std::experimental::net::ip::tcp::endpoint const& app_endpoint);
   void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
 
-  void deliver(std::vector<char> const& data);
+  void dp_deliver(std::vector<char> const& data);
+  void data_deliver(std::vector<char> const& data);
 
   bool operator==(proxy const& rhs);
   bool operator<(proxy const& rhs);

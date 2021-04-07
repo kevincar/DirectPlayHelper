@@ -7,8 +7,8 @@
 
 // Helper function for tests below
 TEST(interceptorTest, host_test) {
-  std::vector recv_buf(512, '\0');
-  std::vector send_buf(512, '\0');
+  std::vector<char> recv_buf(512, '\0');
+  std::vector<char> send_buf(512, '\0');
   auto dpsrvr_duration = std::chrono::seconds(5);
   auto transmission_duration = std::chrono::milliseconds(750);
   std::experimental::net::io_context io_context;

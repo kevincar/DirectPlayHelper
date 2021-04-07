@@ -6,8 +6,8 @@
 
 namespace dppl {
 proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
-             std::function<void(std::vector<char>)> dp_callback,
-             std::function<void(std::vector<char>)> data_callback)
+             std::function<void(DPProxyMessage const&)> dp_callback,
+             std::function<void(DPProxyMessage const&)> data_callback)
     : io_context_(io_context),
       proxy_type_(proxy_type),
       dp_callback_(dp_callback),
@@ -72,6 +72,14 @@ void proxy::data_deliver(std::vector<char> const& data) {
   this->data_send();
 }
 
+DWORD proxy::get_system_id() const {
+  return this->system_id_;
+}
+
+DWORD proxy::get_player_id() const {
+  return this->player_id_;
+}
+
 bool proxy::operator==(proxy const& rhs) {
   return this->system_id_ == rhs.system_id_;
 }
@@ -80,7 +88,8 @@ bool proxy::operator<(proxy const& rhs) {
   return this->system_id_ < rhs.system_id_;
 }
 
-proxy::operator int() { return this->system_id_; }
+proxy::operator DWORD() const { return this->system_id_; }
+
 /*
  ******************************************************************************
  *                                                                            *
@@ -155,7 +164,8 @@ void proxy::dp_receive_requestplayerreply() {
   } else {
     this->player_id_ = msg->dwID;
   }
-  this->dp_callback_(this->dp_recv_buf_);
+  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0});
+  this->dp_callback_(proxy_message);
 }
 
 void proxy::dp_receive_addforwardrequest_handler() {
@@ -185,7 +195,8 @@ void proxy::dp_receive_addforwardrequest_handler() {
 
 void proxy::dp_default_receive_handler() {
   LOG(DEBUG) << "data received default handler";
-  this->dp_callback_(this->dp_recv_buf_);
+  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0});
+  this->dp_callback_(proxy_message);
 }
 
 // SENDING
@@ -244,7 +255,7 @@ void proxy::dp_send_enumsession_handler() {
     LOG(DEBUG) << "dpsrvr socket connecting";
     this->dpsrvr_socket_.connect(
         std::experimental::net::ip::udp::endpoint(
-            std::experimental::net::ip::address_v4::broadcast(), 47624),
+            std::experimental::net::ip::address_v4::loopback(), 47624),
         ec);
     if (ec) {
       LOG(WARNING) << "dpsrvr Failed to connect: " << ec.message();
@@ -360,7 +371,8 @@ void proxy::data_receive_handler(std::error_code const& ec,
 }
 
 void proxy::data_default_receive_handler() {
-  this->data_callback_(this->data_recv_buf_);
+  DPProxyMessage proxy_message(this->data_recv_buf_, *this, {0, 0});
+  this->data_callback_(proxy_message);
 }
 
 void proxy::data_send_handler(std::error_code const& ec,

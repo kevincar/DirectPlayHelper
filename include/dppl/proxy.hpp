@@ -4,15 +4,17 @@
 #include <vector>
 
 #include "dppl/DPMessage.hpp"
+#include "dppl/DPProxyMessage.hpp"
 
 namespace dppl {
+class DPProxyMessage;
 class proxy : public std::enable_shared_from_this<proxy> {
  public:
   enum type { host, peer };
 
   proxy(std::experimental::net::io_context* io_context, type proxy_type,
-        std::function<void(std::vector<char>)> dp_callback,
-        std::function<void(std::vector<char>)> data_callback);
+        std::function<void(DPProxyMessage const&)> dp_callback,
+        std::function<void(DPProxyMessage const&)> data_callback);
 
   void stop();
 
@@ -24,9 +26,12 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void dp_deliver(std::vector<char> const& data);
   void data_deliver(std::vector<char> const& data);
 
+  DWORD get_system_id() const;
+  DWORD get_player_id() const;
+
   bool operator==(proxy const& rhs);
   bool operator<(proxy const& rhs);
-  operator int();
+  operator DWORD() const;
 
  private:
   /* Direct Play Socket Processes */
@@ -60,8 +65,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
                          std::size_t bytes_transmitted);
 
   /* Proxy Attributes */
-  int system_id_ = -1;
-  int player_id_ = -1;
+  DWORD system_id_ = 0;
+  DWORD player_id_ = 0;
   int recent_request_flags_ = -1;
   type proxy_type_;
 
@@ -78,8 +83,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   std::experimental::net::ip::udp::socket dpsrvr_socket_;
   std::experimental::net::ip::udp::socket data_socket_;
 
-  std::function<void(std::vector<char>)> dp_callback_;
-  std::function<void(std::vector<char>)> data_callback_;
+  std::function<void(DPProxyMessage const&)> dp_callback_;
+  std::function<void(DPProxyMessage const&)> data_callback_;
 };
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_PROXY_HPP_

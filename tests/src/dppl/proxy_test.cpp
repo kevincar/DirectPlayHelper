@@ -14,13 +14,13 @@ TEST(ProxyTest, constructor_host) {
   // issues. Because these will asynchronously start waiting for data, we'll
   // create a 750ms timer that will shut everything down
 
-  ASSERT_NO_THROW({
+  EXPECT_NO_THROW({
     std::experimental::net::io_context io_context;
     std::experimental::net::steady_timer timer(io_context,
                                                std::chrono::milliseconds(750));
 
-    std::function<void(std::vector<char>)> callback =
-        [](std::vector<char> buf) {};
+    std::function<void(dppl::DPProxyMessage const&)> callback =
+        [](dppl::DPProxyMessage const& proxy_message) {};
     std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
         &io_context, dppl::proxy::type::host, callback, callback);
 
@@ -35,13 +35,13 @@ TEST(ProxyTest, constructor_host) {
 }
 
 TEST(ProxyTest, constructor_peer) {
-  ASSERT_NO_THROW({
+  EXPECT_NO_THROW({
     std::experimental::net::io_context io_context;
     std::experimental::net::steady_timer timer(io_context,
                                                std::chrono::milliseconds(750));
 
-    std::function<void(std::vector<char>)> callback =
-        [](std::vector<char> buf) {};
+    std::function<void(dppl::DPProxyMessage const&)> callback =
+        [](dppl::DPProxyMessage const&) {};
     std::shared_ptr<dppl::proxy> proxy = std::make_shared<dppl::proxy>(
         &io_context, dppl::proxy::type::peer, callback, callback);
 
@@ -76,14 +76,15 @@ TEST(ProxyTest, dp_initialization_host) {
   std::function<void(std::error_code const&)> dpsrvr_timer_callback;
   std::function<void(std::error_code const&)> internet_timer_callback;
   std::function<void(std::vector<char> const&)> send_to_server;
-  std::function<void(std::vector<char>)> proxy_dp_callback =
-      [&](std::vector<char> buf) {
+  std::function<void(dppl::DPProxyMessage const&)> proxy_dp_callback =
+      [&](dppl::DPProxyMessage const& buf) {
         // We'll use the AppSimulator::process_message to simulate a response
         // over the internet
         LOG(DEBUG) << "Proxy received message from the app";
         // Handl messages with player data that needs to have socket info
         // resolved
-        dppl::DPMessage response(&buf);
+        std::vector<char> dp_msg = buf.get_dp_msg();
+        dppl::DPMessage response(&dp_msg);
         switch (response.header()->command) {
           case DPSYS_SUPERENUMPLAYERSREPLY: {
             DPMSG_SUPERENUMPLAYERSREPLY* msg =
@@ -120,12 +121,13 @@ TEST(ProxyTest, dp_initialization_host) {
 
         LOG(DEBUG) << "Simulating sending this data over the internet to the "
                       "server/other player";
-        send_to_server(buf);
+        send_to_server(buf.to_vector());
       };
 
-  std::function<void(std::vector<char>)> proxy_data_callback =
-      [&](std::vector<char> buf) {
+  std::function<void(dppl::DPProxyMessage const&)> proxy_data_callback =
+      [&](dppl::DPProxyMessage const& message) {
         LOG(DEBUG) << "Proxy_test received a data message from the app";
+        std::vector<char> buf = message.get_dp_msg();
         DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
         ASSERT_EQ(*ptr, player_id);
         proxy->stop();
@@ -154,7 +156,9 @@ TEST(ProxyTest, dp_initialization_host) {
   internet_timer_callback = [&](std::error_code const& ec) {
     if (!ec) {
       dpsrvr_timer.cancel();
-      send_buf = dppl::AppSimulator::process_message(recv_buf);
+      dppl::DPProxyMessage proxy_message(recv_buf);
+      send_buf =
+          dppl::AppSimulator::process_message(proxy_message.get_dp_msg());
       LOG(DEBUG) << "Received response from simulated player, delivering back "
                     "to the app through proxy";
       proxy->dp_deliver(send_buf);
@@ -194,9 +198,11 @@ TEST(ProxyTest, dp_initialization_join) {
   std::function<void(std::error_code const&)> internet_callback =
       [&](std::error_code const& ec) {
         if (!ec) {
-          dppl::DPMessage request(&recv_buf);
+          dppl::DPProxyMessage proxy_message(recv_buf);
+          std::vector<char> dp_message = proxy_message.get_dp_msg();
+          dppl::DPMessage request(&dp_message);
           bool send_to_data = request.header()->command == DPSYS_CREATEPLAYER;
-          send_buf = dppl::AppSimulator::process_message(recv_buf);
+          send_buf = dppl::AppSimulator::process_message(dp_message);
           LOG(DEBUG)
               << "Received a message from the server. Sending to app via proxy";
           dppl::DPMessage response(&send_buf);
@@ -270,12 +276,15 @@ TEST(ProxyTest, dp_initialization_join) {
     dppl::DPMessage request(&buffer);
     proxy->set_return_addr(
         request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
-    send_to_server(buffer);
+    dppl::DPProxyMessage proxy_message(buffer, {0, 0}, {0, 0});
+    std::vector<char> proxy_message_data = proxy_message.to_vector();
+    send_to_server(proxy_message_data);
   };
-  std::function<void(std::vector<char>)> proxy_dp_callback =
-      [&](std::vector<char> buffer) {
+  std::function<void(dppl::DPProxyMessage const&)> proxy_dp_callback =
+      [&](dppl::DPProxyMessage const& message) {
         LOG(DEBUG) << "Received message from proxy";
-        dppl::DPMessage request(&buffer);
+        std::vector<char> dp_message = message.get_dp_msg();
+        dppl::DPMessage request(&dp_message);
         switch (request.header()->command) {
           case DPSYS_REQUESTPLAYERID: {
             DPMSG_REQUESTPLAYERID* msg =
@@ -293,10 +302,10 @@ TEST(ProxyTest, dp_initialization_join) {
                        << request.header()->command;
             return;
         }
-        send_to_server(buffer);
+        send_to_server(message.to_vector());
       };
-  std::function<void(std::vector<char>)> proxy_data_callback =
-      [&](std::vector<char> buffer) {
+  std::function<void(dppl::DPProxyMessage const&)> proxy_data_callback =
+      [&](dppl::DPProxyMessage const& message) {
         LOG(DEBUG) << "Received data message from proxy";
       };
 
@@ -320,13 +329,14 @@ TEST(ProxyTest, join) {
   std::vector<char> response_data(512, '\0');
   std::shared_ptr<dppl::proxy> host_proxy = std::make_shared<dppl::proxy>(
       &io_context, dppl::proxy::type::host,
-      [&](std::vector<char> buffer) {
-        dppl::DPMessage request(&buffer);
+      [&](dppl::DPProxyMessage const& message) {
+        std::vector<char> dp_message = message.get_dp_msg();
+        dppl::DPMessage request(&dp_message);
         EXPECT_EQ(request.header()->command, 0x5);
         host_proxy->stop();
         std::experimental::net::defer(io_context, [&]() { io_context.stop(); });
       },
-      [&](std::vector<char> buffer) {});
+      [&](dppl::DPProxyMessage const& message) {});
 
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
     LOG(DEBUG) << "Direct Play Message Received";
@@ -385,9 +395,10 @@ TEST(ProxyTest, host) {
                                              std::chrono::seconds(5));
   std::shared_ptr<dppl::proxy> peer_proxy = std::make_shared<dppl::proxy>(
       &io_context, dppl::proxy::type::peer,
-      [&](std::vector<char> buffer) {
+      [&](dppl::DPProxyMessage const& message) {
         LOG(DEBUG) << "Peer proxy received a response rom the app";
-        dppl::DPMessage response(&buffer);
+        std::vector<char> dp_message = message.get_dp_msg();
+        dppl::DPMessage response(&dp_message);
         peer_proxy->set_return_addr(
             response
                 .get_return_addr<std::experimental::net::ip::tcp::endpoint>());
@@ -421,7 +432,7 @@ TEST(ProxyTest, host) {
             break;
         }
       },
-      [&](std::vector<char> buffer) {});
+      [&](dppl::DPProxyMessage const& message) {});
 
   // Ensure that the DirectPlayServer Doesn't interfere with hosting.
   dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {

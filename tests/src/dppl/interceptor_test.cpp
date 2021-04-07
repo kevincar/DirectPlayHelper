@@ -1,142 +1,185 @@
-#include "dppl/interceptor.hpp"
-
+#include "dppl/AppSimulator.hpp"
 #include "dppl/hardware_test.hpp"
+#include "dppl/interceptor.hpp"
 #include "experimental/net"
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
 // Helper function for tests below
-std::vector<char> process_message(std::vector<char> const& buffer) {
-  LOG(DEBUG) << "Processing message";
-  std::vector<char> retval(buffer.begin(), buffer.end());
-  GUID app = {0xbf0613c0, 0xde79, 0x11d0, 0x99, 0xc9, 0x00,
-              0xa0,       0x24,   0x76,   0xad, 0x4b};
-  GUID instance = {0x87cdc14a, 0x15f0, 0x4721, 0x8f, 0x94, 0x76,
-                   0xc8,       0x4c,   0xef,   0x3c, 0xbb};
-  dppl::DPMessage packet(&retval);
-  std::u16string session_name = u"Sample Session Name:JK1MP:m10.jkl";
-  int session_name_byte_length =
-      (session_name.size() + 1) * sizeof(std::u16string::value_type);
+TEST(interceptorTest, host_test) {
+  std::vector recv_buf(512, '\0');
+  std::vector send_buf(512, '\0');
+  auto dpsrvr_duration = std::chrono::seconds(5);
+  auto transmission_duration = std::chrono::milliseconds(750);
+  std::experimental::net::io_context io_context;
+  std::experimental::net::steady_timer dpsrvr_timer(io_context,
+                                                    dpsrvr_duration);
+  std::experimental::net::steady_timer internet_timer(io_context,
+                                                      transmission_duration);
+  std::shared_ptr<dppl::interceptor> interceptor;
+  std::vector<uint8_t> enumsession = {
+      0x34, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
+      0x61, 0x79, 0x02, 0x00, 0x0e, 0x00, 0xc0, 0x13, 0x06, 0xbf, 0x79,
+      0xde, 0xd0, 0x11, 0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b,
+      0x00, 0x00, 0x00, 0x00, 0x52, 0x00, 0x00, 0x00,
+  };
 
-  switch (packet.header()->command) {
-    case DPSYS_ENUMSESSIONSREPLY: {
-      std::vector<uint8_t> temp = {
-          0xa6, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
-          0x61, 0x79, 0x01, 0x00, 0x0e, 0x00, 0x50, 0x00, 0x00, 0x00, 0xc0,
-          0x00, 0x00, 0x00, 0x4a, 0xc1, 0xcd, 0x87, 0xf0, 0x15, 0x21, 0x47,
-          0x8f, 0x94, 0x76, 0xc8, 0x4c, 0xef, 0x3c, 0xbb, 0xc0, 0x13, 0x06,
-          0xbf, 0x79, 0xde, 0xd0, 0x11, 0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76,
-          0xad, 0x4b, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa9, 0xfd, 0x95, 0x01,
-          0x00, 0x00, 0x00, 0x00, 0xa4, 0x00, 0x52, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x0a, 0x00, 0x08, 0x00, 0xb4, 0x00, 0x00, 0x00, 0x5c, 0x00,
-          0x00, 0x00, 0x4b, 0x00, 0x65, 0x00, 0x76, 0x00, 0x69, 0x00, 0x6e,
-          0x00, 0x27, 0x00, 0x73, 0x00, 0x20, 0x00, 0x47, 0x00, 0x61, 0x00,
-          0x6d, 0x00, 0x65, 0x00, 0x3a, 0x00, 0x4a, 0x00, 0x4b, 0x00, 0x31,
-          0x00, 0x4d, 0x00, 0x50, 0x00, 0x3a, 0x00, 0x6d, 0x00, 0x31, 0x00,
-          0x30, 0x00, 0x2e, 0x00, 0x6a, 0x00, 0x6b, 0x00, 0x6c, 0x00, 0x00,
-          0x00};
-      retval.assign(temp.begin(), temp.end());
-    } break;
-    case DPSYS_ENUMSESSIONS: {
-      LOG(DEBUG) << "Handing ENUMSESSIONS";
-      dppl::DPMessage response(&retval);
-      response.header()->cbSize = sizeof(DPMSG_HEADER) +
-                                  sizeof(DPMSG_ENUMSESSIONSREPLY) +
-                                  session_name_byte_length;
-      response.header()->token = 0xfab;
-      // retrn addr doesn't matter here since it will need to be
-      // replaced anyway
-      response.set_signature();
-      response.header()->command = DPSYS_ENUMSESSIONSREPLY;
-      response.header()->version = 0xe;
-      DPMSG_ENUMSESSIONSREPLY* msg =
-          response.message<DPMSG_ENUMSESSIONSREPLY>();
-      DPSESSIONDESC2* session_desc = reinterpret_cast<DPSESSIONDESC2*>(msg);
-      session_desc->dwSize = sizeof(DPSESSIONDESC2);
-      session_desc->dwFlags =
-          DPSESSIONDESCFLAGS::useping | DPSESSIONDESCFLAGS::noplayerupdates;
-      session_desc->guidInstance = instance;
-      session_desc->guidApplication = app;
-      session_desc->dwMaxPlayers = 4;
-      session_desc->dpSessionID = 0x0195fda9;
-      session_desc->dwUser1 = 0x005200a4;
-      session_desc->dwUser3 = 0x0008000a;
-      session_desc->dwUser4 = 0xb4;
-      msg->dwNameOffset = 92;
-      std::copy(session_name.begin(), session_name.end() + 1,
-                reinterpret_cast<char16_t*>(&msg->szSessionName));
-      retval.resize(response.header()->cbSize);
-    } break;
-    case DPSYS_REQUESTPLAYERID: {
-      retval.resize(512, '\0');
-      LOG(DEBUG) << "Handling REQUESTPLAYERID";
-      dppl::DPMessage response(&retval);
-      response.header()->cbSize =
-          sizeof(DPMSG_HEADER) + sizeof(DPMSG_REQUESTPLAYERREPLY);
-      response.header()->token = 0xfab;
-      response.set_signature();
-      response.header()->command = DPSYS_REQUESTPLAYERREPLY;
-      response.header()->version = 0xe;
-      DPMSG_REQUESTPLAYERID* reqmsg = packet.message<DPMSG_REQUESTPLAYERID>();
-      DPMSG_REQUESTPLAYERREPLY* msg =
-          response.message<DPMSG_REQUESTPLAYERREPLY>();
-      if (reqmsg->dwFlags &
-          static_cast<int>(REQUESTPLAYERIDFLAGS::issystemplayer)) {
-        msg->dwID = 0x197fdad;
-      } else {
-        msg->dwID = 0x194fdac;
-      }
-      retval.resize(response.header()->cbSize);
-    } break;
-    case DPSYS_CREATEPLAYER: {
-      retval.resize(512, '\0');
-      LOG(DEBUG)
-          << "Creting player... End of initialization protocol... NICE :)";
-    } break;
-    case DPSYS_ADDFORWARDREQUEST: {
-      LOG(DEBUG) << "Handling ADDFORWARDREQUEST";
-      std::vector<uint8_t> data = {
-          0x69, 0x01, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
-          0x61, 0x79, 0x29, 0x00, 0x0e, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x24, 0x00, 0x00, 0x00, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x50, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x4a, 0xc1,
-          0xcd, 0x87, 0xf0, 0x15, 0x21, 0x47, 0x8f, 0x94, 0x76, 0xc8, 0x4c,
-          0xef, 0x3c, 0xbb, 0xc0, 0x13, 0x06, 0xbf, 0x79, 0xde, 0xd0, 0x11,
-          0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b, 0x04, 0x00, 0x00,
-          0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0xa9, 0xfd, 0x95, 0x01, 0x00, 0x00, 0x00, 0x00, 0xa4,
-          0x00, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x08, 0x00,
-          0xb4, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x65, 0x00, 0x76, 0x00, 0x69,
-          0x00, 0x6e, 0x00, 0x27, 0x00, 0x73, 0x00, 0x20, 0x00, 0x47, 0x00,
-          0x61, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x3a, 0x00, 0x4a, 0x00, 0x4b,
-          0x00, 0x31, 0x00, 0x4d, 0x00, 0x50, 0x00, 0x3a, 0x00, 0x6d, 0x00,
-          0x31, 0x00, 0x30, 0x00, 0x2e, 0x00, 0x6a, 0x00, 0x6b, 0x00, 0x6c,
-          0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
-          0xad, 0xfd, 0x97, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
-          0x00, 0x20, 0x02, 0x00, 0x08, 0xfc, 0xc0, 0xa8, 0x01, 0x47, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e,
-          0xc0, 0xa8, 0x01, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x10, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0xa9, 0xfd,
-          0x94, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x20,
-          0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-          0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0xa8, 0xfd, 0x94, 0x01,
-          0x05, 0x00, 0x00, 0x00, 0xa9, 0xfd, 0x94, 0x01, 0x4b, 0x00, 0x65,
-          0x00, 0x76, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x00, 0x00, 0x20, 0x02,
-          0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-      retval.assign(data.begin(), data.end());
-    } break;
-    default:
-      LOG(WARNING) << "Unhandled Command: " << packet.header()->command;
-  }
-  return retval;
+  std::function<void(std::error_code const& ec)> dpsrvr_callback =
+      [&](std::error_code const& ec) {
+        if (!ec) {
+          LOG(DEBUG) << "dpsrver timer sending data";
+          send_buf.assign(enumsession.begin(), enumsession.end());
+          dppl::DPProxyMessage proxy_message(send_buf, {0, 0}, {0, 0});
+          interceptor->dp_deliver(proxy_message.to_vector());
+          dpsrvr_timer.expires_at(std::chrono::steady_clock::now() +
+                                  dpsrvr_duration);
+          dpsrvr_timer.async_wait(dpsrvr_callback);
+        } else {
+          LOG(DEBUG) << "dpsrvr timer error: " << ec.message();
+        }
+      };
+
+  std::function<void(std::error_code const&)> internet_callback =
+      [&](std::error_code const& ec) {
+        if (!ec) {
+          dppl::DPProxyMessage proxy_message(recv_buf);
+          std::vector<char> dp_message = proxy_message.get_dp_msg();
+          send_buf = dppl::AppSimulator::process_message(dp_message);
+          // Swap the to and from IDs
+          dppl::DPProxyMessage send_proxy_message(send_buf,
+                                                  proxy_message.get_from_ids(),
+                                                  proxy_message.get_to_ids());
+
+          dppl::DPMessage request(&send_buf);
+          LOG(DEBUG) << "Received request from joining peer (id "
+                     << send_proxy_message.get_from_ids().systemID
+                     << "). Sending back to interceptor. Received: "
+                     << request.header()->command;
+          switch (request.header()->command) {
+            case DPSYS_REQUESTPLAYERID:
+              // Nothing to handle
+              break;
+            case DPSYS_ADDFORWARDREQUEST:
+              // Nothing to handle
+              break;
+            case DPSYS_CREATEPLAYER:
+              // Nothing to handle
+              break;
+            default:
+              LOG(DEBUG) << "Unhandled message from server "
+                         << request.header()->command;
+              return;
+          }
+          interceptor->dp_deliver(send_proxy_message.to_vector());
+        } else {
+          LOG(DEBUG) << "internet timer error: " << ec.message();
+        }
+      };
+
+  std::function<void(std::vector<char>)> send_to_peer =
+      [&](std::vector<char> buffer) {
+        LOG(DEBUG) << "Sending over the internet back to the peer";
+        recv_buf = buffer;
+        internet_timer.expires_at(std::chrono::steady_clock::now() +
+                                  transmission_duration);
+        internet_timer.async_wait(internet_callback);
+      };
+
+  std::function<void(std::vector<char>)> dp_callback =
+      [&](std::vector<char> buffer) {
+        dppl::DPProxyMessage proxy_message(buffer);
+        LOG(DEBUG) << "interceptor dp callback from "
+                   << proxy_message.get_from_ids().systemID;
+        std::vector<char> dp_message = proxy_message.get_dp_msg();
+        dppl::DPMessage response(&dp_message);
+        if (response.header()->command == DPSYS_ENUMSESSIONSREPLY) {
+          dpsrvr_timer.cancel();
+        }
+        // Simulate the send accross the internet!
+        send_to_peer(buffer);
+      };
+
+  std::function<void(std::vector<char>)> data_callback =
+      [&](std::vector<char> buffer) {
+        LOG(DEBUG) << "interceptor data callback";
+        dppl::DPProxyMessage proxy_message(buffer);
+        std::vector<char> data_message = proxy_message.get_dp_msg();
+        DWORD* id = reinterpret_cast<DWORD*>(&(*data_message.begin()));
+        ASSERT_EQ(proxy_message.get_from_ids().playerID, *id);
+        std::experimental::net::defer([&]() { io_context.stop(); });
+      };
+
+  interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
+                                                    data_callback);
+  dppl::AppSimulator app(&io_context, true);
+  dpsrvr_timer.async_wait(dpsrvr_callback);
+  io_context.run();
+}
+
+TEST(interceptorTest, join_test) {
+  auto internet_delay = std::chrono::milliseconds(750);
+  std::vector<char> recv_buf;
+  std::vector<char> send_buf;
+  std::experimental::net::io_context io_context;
+  std::experimental::net::steady_timer internet_timer(io_context,
+                                                      internet_delay);
+  std::shared_ptr<dppl::interceptor> interceptor;
+  std::function<void(std::error_code const&)> internet_callback =
+      [&](std::error_code const& ec) {
+        if (!ec) {
+          dppl::DPProxyMessage recv_proxy_message(recv_buf);
+          std::vector<char> recv_dp_msg = recv_proxy_message.get_dp_msg();
+          send_buf = dppl::AppSimulator::process_message(recv_dp_msg);
+          dppl::DPMessage recv_dp_message(&recv_dp_msg);
+          dppl::DPMessage send_dp_message(&send_buf);
+          dppl::DPProxyMessage send_proxy_message(
+              send_buf, recv_proxy_message.get_from_ids(),
+              recv_proxy_message.get_to_ids());
+
+          // End of test check
+          if (recv_dp_message.header()->command == DPSYS_CREATEPLAYER) {
+            DWORD* ptr = reinterpret_cast<DWORD*>(&(*send_buf.begin()));
+            DWORD data_to_id = *(++ptr);
+            DWORD pm_to_id = send_proxy_message.get_to_ids().playerID;
+            ASSERT_EQ(data_to_id, pm_to_id);
+            std::experimental::net::defer([&]() { io_context.stop(); });
+          }
+          LOG(DEBUG) << "Received data from host. Command: "
+                     << send_dp_message.header()->command;
+          interceptor->dp_deliver(send_proxy_message.to_vector());
+        } else {
+          LOG(DEBUG) << "Internet timer error: " << ec.message();
+        }
+      };
+  std::function<void(std::vector<char>)> send_to_internet =
+      [&](std::vector<char> buffer) {
+        LOG(DEBUG) << "Sending data over internet...";
+        recv_buf = buffer;
+        internet_timer.expires_at(internet_timer.expiry() + internet_delay);
+        internet_timer.async_wait(internet_callback);
+      };
+  std::function<void(std::vector<char>)> dp_callback =
+      [&](std::vector<char> buffer) {
+        dppl::DPProxyMessage proxy_message(buffer);
+        std::vector<char> dp_msg = proxy_message.get_dp_msg();
+        dppl::DPMessage dp_message(&dp_msg);
+        if (dp_message.header()->command > DPSYS_CREATEPLAYERVERIFY) {
+          dp_message = dppl::DPMessage(&buffer);
+          proxy_message = dppl::DPProxyMessage(buffer, {0, 0}, {0, 0});
+        }
+        LOG(DEBUG) << "interceptor dp callback. Command: "
+                   << dp_message.header()->command;
+        send_to_internet(proxy_message.to_vector());
+      };
+  std::function<void(std::vector<char>)> data_callback =
+      [&](std::vector<char> buffer) {
+        LOG(DEBUG) << "interceptor data callback";
+      };
+  interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
+                                                    data_callback);
+  dppl::AppSimulator app(&io_context, false);
+  io_context.run();
 }
 
 TEST(interceptorTest, join) {
@@ -161,8 +204,7 @@ TEST(interceptorTest, join) {
         // Simulate sending this off to the internet
         (*send_to_internet)(buffer);
       },
-      [&](std::vector<char> const& buffer) {
-      });
+      [&](std::vector<char> const& buffer) {});
 
   send_to_internet =
       std::make_shared<std::function<void(std::vector<char> const&)>>(
@@ -174,9 +216,9 @@ TEST(interceptorTest, join) {
                 LOG(DEBUG) << "Timer failed: " << ec.message();
                 return;
               }
-              response_data = process_message(request_data);
+              response_data = dppl::AppSimulator::process_message(request_data);
               LOG(DEBUG) << "Got a response from the internet";
-              interceptor.deliver(response_data);
+              interceptor.dp_deliver(response_data);
               timer.expires_at(timer.expiry() + std::chrono::milliseconds(100));
             });
           });
@@ -225,8 +267,7 @@ TEST(interceptorTest, host) {
         // Sned off to the interet
         (*send_to_internet)(buffer);
       },
-      [&](std::vector<char> const& buffer) {
-      });
+      [&](std::vector<char> const& buffer) {});
 
   // function to send stuff off to the internet
   send_to_internet =
@@ -241,7 +282,7 @@ TEST(interceptorTest, host) {
                 LOG(DEBUG) << "Timer Failed: " << ec.message();
                 return;
               }
-              response_data = process_message(request_data);
+              response_data = dppl::AppSimulator::process_message(request_data);
               LOG(DEBUG) << "Incomming data from the internet";
 
               // If we received an ENUMSESSIONREPLY let's stop our timer
@@ -249,7 +290,7 @@ TEST(interceptorTest, host) {
               if (response.header()->command == DPSYS_ENUMSESSIONSREPLY) {
                 dpsrvr_timer.cancel();
               }
-              interceptor.deliver(response_data);
+              interceptor.dp_deliver(response_data);
               timer.expires_at(timer.expiry() + std::chrono::milliseconds(
                                                     simulated_internet_delay));
             });
@@ -275,7 +316,7 @@ TEST(interceptorTest, host) {
           response_data.resize(request.header()->cbSize);
 
           LOG(DEBUG) << "Timer: Sending sample ENUMSESSIONS request";
-          interceptor.deliver(response_data);
+          interceptor.dp_deliver(response_data);
           dpsrvr_timer.expires_at(dpsrvr_timer.expiry() +
                                   std::chrono::seconds(5));
           dpsrvr_timer.async_wait(timer_callback);

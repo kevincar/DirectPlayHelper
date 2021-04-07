@@ -14,22 +14,36 @@ class interceptor {
               std::function<void(std::vector<char> const&)> dp_forward,
               std::function<void(std::vector<char> const&)> data_forward);
 
-  void deliver(std::vector<char> const& buffer);
+  void dp_deliver(std::vector<char> const& buffer);
+  void data_deliver(std::vector<char> const& buffer);
 
  private:
   /* Proxy Helper Funcs */
   inline bool has_proxies();
-  std::shared_ptr<proxy> find_peer_proxy(int const& id);
+  std::shared_ptr<proxy> find_peer_proxy(DWORD const& id);
+  std::shared_ptr<proxy> find_peer_proxy_by_playerid(DWORD const& id);
   bool has_free_peer_proxy();
   std::shared_ptr<proxy> get_free_peer_proxy();
   void direct_play_server_callback(std::vector<char> const& buffer);
-  void proxy_dp_callback(std::vector<char> const& buffer);
-  void proxy_data_callback(std::vector<char> const& buffer);
+  void proxy_dp_callback(DPProxyMessage const& message);
+  void proxy_data_callback(DPProxyMessage const& message);
 
-  /* handlers for messages from above */
-  void enumsessions_from_server_handler();
-  void superenumplayersreply_from_server_handler();
+  /* handlers for messages from remotes */
+  void dp_send_enumsessions();
+  void dp_send_requestplayerid(DWORD id);
+  void dp_send_requestplayerreply();
+  void dp_send_createplayer(DWORD id);
+  void dp_send_addforwardrequest();
+  void dp_send_superenumplayersreply();
   std::size_t register_player(DPLAYI_SUPERPACKEDPLAYER* player);
+
+  /* handlers for messages from local */
+  void dp_recv_requestplayerid();
+  void dp_recv_superenumplayersreply();
+
+  DWORD system_id_ = 0;
+  DWORD player_id_ = 0;
+  int recent_player_id_flags_ = -1;
 
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;

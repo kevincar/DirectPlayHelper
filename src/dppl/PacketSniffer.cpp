@@ -13,7 +13,9 @@ PacketSniffer::PacketSniffer(
 
   std::string filter_string = std::string("ip src ") +
                               iface.addresses().ip_addr.to_string() +
-                              " and udp port " + std::to_string(kPort_);
+                              " and ip dst 255.255.255.255" +
+                              " and udp port " +
+                              std::to_string(kPort_);
   this->sniffer_->set_filter(filter_string);
 
   this->start_sniffing();

@@ -252,7 +252,7 @@ TEST(ProxyTest, dp_initialization_join) {
                 ASSERT_EQ(*id, player_id);
                 proxy->stop();
                 std::experimental::net::post([&]() { io_context.stop(); });
-                // return proxy->data_deliver(send_buf);
+                return proxy->data_deliver(send_buf);
               } else {
                 return;
               }

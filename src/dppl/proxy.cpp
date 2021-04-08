@@ -72,13 +72,9 @@ void proxy::data_deliver(std::vector<char> const& data) {
   this->data_send();
 }
 
-DWORD proxy::get_system_id() const {
-  return this->system_id_;
-}
+DWORD proxy::get_system_id() const { return this->system_id_; }
 
-DWORD proxy::get_player_id() const {
-  return this->player_id_;
-}
+DWORD proxy::get_player_id() const { return this->player_id_; }
 
 bool proxy::operator==(proxy const& rhs) {
   return this->system_id_ == rhs.system_id_;
@@ -133,7 +129,8 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    PILOG(DEBUG) << "dp received message: " << packet.header()->command << PELOG;
+    PILOG(DEBUG) << "dp received message: " << packet.header()->command
+                 << PELOG;
     switch (packet.header()->command) {
       case DPSYS_REQUESTPLAYERID: {
         DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
@@ -146,8 +143,15 @@ void proxy::dp_receive_handler(std::error_code const& ec,
       case DPSYS_ADDFORWARDREQUEST: {
         this->dp_receive_addforwardrequest_handler();
       } break;
-      default:
+      case DPSYS_ENUMSESSIONSREPLY:
+      case DPSYS_CREATEPLAYER:
+      case DPSYS_SUPERENUMPLAYERSREPLY:
         this->dp_default_receive_handler();
+        break;
+      default:
+        LOG(WARNING) << TXCR << TXFB
+                     << "dp proxy received an unrecognized command "
+                     << packet.header()->command << TXRS;
     }
   } else {
     LOG(WARNING) << "dp receive error: " << ec.message();
@@ -219,8 +223,15 @@ void proxy::dp_send() {
       break;
     case DPSYS_CREATEPLAYER:
       this->dp_send_createplayer_handler();
-    default:
+      break;
+    case DPSYS_REQUESTPLAYERREPLY:
+    case DPSYS_SUPERENUMPLAYERSREPLY:
       this->dp_default_send_handler();
+      break;
+    default:
+      LOG(WARNING) << TXCR << TXFB
+                   << "dp proxy received an unrecognized command "
+                   << packet.header()->command << TXRS;
   }
 }
 

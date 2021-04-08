@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
 #else
@@ -571,14 +571,12 @@ typedef struct {
 #define DPSYS_PLAYERMESSAGE 0x000A
 #pragma pack(push, 1)
 typedef struct {
-  union {
-    DWORD dwSize;   //  Indicates the size of the message (&)
-                    //  operation with the token field and
-                    //  0x000FFFFF.
-    DWORD dwToken;  //  Describes high-level message
-                    //  characteristics. (&) operation with the
-                    //  size field and 0xFFF00000. (FAB, CAB, BAB)
-  };
+  DWORD dwSize : 20;     //  Indicates the size of the message (&)
+                         //  operation with the token field and
+                         //  0x000FFFFF.
+  DWORD dwToken : 12;    //  Describes high-level message
+                         //  characteristics. (&) operation with the
+                         //  size field and 0xFFF00000. (FAB, CAB, BAB)
   sockaddr_in sockaddr;  //  Not used to transmit data. This field
                          //  is a placeholder within the packet to
                          //  be used by the sender and the receiver

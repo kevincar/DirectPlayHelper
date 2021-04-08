@@ -7,6 +7,11 @@
 #include "dppl/dplay.h"
 #include "dppl/proxy.hpp"
 #include "experimental/net"
+
+#define IOLOG(X) LOG(X) << TXCY
+#define IILOG(X) LOG(X) << TXCG
+#define IELOG TXRS
+
 namespace dppl {
 class interceptor {
  public:

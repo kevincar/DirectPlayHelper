@@ -1,10 +1,20 @@
 #ifndef INCLUDE_DPPL_PROXY_HPP_
 #define INCLUDE_DPPL_PROXY_HPP_
+#define TXCR "\u001b[31m"
+#define TXCG "\u001b[32m"
+#define TXCY "\u001b[33m"
+#define TXFB "\u001b[1m"
+#define TXRS "\u001b[0m"
+
 #include <experimental/net>
 #include <vector>
 
 #include "dppl/DPMessage.hpp"
 #include "dppl/DPProxyMessage.hpp"
+
+#define POLOG(X) LOG(X) << TXCY << TXFB
+#define PILOG(X) LOG(X) << TXCG << TXFB
+#define PELOG TXRS
 
 namespace dppl {
 class DPProxyMessage;

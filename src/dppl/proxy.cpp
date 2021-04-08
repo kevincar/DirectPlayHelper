@@ -133,7 +133,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    LOG(DEBUG) << "dp received message: " << packet.header()->command;
+    PILOG(DEBUG) << "dp received message: " << packet.header()->command << PELOG;
     switch (packet.header()->command) {
       case DPSYS_REQUESTPLAYERID: {
         DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
@@ -156,7 +156,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
 }
 
 void proxy::dp_receive_requestplayerreply() {
-  LOG(DEBUG) << "dp receive REQUESTPLAYERREPLY";
+  PILOG(DEBUG) << "dp receive REQUESTPLAYERREPLY" << PELOG;
   DPMessage packet(&this->dp_recv_buf_);
   DPMSG_REQUESTPLAYERREPLY* msg = packet.message<DPMSG_REQUESTPLAYERREPLY>();
   if (this->recent_request_flags_ & REQUESTPLAYERIDFLAGS::issystemplayer) {
@@ -169,7 +169,7 @@ void proxy::dp_receive_requestplayerreply() {
 }
 
 void proxy::dp_receive_addforwardrequest_handler() {
-  LOG(DEBUG) << "dp receive handling ADDFORWARDREQUEST";
+  PILOG(DEBUG) << "dp receive handling ADDFORWARDREQUEST" << PELOG;
   DPMessage packet(&this->dp_recv_buf_);
   DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
   DPLAYI_PACKEDPLAYER* player_data =
@@ -203,7 +203,7 @@ void proxy::dp_default_receive_handler() {
 
 void proxy::dp_send() {
   DPMessage packet(&this->dp_send_buf_);
-  LOG(DEBUG) << "dp sending message " << packet.header()->command;
+  POLOG(DEBUG) << "dp sending message " << packet.header()->command << PELOG;
   switch (packet.header()->command) {
     case DPSYS_ENUMSESSIONS:
       this->dp_send_enumsession_handler();
@@ -247,12 +247,12 @@ void proxy::dp_assert_connection() {
 }
 
 void proxy::dp_send_enumsession_handler() {
-  LOG(DEBUG) << "dpsrvr sending ENUMSESSIONS";
+  POLOG(DEBUG) << "dpsrvr sending ENUMSESSIONS" << PELOG;
 
   std::error_code ec;
   this->dpsrvr_socket_.remote_endpoint(ec);
   if (ec) {
-    LOG(DEBUG) << "dpsrvr socket connecting";
+    POLOG(DEBUG) << "dpsrvr socket connecting" << PELOG;
     this->dpsrvr_socket_.connect(
         std::experimental::net::ip::udp::endpoint(
             std::experimental::net::ip::address_v4::loopback(), 47624),
@@ -270,7 +270,7 @@ void proxy::dp_send_enumsession_handler() {
 }
 
 void proxy::dp_send_enumsessionreply_handler() {
-  LOG(DEBUG) << "dp sending ENUMSESSIONREPLY";
+  POLOG(DEBUG) << "dp sending ENUMSESSIONREPLY" << PELOG;
 
   // Received information from a host pass it on to the app
   this->dp_assert_connection();
@@ -278,7 +278,7 @@ void proxy::dp_send_enumsessionreply_handler() {
 }
 
 void proxy::dp_send_requestplayerid() {
-  LOG(DEBUG) << "dp sending REQUESTPLAYERID";
+  POLOG(DEBUG) << "dp sending REQUESTPLAYERID" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
   DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
   this->recent_request_flags_ = msg->dwFlags;
@@ -287,7 +287,7 @@ void proxy::dp_send_requestplayerid() {
 }
 
 void proxy::dp_send_addforwardrequest() {
-  LOG(DEBUG) << "dp sending ADDFORWARDREQUEST";
+  PILOG(DEBUG) << "dp sending ADDFORWARDREQUEST" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
   DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
   DPLAYI_PACKEDPLAYER* player =
@@ -302,7 +302,7 @@ void proxy::dp_send_addforwardrequest() {
 }
 
 void proxy::dp_send_createplayer_handler() {
-  LOG(DEBUG) << "dp send CREATEPLAYER";
+  POLOG(DEBUG) << "dp send CREATEPLAYER" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
   DPMSG_CREATEPLAYER* msg = packet.message<DPMSG_CREATEPLAYER>();
   DPLAYI_PACKEDPLAYER* player =

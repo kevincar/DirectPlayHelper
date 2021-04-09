@@ -102,6 +102,12 @@ if(WIN32)
 	add_definitions(-D_WIN32_WINNT=${ver})
 endif()
 
+# argparse
+execute_process(
+  COMMAND git clone https://github.com/p-ranav/argparse "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse"
+  )
+set(ARGPARSE_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse/include")
+
 #####################################################################
 #                                                                   #
 #                           PROGRAM                                 #
@@ -124,6 +130,7 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 		include
 		${G3LOG_INCLUDE_DIR}
 		${NETWORK_TS_INCLUDES}
+    ${ARGPARSE_INCLUDES}
 		)
 
 # build the libraries

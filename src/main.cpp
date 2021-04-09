@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 
+#include <argparse/argparse.hpp>
 #include "CustomSink.hpp"
 #include "DPServer.hpp"
 #include "g3log/g3log.hpp"

@@ -32,9 +32,18 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/DPServer_test.cpp
 	./src/ArgParser_test.cpp
 
-	./src/nathp/Packet_test.cpp
-	./src/nathp/ClientRecord_test.cpp
-	./src/nathp/Server_test.cpp
+	#./src/nathp/Packet_test.cpp
+	#./src/nathp/ClientRecord_test.cpp
+	#./src/nathp/Server_test.cpp
+
+  ./src/dppl/hardware_test.cpp
+  ./src/dppl/PacketSniffer_test.cpp
+  ./src/dppl/DPSuperPackedPlayer_test.cpp
+  ./src/dppl/DPProxyMessage_test.cpp
+  ./src/dppl/DirectPlayServer_test.cpp
+  ./src/dppl/AppSimulator.cpp
+  ./src/dppl/proxy_test.cpp
+  ./src/dppl/interceptor_test.cpp
 	)
 
 # Includes
@@ -42,15 +51,19 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 	PUBLIC
 		../include
 		./include
+		${PCAP_INCLUDE_DIR}
+		${G3LOG_INCLUDE_DIR}
+		${LIBTINS_INCLUDE_DIR}
 		"${gtest_SOURCE_DIR}/include"
-		"${install_dir}/include"
+		"${NETWORK_TS_INCLUDES}"
 		)
 
 # Link dependencies
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
+		#nathp
+		dppl
+		gtest_main
 		g3log
-		"${ws2_32}"
-		inet
-		nathp
-		gtest_main)
+		${LIBTINS_LIBRARY}
+		)

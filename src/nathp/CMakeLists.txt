@@ -17,13 +17,6 @@ add_library(nathp
 target_include_directories(nathp BEFORE
 	PUBLIC
 		../../include
-		${install_dir}/include
-		"${CMAKE_CURRENT_BINARY_DIR}/../inet/include" # For config.hpp
-		)
-
-target_include_directories(nathp BEFORE
-	PUBLIC
-		../../include
-		${install_dir}/include
+		${g3log_dir}/include
 		"${CMAKE_CURRENT_BINARY_DIR}/../inet/include" # For config.hpp
 		)

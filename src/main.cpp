@@ -14,11 +14,33 @@ int main(int argc, char const* argv[]) {
                      &CustomSink::ReceiveLogMessage);
   g3::initializeLogging(logWorker.get());
 
-  // std::unique_ptr<DPServer> app = std::unique_ptr<DPServer>(new
-  // DPServer(argc, argv)); app->start();
+  // Begin Argument parsing
+  argparse::ArgumentParser app("DirectPlayHelper", "0.1");
 
-  LOG(DEBUG) << "Hello, World!";
-  // std::cout << "Hello, world!" << std::endl;
+  // Optional arguments
+  app.add_argument("-s", "--server")
+    .help("Runs this instace as a dph server")
+    .default_value(false)
+    .implicit_value(true);
+
+  app.add_argument("-p", "--port")
+    .help("the port to connect or listen on")
+    .default_value(47625);
+
+  app.add_argument("-h", "--host")
+    .help("the host address to connect to");
+
+  try {
+    app.parse_args(argc, argv);
+  }
+  catch (std::runtime_error const& err) {
+    std::cout << err.what() << std::endl;
+    std::cout << app;
+    return 0;
+  }
+
+  auto server = app.get<bool>("--server");
+  std::cout << "Server: " << server << std::endl;
 
   return 0;
 }

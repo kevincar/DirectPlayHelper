@@ -117,6 +117,7 @@ set(ARGPARSE_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse/include")
 # build the app
 add_executable("${PROJECT_NAME}"
 	src/main.cpp
+  src/Client.cpp
 	)
 
 # Add dependency targets to this main target

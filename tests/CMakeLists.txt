@@ -26,6 +26,8 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 # Make the test executable
 add_executable("${TEST_PROJECT_NAME}"
 	./src/main_test.cpp
+  ./src/Client_test.cpp
+  ../src/Client.cpp
 
 	#./src/nathp/Packet_test.cpp
 	#./src/nathp/ClientRecord_test.cpp

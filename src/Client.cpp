@@ -8,6 +8,7 @@ Client::Client(
     std::experimental::net::ip::tcp::resolver::results_type const& endpoints)
     : io_context_(io_context),
       connection_(*io_context, std::experimental::net::ip::tcp::v4()) {
+  LOG(INFO) << "Starting Client";
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);

@@ -11,13 +11,15 @@ TEST(ClientTest, constructor) {
                       std::experimental::net::ip::tcp::v4(), 0));
   uint16_t server_port = server_socket.local_endpoint().port();
 
-  server_socket.async_accept([&](std::error_code const& ec, std::experimental::net::ip::tcp::socket const& socket){
-      LOG(DEBUG) << "Accepted :)";
+  server_socket.async_accept(
+      [&](std::error_code const& ec,
+          std::experimental::net::ip::tcp::socket const& socket) {
+        LOG(DEBUG) << "Accepted :)";
       });
 
   // Create a dang client!
   std::experimental::net::ip::tcp::resolver resolver(io_context);
   auto endpoints = resolver.resolve("localhost", std::to_string(server_port));
   dph::Client client(&io_context, endpoints);
-   io_context.run();
+  io_context.run();
 }

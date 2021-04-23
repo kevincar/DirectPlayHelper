@@ -12,5 +12,12 @@ typedef struct {
   char data[];
 } DPH_MESSAGE;
 #pragma pack(pop)
+enum DPHCommand {
+  REQUESTID,
+  REQUESTIDREPLY,
+  ENUMCLIENTS,
+  ENUMCLIENTSREPLY,
+  FORWARDMESSAGE
+};
 
 #endif  // INCLUDE_DPHMESSAGE_HPP_

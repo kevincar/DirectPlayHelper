@@ -10,7 +10,6 @@ TEST(DPHMessageTest, constructor) {
 
   std::vector<char> payload = dph_message.get_payload();
   ASSERT_STREQ(payload.data(), "Hello");
-
 }
 
 TEST(DPHMessageTest, get_message) {

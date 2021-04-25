@@ -18,4 +18,14 @@ std::vector<char> DPHMessage::get_payload(void) {
   return result;
 }
 
+void DPHMessage::set_payload(std::vector<char> const& payload) {
+  this->data_.resize(sizeof(DPH_MESSAGE)+payload.size(), '\0');
+  DPH_MESSAGE *dphm = this->get_message();
+  dphm->data_size = payload.size();
+  std::copy(payload.begin(), payload.end(), dphm->data);
+}
+
+std::vector<char> DPHMessage::to_vector(void) {
+  return this->data_;
+}
 }  // namespace dph

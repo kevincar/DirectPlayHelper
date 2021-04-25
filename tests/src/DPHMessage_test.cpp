@@ -21,3 +21,22 @@ TEST(DPHMessageTest, get_message) {
   DPH_MESSAGE* dphm = dph_message.get_message();
   ASSERT_EQ(dphm->from_id, 10);
 }
+
+TEST(DPHMessageTest, set_payload) {
+  dph::DPHMessage dph_message;
+  std::string name = "Balazs";
+  std::vector<char> payload(name.begin(), name.end());
+  dph_message.set_payload(payload);
+  DPH_MESSAGE* dphm = dph_message.get_message();
+  ASSERT_EQ(dphm->data_size, name.size());
+}
+
+TEST(DPHMessageTest, to_vector) {
+  std::vector<char> data = {10, 0, 0, 0,   5,   0,   0,   0,   1, 6,
+                            0,  0, 0, 'H', 'e', 'l', 'l', 'o', 0};
+  dph::DPHMessage dph_message(data);
+  std::vector<char> data2 = dph_message.to_vector();
+  for (int i = 0; i < data.size(); i++) {
+    ASSERT_EQ(data[i], data2[i]);
+  }
+}

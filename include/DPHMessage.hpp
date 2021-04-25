@@ -32,6 +32,7 @@ class DPHMessage {
   std::vector<char> get_payload(void);
   void set_payload(std::vector<char> const& payload);
 
+  std::vector<char> to_vector(void);
  private:
   std::vector<char> data_;
 };

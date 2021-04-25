@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/kevincar/DPServer.svg?branch=master)](https://travis-ci.org/kevincar/DPServer)
+![Build Status](https://travis-ci.org/kevincar/DirectPlayHelper.svg?branch=master)
 
 # Direct Play Server
 

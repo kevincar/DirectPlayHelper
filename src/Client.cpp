@@ -7,18 +7,27 @@ Client::Client(
     std::experimental::net::io_context* io_context,
     std::experimental::net::ip::tcp::resolver::results_type const& endpoints)
     : io_context_(io_context),
-      connection_(*io_context, std::experimental::net::ip::tcp::v4()) {
+      connection_(*io_context, std::experimental::net::ip::tcp::v4()),
+      send_buf_(1024, '\0') {
   LOG(INFO) << "Starting Client";
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
 }
 
+void Client::request_id(void) const {
+  auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,
+                           std::placeholders::_2);
+  std::experimental::net::async_write(
+      this->connection_, std::experimental::net::buffer(this->send_buf_),
+      handler);
+}
+
 void Client::connection_handler(
     std::error_code const& ec,
     std::experimental::net::ip::tcp::endpoint const& endpoint) {
   if (!ec) {
-    LOG(DEBUG) << "NICE :)";
+    this->request_id();
   } else {
     LOG(WARNING)
         << "Error attempting to connect with the DirectPlayHelper client: "

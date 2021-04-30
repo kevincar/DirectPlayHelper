@@ -10,6 +10,13 @@ TEST(DPHMessageTest, constructor) {
 
   std::vector<char> payload = dph_message.get_payload();
   ASSERT_STREQ(payload.data(), "Hello");
+
+  /* From stractch */
+  std::string payload_message = "Hello";
+  dph::DPHMessage dph2(10, 5, DPHCommand::REQUESTID, payload_message.size(),
+                       payload_message.c_str());
+  payload = dph2.get_payload();
+  ASSERT_STREQ(payload.data(), "Hello");
 }
 
 TEST(DPHMessageTest, get_message) {

@@ -26,6 +26,8 @@ class DPHMessage {
  public:
   DPHMessage(void);
   explicit DPHMessage(std::vector<char> const& data);
+  DPHMessage(uint32_t from, uint32_t to, DPHCommand command, uint32_t data_size,
+             char const* data);
 
   DPH_MESSAGE* get_message(void);
 
@@ -33,6 +35,7 @@ class DPHMessage {
   void set_payload(std::vector<char> const& payload);
 
   std::vector<char> to_vector(void);
+
  private:
   std::vector<char> data_;
 };

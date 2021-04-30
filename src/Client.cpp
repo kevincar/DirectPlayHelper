@@ -8,19 +8,50 @@ Client::Client(
     std::experimental::net::ip::tcp::resolver::results_type const& endpoints)
     : io_context_(io_context),
       connection_(*io_context, std::experimental::net::ip::tcp::v4()),
-      send_buf_(1024, '\0') {
+      send_buf_(1024, '\0'),
+      recv_buf_(1024, '\0') {
   LOG(INFO) << "Starting Client";
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
 }
 
-void Client::request_id(void) const {
+void Client::request_id(void) {
+  DPHMessage dph_message(0, 0, DPHCommand::REQUESTID, 0, nullptr);
+  std::vector<char> data = dph_message.to_vector();
+  this->send_buf_.assign(data.begin(), data.end());
   auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,
                            std::placeholders::_2);
   std::experimental::net::async_write(
       this->connection_, std::experimental::net::buffer(this->send_buf_),
       handler);
+}
+
+void Client::receive(void) {
+  this->recv_buf_.resize(1024, '\0');
+  auto handler = std::bind(&Client::receive_handler, this,
+                           std::placeholders::_1, std::placeholders::_2);
+  std::experimental::net::async_read(
+      this->connection_, std::experimental::net::buffer(this->recv_buf_),
+      handler);
+}
+
+void Client::write_handler(std::error_code const& ec,
+                           std::size_t bytes_transmitted) {
+  if (!ec) {
+    LOG(DEBUG) << "Transmitted Message";
+  } else {
+    LOG(WARNING) << "Client::write_handler error: " << ec.message();
+  }
+}
+
+void Client::receive_handler(std::error_code const& ec,
+                             std::size_t bytes_transmitted) {
+  if (ec) {
+    LOG(INFO) << "Received Message";
+  } else {
+    LOG(WARNING) << "Client::receive_handler error: " << ec.message();
+  }
 }
 
 void Client::connection_handler(

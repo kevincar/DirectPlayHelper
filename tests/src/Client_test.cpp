@@ -17,7 +17,7 @@ TEST(ClientTest, constructor) {
         LOG(DEBUG) << "Accepted :)";
       });
 
-  // Create a dang client!
+  // Create a client!
   std::experimental::net::ip::tcp::resolver resolver(io_context);
   auto endpoints = resolver.resolve("localhost", std::to_string(server_port));
   dph::Client client(&io_context, endpoints);

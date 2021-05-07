@@ -11,6 +11,10 @@ Client::Client(
       send_buf_(1024, '\0'),
       recv_buf_(1024, '\0') {
   LOG(INFO) << "Starting Client";
+  for (auto it : endpoints) {
+    std::experimental::net::ip::tcp::endpoint ep = it;
+    LOG(INFO) << "endpoint: " << ep;
+  }
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
@@ -48,7 +52,7 @@ void Client::write_handler(std::error_code const& ec,
 void Client::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted) {
   if (ec) {
-    LOG(INFO) << "Received Message";
+    LOG(DEBUG) << "Received Message";
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
   }

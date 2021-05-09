@@ -1,8 +1,8 @@
-#include <g3log/g3log.hpp>
 #include <utility>
+#include <g3log/g3log.hpp>
 
-#include "DPHMessage.hpp"
 #include "Client.hpp"
+#include "DPHMessage.hpp"
 #include "gtest/gtest.h"
 
 TEST(ClientTest, constructor) {
@@ -29,7 +29,7 @@ TEST(ClientTest, constructor) {
               LOG(DEBUG) << "REQUESTID";
               break;
           }
-          std::experimental::net::defer([&](){ io_context.stop(); });
+          std::experimental::net::defer([&]() { io_context.stop(); });
         } else {
           LOG(WARNING) << "receive error: " << ec.message();
         }
@@ -43,7 +43,8 @@ TEST(ClientTest, constructor) {
           LOG(DEBUG) << "Accepted";
           connection_socket = std::move(socket);
           recv_buf.resize(1024);
-          connection_socket.async_receive(std::experimental::net::buffer(recv_buf), do_receive);
+          connection_socket.async_receive(
+              std::experimental::net::buffer(recv_buf), do_receive);
           server_socket.async_accept(do_accept);
         } else {
           LOG(WARNING) << "accept error: " << ec.message();

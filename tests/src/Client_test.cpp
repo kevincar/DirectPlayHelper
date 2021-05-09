@@ -1,6 +1,7 @@
 #include <g3log/g3log.hpp>
 #include <utility>
 
+#include "DPHMessage.hpp"
 #include "Client.hpp"
 #include "gtest/gtest.h"
 
@@ -20,6 +21,14 @@ TEST(ClientTest, constructor) {
       [&](std::error_code const& ec, std::size_t bytes_transmitted) {
         if (!ec) {
           LOG(DEBUG) << "Data Received!";
+          LOG(DEBUG) << recv_buf.size();
+          dph::DPHMessage dph_message(recv_buf);
+          DPH_MESSAGE* msg = dph_message.get_message();
+          switch (msg->msg_command) {
+            case DPHCommand::REQUESTID:
+              LOG(DEBUG) << "REQUESTID";
+              break;
+          }
           std::experimental::net::defer([&](){ io_context.stop(); });
         } else {
           LOG(WARNING) << "receive error: " << ec.message();
@@ -33,9 +42,8 @@ TEST(ClientTest, constructor) {
         if (!ec) {
           LOG(DEBUG) << "Accepted";
           connection_socket = std::move(socket);
-          std::experimental::net::async_read(
-              connection_socket, std::experimental::net::buffer(recv_buf),
-              do_receive);
+          recv_buf.resize(1024);
+          connection_socket.async_receive(std::experimental::net::buffer(recv_buf), do_receive);
           server_socket.async_accept(do_accept);
         } else {
           LOG(WARNING) << "accept error: " << ec.message();

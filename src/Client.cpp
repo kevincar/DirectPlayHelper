@@ -21,7 +21,7 @@ Client::Client(
 }
 
 void Client::request_id(void) {
-  DPHMessage dph_message(0, 0, DPHCommand::REQUESTID, 0, nullptr);
+  dph::DPHMessage dph_message(0, 0, dph::DPHCommand::REQUESTID, 0, nullptr);
   std::vector<char> data = dph_message.to_vector();
   this->send_buf_.assign(data.begin(), data.end());
   auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,

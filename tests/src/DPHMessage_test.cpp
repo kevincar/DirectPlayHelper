@@ -13,7 +13,7 @@ TEST(DPHMessageTest, constructor) {
 
   /* From stractch */
   std::string payload_message = "Hello";
-  dph::DPHMessage dph2(10, 5, DPHCommand::REQUESTID, payload_message.size(),
+  dph::DPHMessage dph2(10, 5, dph::DPHCommand::REQUESTID, payload_message.size(),
                        payload_message.c_str());
   payload = dph2.get_payload();
   ASSERT_STREQ(payload.data(), "Hello");
@@ -24,7 +24,7 @@ TEST(DPHMessageTest, get_message) {
                             0,  0, 0, 'H', 'e', 'l', 'l', 'o', 0};
 
   dph::DPHMessage dph_message(data);
-  DPH_MESSAGE* dphm = dph_message.get_message();
+  dph::DPH_MESSAGE* dphm = dph_message.get_message();
   ASSERT_EQ(dphm->from_id, 10);
 }
 
@@ -33,7 +33,7 @@ TEST(DPHMessageTest, set_payload) {
   std::string name = "Balazs";
   std::vector<char> payload(name.begin(), name.end());
   dph_message.set_payload(payload);
-  DPH_MESSAGE* dphm = dph_message.get_message();
+  dph::DPH_MESSAGE* dphm = dph_message.get_message();
   ASSERT_EQ(dphm->data_size, name.size());
 }
 

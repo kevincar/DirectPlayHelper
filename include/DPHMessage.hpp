@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 
+namespace dph {
 #pragma pack(push, 1)
 typedef struct {
   uint32_t from_id;
@@ -21,7 +22,6 @@ enum DPHCommand {
   FORWARDMESSAGE
 };
 
-namespace dph {
 class DPHMessage {
  public:
   DPHMessage(void);

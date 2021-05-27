@@ -1,5 +1,5 @@
-#include <utility>
 #include <g3log/g3log.hpp>
+#include <utility>
 
 #include "Client.hpp"
 #include "DPHMessage.hpp"
@@ -15,19 +15,45 @@ TEST(ClientTest, constructor) {
 
   uint16_t server_port = server_socket.local_endpoint().port();
   std::vector<char> recv_buf;
+  std::vector<char> send_buf;
 
   // Mock Server Functions
+  std::function<void(std::error_code const&, std::size_t)> do_send =
+      [&](std::error_code const& ec, std::size_t bytes_transmitted) {
+        if (!ec) {
+          LOG(DEBUG) << "server data sent";
+        } else {
+          LOG(WARNING) << "send error: " << ec.message();
+        }
+      };
+
   std::function<void(std::error_code const&, std::size_t)> do_receive =
       [&](std::error_code const& ec, std::size_t bytes_transmitted) {
         if (!ec) {
           LOG(DEBUG) << "Data Received!";
           LOG(DEBUG) << recv_buf.size();
-          dph::DPHMessage dph_message(recv_buf);
-          DPH_MESSAGE* msg = dph_message.get_message();
+          dph::DPHMessage dph_message_recv(recv_buf);
+          dph::DPH_MESSAGE* msg = dph_message_recv.get_message();
           switch (msg->msg_command) {
-            case DPHCommand::REQUESTID:
+            case dph::DPHCommand::REQUESTID: {
               LOG(DEBUG) << "REQUESTID";
-              break;
+
+              // Set up the message
+              send_buf.resize(1024);
+              int mock_id = 47625;
+              dph::DPHMessage dph_message_send(
+                  0, mock_id, dph::DPHCommand::REQUESTIDREPLY, 0, nullptr);
+              std::vector<char> dph_data = dph_message_send.to_vector();
+
+              // Send it back
+              LOG(DEBUG) << "Sending back ID: " << mock_id;
+
+              send_buf.assign(dph_data.begin(), dph_data.end());
+              connection_socket.async_send(
+                  std::experimental::net::buffer(send_buf), do_send);
+            } break;
+            default:
+              std::experimental::net::defer([&]() { io_context.stop(); });
           }
           std::experimental::net::defer([&]() { io_context.stop(); });
         } else {

@@ -1,5 +1,5 @@
-#include <g3log/g3log.hpp>
 #include <utility>
+#include <g3log/g3log.hpp>
 
 #include "Client.hpp"
 #include "DPHMessage.hpp"

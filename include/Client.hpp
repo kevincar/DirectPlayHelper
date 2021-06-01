@@ -34,7 +34,7 @@ class Client {
       std::error_code const& ec,
       std::experimental::net::ip::tcp::endpoint const& endpoint);
 
-  uint32_t id = 0;
+  uint32_t id_ = 0;
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;
   std::experimental::net::io_context* io_context_;

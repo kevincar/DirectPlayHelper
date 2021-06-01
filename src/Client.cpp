@@ -29,15 +29,15 @@ void Client::request_id(void) {
   std::experimental::net::async_write(
       this->connection_, std::experimental::net::buffer(this->send_buf_),
       handler);
+  this->receive();
 }
 
 void Client::receive(void) {
   this->recv_buf_.resize(1024, '\0');
   auto handler = std::bind(&Client::receive_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
-  std::experimental::net::async_read(
-      this->connection_, std::experimental::net::buffer(this->recv_buf_),
-      handler);
+  this->connection_.async_receive(
+      std::experimental::net::buffer(this->recv_buf_), handler);
 }
 
 void Client::write_handler(std::error_code const& ec,
@@ -51,8 +51,16 @@ void Client::write_handler(std::error_code const& ec,
 
 void Client::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted) {
-  if (ec) {
+  if (!ec) {
     LOG(DEBUG) << "Received Message";
+    dph::DPHMessage dph_message(this->recv_buf_);
+    dph::DPH_MESSAGE* dph_msg = dph_message.get_message();
+    switch (dph_msg->msg_command) {
+      case dph::DPHCommand::REQUESTIDREPLY: {
+        LOG(DEBUG) << "Received ID";
+        this->id_ = dph_msg->to_id;
+      } break;
+    }
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
   }

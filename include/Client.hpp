@@ -15,7 +15,7 @@ class Client {
  private:
   /* Message Sending */
   void request_id(void);
-  void enumerate_clients(void) const;
+  void enumerate_clients(void);
   void forward_message(DPHMessage const& message);
 
   /* Message Handlers */

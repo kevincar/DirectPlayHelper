@@ -119,6 +119,7 @@ add_executable("${PROJECT_NAME}"
 	src/main.cpp
   src/DPHMessage.cpp
   src/Client.cpp
+  src/ClientRecord.cpp
 	)
 
 # Add dependency targets to this main target

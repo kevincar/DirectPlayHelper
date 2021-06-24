@@ -19,6 +19,6 @@ class ClientRecord {
  private:
   uint32_t id_;
   std::experimental::net::ip::tcp::endpoint public_address_;
-}
+};
 }  // namespace dph
 #endif  // INCLUDE_CLIENTRECORD_HPP_

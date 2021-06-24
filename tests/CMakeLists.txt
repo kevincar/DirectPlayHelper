@@ -28,8 +28,10 @@ add_executable("${TEST_PROJECT_NAME}"
 	./src/main_test.cpp
   ./src/DPHMessage_test.cpp
   ./src/Client_test.cpp
+  ./src/ClientRecord_test.cpp
   ../src/DPHMessage.cpp
   ../src/Client.cpp
+  ../src/ClientRecord.cpp
 
 	#./src/nathp/Packet_test.cpp
 	#./src/nathp/ClientRecord_test.cpp

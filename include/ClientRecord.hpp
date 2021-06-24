@@ -1,7 +1,8 @@
 #ifndef INCLUDE_CLIENTRECORD_HPP_
 #define INCLUDE_CLIENTRECORD_HPP_
-#include <cstdint>
 #include <experimental/net>
+#include <cstdint>
+#include <vector>
 
 namespace dph {
 #pragma pack(push, 1)
@@ -16,6 +17,7 @@ class ClientRecord {
   ClientRecord(uint32_t id, std::experimental::net::ip::tcp::endpoint const&);
   explicit ClientRecord(std::vector<char> const&);
   std::vector<char> to_vector();
+
  private:
   uint32_t id_;
   std::experimental::net::ip::tcp::endpoint public_address_;

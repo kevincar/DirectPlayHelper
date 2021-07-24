@@ -3,24 +3,29 @@
 #include <experimental/net>
 #include <vector>
 
-#include "DPHMessage.hpp"
+#include "Message.hpp"
 
 namespace dph {
 class Client {
  public:
   Client(
       std::experimental::net::io_context* io_context,
-      std::experimental::net::ip::tcp::resolver::results_type const& endpoints);
+      std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
+      std::function<void(std::vector<char>)> callback =
+          [](std::vector<char> x) {});
+
+  void request_clients(void);
 
  private:
+  void forward_message(Message const& message);
+
   /* Message Sending */
   void request_id(void);
   void enumerate_clients(void);
-  void forward_message(DPHMessage const& message);
 
   /* Message Handlers */
-  void request_id_reply_handler(DPHMessage const& message);
-  void enumerate_clients_reply_handler(DPHMessage const& message);
+  void request_id_reply_handler(Message const& message);
+  void enumerate_clients_reply_handler(Message const& message);
 
   /* General net initializers */
   void receive(void);
@@ -39,6 +44,8 @@ class Client {
   std::vector<char> recv_buf_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::socket connection_;
+  std::experimental::net::steady_timer request_timer_;
+  std::function<void(std::vector<char>)> request_callback_;
 };
 }  // namespace dph
 #endif  // INCLUDE_CLIENT_HPP_

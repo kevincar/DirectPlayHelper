@@ -11,4 +11,6 @@ TEST(ClientRecord, constructor) {
   dph::CLIENT_RECORD* p_record =
       reinterpret_cast<dph::CLIENT_RECORD*>(data.data());
   ASSERT_EQ(p_record->id, 1);
+
+  dph::ClientRecord client_record_data(data);
 }

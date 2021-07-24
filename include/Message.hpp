@@ -1,5 +1,5 @@
-#ifndef INCLUDE_DPHMESSAGE_HPP_
-#define INCLUDE_DPHMESSAGE_HPP_
+#ifndef INCLUDE_MESSAGE_HPP_
+#define INCLUDE_MESSAGE_HPP_
 
 #include <cstdint>
 #include <vector>
@@ -12,9 +12,9 @@ typedef struct {
   uint8_t msg_command;
   uint32_t data_size;
   char data[];
-} DPH_MESSAGE;
+} MESSAGE;
 #pragma pack(pop)
-enum DPHCommand {
+enum Command {
   REQUESTID,
   REQUESTIDREPLY,
   ENUMCLIENTS,
@@ -22,14 +22,21 @@ enum DPHCommand {
   FORWARDMESSAGE
 };
 
-class DPHMessage {
+#pragma pack(push, 1)
+typedef struct {
+  uint32_t n_clients;
+  uint32_t client_ids[];
+} MSG_ENUMCLIENTS;
+#pragma pack(pop)
+
+class Message {
  public:
-  DPHMessage(void);
-  explicit DPHMessage(std::vector<char> const& data);
-  DPHMessage(uint32_t from, uint32_t to, DPHCommand command, uint32_t data_size,
+  Message(void);
+  explicit Message(std::vector<char> const& data);
+  Message(uint32_t from, uint32_t to, Command command, uint32_t data_size,
              char const* data);
 
-  DPH_MESSAGE* get_message(void);
+  MESSAGE* get_message(void);
 
   std::vector<char> get_payload(void);
   void set_payload(std::vector<char> const& payload);
@@ -41,4 +48,4 @@ class DPHMessage {
 };
 }  // namespace dph
 
-#endif  // INCLUDE_DPHMESSAGE_HPP_
+#endif  // INCLUDE_MESSAGE_HPP_

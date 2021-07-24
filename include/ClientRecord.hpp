@@ -18,6 +18,8 @@ class ClientRecord {
   explicit ClientRecord(std::vector<char> const&);
   std::vector<char> to_vector();
 
+  uint32_t const get_id() const;
+
  private:
   uint32_t id_;
   std::experimental::net::ip::tcp::endpoint public_address_;

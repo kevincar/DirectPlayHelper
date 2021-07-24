@@ -22,4 +22,7 @@ std::vector<char> ClientRecord::to_vector() {
   result.assign(start, end);
   return result;
 }
+uint32_t const ClientRecord::get_id() const {
+  return this->id_;
+}
 }  // namespace dph

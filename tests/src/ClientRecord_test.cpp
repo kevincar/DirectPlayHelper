@@ -25,4 +25,8 @@ TEST(ClientRecord, packing) {
   std::vector<dph::ClientRecord> records{record1, record2};
   std::vector<char> record_data = dph::ClientRecord::pack_records(records);
   ASSERT_EQ(record_data[0], 2);
+
+  std::vector<dph::ClientRecord> new_records =
+      dph::ClientRecord::unpack_records(record_data);
+  ASSERT_EQ(new_records[0].get_id(), 1);
 }

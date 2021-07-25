@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Message.hpp"
+#include "dppl/interceptor.hpp"
 
 namespace dph {
 class Client {
@@ -39,6 +40,10 @@ class Client {
       std::error_code const& ec,
       std::experimental::net::ip::tcp::endpoint const& endpoint);
 
+  /* Interceptor callbacks */
+  void dp_callback(std::vector<char> const& data);
+  void data_callback(std::vector<char> const& data);
+
   uint32_t id_ = 0;
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;
@@ -46,6 +51,7 @@ class Client {
   std::experimental::net::ip::tcp::socket connection_;
   std::experimental::net::steady_timer request_timer_;
   std::function<void(std::vector<char>)> request_callback_;
+  dppl::interceptor interceptor_;
 };
 }  // namespace dph
 #endif  // INCLUDE_CLIENT_HPP_

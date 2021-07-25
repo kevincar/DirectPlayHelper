@@ -4,6 +4,7 @@
 #include "Client.hpp"
 #include "ClientRecord.hpp"
 #include "Message.hpp"
+#include "dppl/AppSimulator.hpp"
 #include "gtest/gtest.h"
 
 class MockServer {
@@ -172,5 +173,26 @@ TEST(ClientTest, constructor) {
   client =
       std::make_unique<dph::Client>(&io_context, endpoints, client_callback);
 
+  io_context.run();
+}
+
+TEST(ClientTest, SimulateJoin) {
+  uint16_t port;
+  std::vector<char> recv_buf;
+  std::vector<char> send_buf;
+  std::experimental::net::io_context io_context;
+
+  // Start the mock server
+  MockServer server(&io_context);
+  port = server.get_endpoint().port();
+  server.accept();
+
+  // Start the Client
+  std::experimental::net::ip::tcp::resolver resolver(io_context);
+  auto endpoints = resolver.resolve("localhost", std::to_string(port));
+  dph::Client client(&io_context, endpoints);
+
+  // Start the App Simulator
+  dppl::AppSimulator simulator(&io_context, false);
   io_context.run();
 }

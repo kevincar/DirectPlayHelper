@@ -7,12 +7,16 @@ Client::Client(
     std::experimental::net::io_context* io_context,
     std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
     std::function<void(std::vector<char>)> callback)
-    : io_context_(io_context),
+    : send_buf_(1024, '\0'),
+      recv_buf_(1024, '\0'),
+      io_context_(io_context),
       connection_(*io_context, std::experimental::net::ip::tcp::v4()),
-      request_callback_(callback),
       request_timer_(*io_context, std::chrono::milliseconds(5)),
-      send_buf_(1024, '\0'),
-      recv_buf_(1024, '\0') {
+      request_callback_(callback),
+      interceptor_(
+          io_context,
+          std::bind(&Client::dp_callback, this, std::placeholders::_1),
+          std::bind(&Client::data_callback, this, std::placeholders::_1)) {
   LOG(INFO) << "Starting Client";
   for (auto it : endpoints) {
     std::experimental::net::ip::tcp::endpoint ep = it;
@@ -23,9 +27,7 @@ Client::Client(
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
 }
 
-void Client::request_clients(void) {
-  this->enumerate_clients();
-}
+void Client::request_clients(void) { this->enumerate_clients(); }
 
 void Client::request_id(void) {
   dph::Message dph_message(0, 0, dph::Command::REQUESTID, 0, nullptr);
@@ -102,5 +104,14 @@ void Client::connection_handler(
         << "Error attempting to connect with the DirectPlayHelper client: "
         << ec.message();
   }
+}
+
+void Client::dp_callback(std::vector<char> const& data) {
+  LOG(DEBUG) << "Received dp callback";
+  this->io_context_->stop();
+}
+
+void Client::data_callback(std::vector<char> const& data) {
+  LOG(DEBUG) << "Received data callback";
 }
 }  // namespace dph

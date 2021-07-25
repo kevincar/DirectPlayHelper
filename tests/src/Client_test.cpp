@@ -57,33 +57,9 @@ class MockServer {
         case dph::Command::ENUMCLIENTS: {
           LOG(DEBUG) << "ENUMCLIENTS";
 
-          // Calculated data sizes
-          std::size_t const n_client_records = this->client_records_.size();
-          std::size_t const client_records_size =
-              sizeof(uint32_t) + sizeof(dph::CLIENT_RECORD) * n_client_records;
-          LOG(DEBUG) << "n_client_records: " << n_client_records;
-
-          // Initialize the data
-          std::vector<char> client_record_data(client_records_size, '\0');
-          auto pos = client_record_data.begin();
-          LOG(DEBUG) << "Initialize the data";
-
-          // First store how many records we have
-          char const* start =
-              reinterpret_cast<char const*>(&client_records_size);
-          char const* end = start + sizeof(std::size_t);
-          std::copy(start, end, pos);
-          pos += sizeof(std::size_t);
-          LOG(DEBUG) << "Stored num records";
-
-          // Load in the client records
-          for (auto client_record : this->client_records_) {
-            std::vector<char> client_data = client_record.to_vector();
-            std::copy(client_data.begin(), client_data.end(), pos);
-            pos += client_data.size();
-            LOG(DEBUG) << "Stored record...";
-          }
-          LOG(DEBUG) << "Done storing records";
+          // Pack the ClientRecords
+          std::vector<char> client_record_data =
+              dph::ClientRecord::pack_records(this->client_records_);
 
           // Set up the message
           this->send_buf_.resize(1024);
@@ -182,6 +158,9 @@ TEST(ClientTest, constructor) {
         client->request_clients();
       } break;
       case dph::Command::ENUMCLIENTSREPLY: {
+        std::vector<dph::ClientRecord> records =
+            dph::ClientRecord::unpack_records(dph_message.get_payload());
+        ASSERT_EQ(records.size(), 1);
         io_context.stop();
       } break;
     }

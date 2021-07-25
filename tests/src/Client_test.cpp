@@ -58,7 +58,8 @@ class MockServer {
           LOG(DEBUG) << "ENUMCLIENTS";
 
           // Pack the ClientRecords
-          std::vector<char> client_record_data = dph::ClientRecord::pack_records(this->client_records_);
+          std::vector<char> client_record_data =
+              dph::ClientRecord::pack_records(this->client_records_);
 
           // Set up the message
           this->send_buf_.resize(1024);
@@ -157,7 +158,8 @@ TEST(ClientTest, constructor) {
         client->request_clients();
       } break;
       case dph::Command::ENUMCLIENTSREPLY: {
-        std::vector<dph::ClientRecord> records = dph::ClientRecord::unpack_records(dph_message.get_payload());
+        std::vector<dph::ClientRecord> records =
+            dph::ClientRecord::unpack_records(dph_message.get_payload());
         ASSERT_EQ(records.size(), 1);
         io_context.stop();
       } break;

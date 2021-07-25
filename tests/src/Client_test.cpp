@@ -1,5 +1,5 @@
-#include <g3log/g3log.hpp>
 #include <utility>
+#include <g3log/g3log.hpp>
 
 #include "Client.hpp"
 #include "ClientRecord.hpp"
@@ -40,8 +40,8 @@ class MockServer {
 
           // Set up the message
           this->send_buf_.resize(1024);
-          dph::Message dph_message_send(
-              0, id, dph::Command::REQUESTIDREPLY, 0, nullptr);
+          dph::Message dph_message_send(0, id, dph::Command::REQUESTIDREPLY, 0,
+                                        nullptr);
           std::vector<char> dph_data = dph_message_send.to_vector();
 
           // Send it back
@@ -69,7 +69,8 @@ class MockServer {
           LOG(DEBUG) << "Initialize the data";
 
           // First store how many records we have
-          char const* start = reinterpret_cast<char const*>(&client_records_size);
+          char const* start =
+              reinterpret_cast<char const*>(&client_records_size);
           char const* end = start + sizeof(std::size_t);
           std::copy(start, end, pos);
           pos += sizeof(std::size_t);
@@ -86,9 +87,9 @@ class MockServer {
 
           // Set up the message
           this->send_buf_.resize(1024);
-          dph::Message dph_message_send(
-              0, id, dph::Command::ENUMCLIENTSREPLY,
-              client_record_data.size(), client_record_data.data());
+          dph::Message dph_message_send(0, id, dph::Command::ENUMCLIENTSREPLY,
+                                        client_record_data.size(),
+                                        client_record_data.data());
           std::vector<char> dph_data = dph_message_send.to_vector();
           this->send_buf_.assign(dph_data.begin(), dph_data.end());
 
@@ -180,13 +181,17 @@ TEST(ClientTest, constructor) {
       case dph::Command::REQUESTIDREPLY: {
         client->request_clients();
       } break;
+      case dph::Command::ENUMCLIENTSREPLY: {
+        io_context.stop();
+      } break;
     }
   };
 
   // Create a client!
   std::experimental::net::ip::tcp::resolver resolver(io_context);
   auto endpoints = resolver.resolve("localhost", std::to_string(server_port));
-  client = std::make_unique<dph::Client>(&io_context, endpoints, client_callback);
+  client =
+      std::make_unique<dph::Client>(&io_context, endpoints, client_callback);
 
   io_context.run();
 }

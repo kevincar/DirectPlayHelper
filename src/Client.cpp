@@ -25,9 +25,20 @@ Client::Client(
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
+  this->receive();
 }
 
 void Client::request_clients(void) { this->enumerate_clients(); }
+
+void Client::forward_message(Message const& message) {
+  std::vector<char> data = message.to_vector();
+  this->send_buf_.assign(data.begin(), data.end());
+  auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,
+                           std::placeholders::_2);
+  std::experimental::net::async_write(
+      this->connection_, std::experimental::net::buffer(this->send_buf_),
+      handler);
+}
 
 void Client::request_id(void) {
   dph::Message dph_message(0, 0, dph::Command::REQUESTID, 0, nullptr);
@@ -38,7 +49,6 @@ void Client::request_id(void) {
   std::experimental::net::async_write(
       this->connection_, std::experimental::net::buffer(this->send_buf_),
       handler);
-  this->receive();
 }
 
 void Client::enumerate_clients(void) {
@@ -51,7 +61,6 @@ void Client::enumerate_clients(void) {
   std::experimental::net::async_write(
       this->connection_, std::experimental::net::buffer(this->send_buf_),
       handler);
-  this->receive();
 }
 
 void Client::enumerate_clients_reply_handler(Message const& message) {}
@@ -92,6 +101,7 @@ void Client::receive_handler(std::error_code const& ec,
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
   }
+  this->receive();
 }
 
 void Client::connection_handler(
@@ -107,8 +117,14 @@ void Client::connection_handler(
 }
 
 void Client::dp_callback(std::vector<char> const& data) {
-  LOG(DEBUG) << "Received dp callback";
-  this->io_context_->stop();
+  // TODO: @kevincar
+  // We cannot assume we know where message is going just yet, we must decode
+  // the message and match the ID endpoints with those of the server. This is
+  // where ENUMCLIENS comes in. Perhaps it doens't matter, and we can let the
+  // server determine the destination by processing the payload?
+  dph::Message message(this->id_, 0, dph::Command::FORWARDMESSAGE, data.size(),
+                       data.data());
+  this->forward_message(message);
 }
 
 void Client::data_callback(std::vector<char> const& data) {

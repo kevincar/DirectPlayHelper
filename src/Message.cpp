@@ -37,5 +37,5 @@ void Message::set_payload(std::vector<char> const& payload) {
   std::copy(payload.begin(), payload.end(), dphm->data);
 }
 
-std::vector<char> Message::to_vector(void) { return this->data_; }
+std::vector<char> Message::to_vector(void) const { return this->data_; }
 }  // namespace dph

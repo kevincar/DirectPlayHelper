@@ -41,7 +41,7 @@ class Message {
   std::vector<char> get_payload(void);
   void set_payload(std::vector<char> const& payload);
 
-  std::vector<char> to_vector(void);
+  std::vector<char> to_vector(void) const;
 
  private:
   std::vector<char> data_;

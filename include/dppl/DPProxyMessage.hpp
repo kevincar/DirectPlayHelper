@@ -8,18 +8,16 @@
 namespace dppl {
 #pragma pack(push, 1)
 typedef struct {
-  DWORD toSystemID;
-  DWORD toPlayerID;
-  DWORD fromSystemID;
-  DWORD fromPlayerID;
-  BYTE dp_message[];
-} DPPROXYMSG;
-#pragma pack(pop)
-
-typedef struct {
+  DWORD clientID;
   DWORD systemID;
   DWORD playerID;
 } DPProxyEndpointIDs;
+typedef struct {
+  DPProxyEndpointIDs to;
+  DPProxyEndpointIDs from;
+  BYTE dp_message[];
+} DPPROXYMSG;
+#pragma pack(pop)
 
 class proxy;
 class DPProxyMessage {

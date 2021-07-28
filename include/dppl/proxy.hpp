@@ -75,6 +75,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
                          std::size_t bytes_transmitted);
 
   /* Proxy Attributes */
+  DWORD client_id_ = 0;
   DWORD system_id_ = 0;
   DWORD player_id_ = 0;
   int recent_request_flags_ = -1;

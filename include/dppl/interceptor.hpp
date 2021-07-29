@@ -13,12 +13,29 @@
 #define IELOG TXRS
 
 namespace dppl {
+// The `interceptor` class manages all process that are responsible for
+// "intercepting" data and messages sent out by the local DirectPlay
+// Application. From a high level, the `interceptor` is responsible for
+// managing all proxyies and DirectPlayServer sockets associated with a given
+// DirectPlay Application. The `interceptor` also acts in a way like a proxy
+// for the local player application to keep track of the information pertaining
+// to the user on the application such as the DirectPlay ID for the user, since
+// the proxies are doing this for all the other connected peers, etc.
 class interceptor {
  public:
+  // the `pd_forward` and `data_forward` are callback methods defined by the
+  // class that owns the `interceptor`. Messages from the interceptor's
+  // `proxy`s and `DirectPlayServer` will be bundled into DPProxyMessages and
+  // forwarded through these callbacks.
   interceptor(std::experimental::net::io_context* io_context,
               std::function<void(std::vector<char> const&)> dp_forward,
               std::function<void(std::vector<char> const&)> data_forward);
 
+  // These `_deliver` functions allow the owning class to send data to the
+  // local DirectPlay Application through one of the `interceptor`'s proxies.
+  // The proxy through which the message is sent is determined by the id
+  // information providd in the structure of the message. The underlying data
+  // should be in the format of a DPProxyMessage structure.
   void dp_deliver(std::vector<char> const& buffer);
   void data_deliver(std::vector<char> const& buffer);
 

@@ -25,7 +25,6 @@ Client::Client(
   auto handler = std::bind(&Client::connection_handler, this,
                            std::placeholders::_1, std::placeholders::_2);
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
-  this->receive();
 }
 
 void Client::request_clients(void) { this->enumerate_clients(); }
@@ -114,6 +113,7 @@ void Client::connection_handler(
         << "Error attempting to connect with the DirectPlayHelper client: "
         << ec.message();
   }
+  this->receive();
 }
 
 void Client::dp_callback(std::vector<char> const& data) {

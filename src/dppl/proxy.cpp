@@ -63,14 +63,18 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
 }
 
 void proxy::dp_deliver(DPProxyMessage const& data) {
+  if (!this->validate_message(data)) return;
   this->dp_send_buf_ = data.get_dp_msg();
   this->dp_send();
 }
 
 void proxy::data_deliver(std::vector<char> const& data) {
+  if (!this->validate_message(data)) return;
   this->data_send_buf_ = data;
   this->data_send();
 }
+
+DWORD proxy::get_client_id() const { return this->client_id_; }
 
 DWORD proxy::get_system_id() const { return this->system_id_; }
 

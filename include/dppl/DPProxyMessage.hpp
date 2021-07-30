@@ -20,8 +20,14 @@ typedef struct {
 #pragma pack(pop)
 
 class proxy;
+// A `DPProxyMessage` is a DirectPlay message associated with endpoint
+// metadata; i.e., it's simply the binary information for a DPMessage that also
+// comes with important information for proxies to know who the message came
+// from and who it's intended for
 class DPProxyMessage {
  public:
+  // The Vector Chars are the binary data, and the first and second endpoints
+  // or proxy are the sender and recipient respectively
   DPProxyMessage(std::vector<char>, proxy const&, proxy const&);
   DPProxyMessage(std::vector<char>, DPProxyEndpointIDs, proxy const&);
   DPProxyMessage(std::vector<char>, proxy const&, DPProxyEndpointIDs);
@@ -30,8 +36,10 @@ class DPProxyMessage {
 
   DPProxyMessage(DPProxyMessage const&);
 
+  // Convert the DPProxyMessage into a byte vector
   std::vector<char> to_vector() const;
-
+  
+  // Get the DirectPlay Message as a byte vactor
   std::vector<char> get_dp_msg() const;
 
   DPProxyEndpointIDs get_to_ids() const;

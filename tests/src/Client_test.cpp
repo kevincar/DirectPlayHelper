@@ -146,7 +146,7 @@ class MockServer {
     return *result;
   }
 
-  void process(dppl::DPMessage const&) {
+  void process(dppl::DPProxyMessage const&) {
 
   }
 };

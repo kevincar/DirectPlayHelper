@@ -75,8 +75,10 @@ std::vector<char> DPProxyMessage::pack_message(std::vector<char> message_data,
   std::size_t new_len = sizeof(DPPROXYMSG) + message_data.size();
   std::vector<char> retval(new_len, '\0');
   DPPROXYMSG* imsg = reinterpret_cast<DPPROXYMSG*>(&(*retval.begin()));
+  imsg->to.clientID = toIDs.clientID;
   imsg->to.systemID = toIDs.systemID;
   imsg->to.playerID = toIDs.playerID;
+  imsg->from.clientID = fromIDs.clientID;
   imsg->from.systemID = fromIDs.systemID;
   imsg->from.playerID = fromIDs.playerID;
   char* dest = reinterpret_cast<char*>(&imsg->dp_message);
@@ -85,9 +87,10 @@ std::vector<char> DPProxyMessage::pack_message(std::vector<char> message_data,
 }
 
 DPProxyEndpointIDs DPProxyMessage::proxy_to_ids(proxy const& p) {
-  DWORD system_id = static_cast<int>(p);
-  DWORD player_id = static_cast<uint32_t>(p);
-  DPProxyEndpointIDs ids = {system_id, player_id};
+  DWORD client_id = p.get_client_id();
+  DWORD system_id = p.get_system_id();
+  DWORD player_id = p.get_player_id();
+  DPProxyEndpointIDs ids = {client_id, system_id, player_id};
   return ids;
 }
 }  // namespace dppl

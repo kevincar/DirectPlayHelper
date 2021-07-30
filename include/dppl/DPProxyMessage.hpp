@@ -27,7 +27,7 @@ class proxy;
 class DPProxyMessage {
  public:
   // The Vector Chars are the binary data, and the first and second endpoints
-  // or proxy are the sender and recipient respectively
+  // or proxy are the recipient and sender respectively
   DPProxyMessage(std::vector<char>, proxy const&, proxy const&);
   DPProxyMessage(std::vector<char>, DPProxyEndpointIDs, proxy const&);
   DPProxyMessage(std::vector<char>, proxy const&, DPProxyEndpointIDs);

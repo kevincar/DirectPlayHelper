@@ -62,8 +62,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
 
   // the `_deliver` functions are used by the owning class to send incoming
   // remote messages to the local DirectPlay application
-  void dp_deliver(std::vector<char> const& data);
-  void data_deliver(std::vector<char> const& data);
+  void dp_deliver(DPProxyMessage const& data);
+  void data_deliver(DPProxyMessage const& data);
 
   DWORD get_system_id() const;
   DWORD get_player_id() const;
@@ -102,6 +102,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void data_send();
   void data_send_handler(std::error_code const& ec,
                          std::size_t bytes_transmitted);
+
+  bool validate_message(DPProxyMessage const& message);
 
   // Proxy Attributes
   DWORD client_id_ = 0;

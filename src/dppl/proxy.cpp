@@ -62,8 +62,8 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   return;
 }
 
-void proxy::dp_deliver(std::vector<char> const& data) {
-  this->dp_send_buf_ = data;
+void proxy::dp_deliver(DPProxyMessage const& data) {
+  this->dp_send_buf_ = data.get_dp_msg();
   this->dp_send();
 }
 
@@ -391,6 +391,26 @@ void proxy::data_send_handler(std::error_code const& ec,
   if (ec) {
     LOG(WARNING) << "data send error: " << ec.message();
   }
+}
+
+bool proxy::validate_message(DPProxyMessage const& message) {
+  DPProxyEndpointIDs sender_info = message.get_from_ids();
+  DWORD sender_id = sender_info.clientID;
+
+  if (sender_id == 0) {
+    LOG(ERROR) << "Proxy received information from an unknown sender";
+    return false;
+  }
+
+  if (this->client_id_ == 0) {
+    this->client_id_ = sender_id;
+  } else if (this->client_id_ != = sender_id) {
+    LOG(ERROR) << "Proxy message intended for client " << sender_id
+               << "was sent to the wrong proxy" << this->client_id_;
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace dppl

@@ -65,6 +65,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
   void dp_deliver(DPProxyMessage const& data);
   void data_deliver(DPProxyMessage const& data);
 
+  DWORD get_client_id() const;
   DWORD get_system_id() const;
   DWORD get_player_id() const;
 

@@ -38,13 +38,13 @@ std::vector<char> DPProxyMessage::get_dp_msg() const {
 DPProxyEndpointIDs DPProxyMessage::get_to_ids() const {
   DPPROXYMSG const* msg =
       reinterpret_cast<DPPROXYMSG const*>(&(*this->data_.begin()));
-  return {msg->toSystemID, msg->toPlayerID};
+  return {msg->to.systemID, msg->to.playerID};
 }
 
 DPProxyEndpointIDs DPProxyMessage::get_from_ids() const {
   DPPROXYMSG const* msg =
       reinterpret_cast<DPPROXYMSG const*>(&(*this->data_.begin()));
-  return {msg->fromSystemID, msg->fromPlayerID};
+  return {msg->from.systemID, msg->from.playerID};
 }
 
 std::vector<char> DPProxyMessage::pack_message(std::vector<char> message_data,
@@ -75,10 +75,10 @@ std::vector<char> DPProxyMessage::pack_message(std::vector<char> message_data,
   std::size_t new_len = sizeof(DPPROXYMSG) + message_data.size();
   std::vector<char> retval(new_len, '\0');
   DPPROXYMSG* imsg = reinterpret_cast<DPPROXYMSG*>(&(*retval.begin()));
-  imsg->toSystemID = toIDs.systemID;
-  imsg->toPlayerID = toIDs.playerID;
-  imsg->fromSystemID = fromIDs.systemID;
-  imsg->fromPlayerID = fromIDs.playerID;
+  imsg->to.systemID = toIDs.systemID;
+  imsg->to.playerID = toIDs.playerID;
+  imsg->from.systemID = fromIDs.systemID;
+  imsg->from.playerID = fromIDs.playerID;
   char* dest = reinterpret_cast<char*>(&imsg->dp_message);
   std::copy(message_data.begin(), message_data.end(), dest);
   return retval;

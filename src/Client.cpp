@@ -97,14 +97,16 @@ void Client::connection_handler(
   this->receive();
 }
 
+// data is a vector of bytes in the format of a DPProxyMessage
 void Client::dp_callback(std::vector<char> const& data) {
-  // TODO(@kevincar): Read below
-  // We cannot assume we know where message is going just yet, we must decode
-  // the message and match the ID endpoints with those of the server. This is
-  // where ENUMCLIENS comes in. Perhaps it doens't matter, and we can let the
-  // server determine the destination by processing the payload?
-  dph::Message message(this->id_, 0, dph::Command::FORWARDMESSAGE, data.size(),
-                       data.data());
+  dph::dppl::DPProxyMessage message(data);
+
+  // Assert that we're sending this from the right client
+  assert message.get_from_ids().clientID == this->id_;
+  uint32_t to_id = message.get_to_ids().clientID;
+
+  dph::Message message(this->id_, to_id, dph::Command::FORWARDMESSAGE,
+                       data.size(), data.data());
   this->forward_message(message);
 }
 

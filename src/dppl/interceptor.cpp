@@ -188,7 +188,8 @@ void interceptor::dp_send_enumsessions() {
 }
 
 void interceptor::dp_send_enumsessionsreply() {
-    this->host_proxy_->dp_deliver(proxy_message);
+  DPProxyMessage message = this->get_send_msg();
+  this->host_proxy_->dp_deliver(message);
 }
 
 void interceptor::dp_send_requestplayerid() {

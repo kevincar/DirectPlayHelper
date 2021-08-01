@@ -57,6 +57,7 @@ class interceptor {
 
   // handlers for messages from remotes
   void dp_send_enumsessions();
+  void dp_send_enumsessionsreply();
   void dp_send_requestplayerid();
   void dp_send_requestplayerreply();
   void dp_send_createplayer();

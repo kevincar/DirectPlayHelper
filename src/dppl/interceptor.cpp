@@ -37,7 +37,7 @@ void interceptor::dp_deliver(std::vector<char> const& buffer) {
       this->dp_send_createplayer();
       break;
     case DPSYS_ENUMSESSIONSREPLY:
-      this->host_proxy_->dp_deliver(proxy_message);
+      this->dp_send_enumsessionsreply();
       break;
     case DPSYS_ADDFORWARDREQUEST:
       this->dp_send_addforwardrequest();
@@ -185,6 +185,10 @@ void interceptor::dp_send_enumsessions() {
   IILOG(DEBUG) << "dp send ENUMSESSIONS" << IELOG;
   std::shared_ptr<proxy> peer_proxy = this->get_free_peer_proxy();
   peer_proxy->dp_deliver(message);
+}
+
+void interceptor::dp_send_enumsessionsreply() {
+    this->host_proxy_->dp_deliver(proxy_message);
 }
 
 void interceptor::dp_send_requestplayerid() {

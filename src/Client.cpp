@@ -75,6 +75,7 @@ void Client::receive_handler(std::error_code const& ec,
       case dph::Command::REQUESTIDREPLY: {
         LOG(DEBUG) << "Received ID";
         this->id_ = dph_msg->to_id;
+        this->interceptor_.set_client_id(this->id_);
       } break;
     }
   } else {

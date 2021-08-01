@@ -76,6 +76,15 @@ class MockServer {
           this->connection_socket_.async_send(
               std::experimental::net::buffer(this->send_buf_), handler);
         } break;
+        case dph::Command::FORWARDMESSAGE: {
+          // Here we simulate the message being sent to all parties and send
+          // back the host response. On the real server, we simply forward the
+          // message to the appropariate clinet. If the intended recipient is
+          // the host, the message is forwarded to all.
+          std::vector<char> payload = dph_message_recv.get_payload();
+          dppl::DPProxyMessage msg(payload);
+          this->process(msg);
+        } break;
         default:
           std::experimental::net::defer([&]() { this->io_context_->stop(); });
       }
@@ -136,6 +145,8 @@ class MockServer {
     }
     return *result;
   }
+
+  void process(dppl::DPProxyMessage const&) {}
 };
 
 TEST(ClientTest, constructor) {
@@ -194,5 +205,5 @@ TEST(ClientTest, SimulateJoin) {
 
   // Start the App Simulator
   dppl::AppSimulator simulator(&io_context, false);
-  io_context.run();
+  // io_context.run();
 }

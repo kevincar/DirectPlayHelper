@@ -30,7 +30,7 @@ TEST(interceptorTest, host_test) {
         if (!ec) {
           LOG(DEBUG) << "dpsrver timer sending data";
           send_buf.assign(enumsession.begin(), enumsession.end());
-          dppl::DPProxyMessage proxy_message(send_buf, {0, 0}, {0, 0});
+          dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0}, {5, 0, 0});
           interceptor->dp_deliver(proxy_message.to_vector());
           dpsrvr_timer.expires_at(std::chrono::steady_clock::now() +
                                   dpsrvr_duration);
@@ -44,7 +44,7 @@ TEST(interceptorTest, host_test) {
       [&](std::error_code const& ec) {
         if (!ec) {
           dppl::DPProxyMessage proxy_message(recv_buf);
-          std::vector<char> dp_message = proxy_message.get_dp_msg();
+          std::vector<char> dp_message = proxy_message.get_dp_msg_data();
           send_buf = dppl::AppSimulator::process_message(dp_message);
           // Swap the to and from IDs
           dppl::DPProxyMessage send_proxy_message(send_buf,
@@ -53,7 +53,7 @@ TEST(interceptorTest, host_test) {
 
           dppl::DPMessage request(&send_buf);
           LOG(DEBUG) << "Received request from joining peer (id "
-                     << send_proxy_message.get_from_ids().systemID
+                     << send_proxy_message.get_from_ids().clientID
                      << "). Sending back to interceptor. Received: "
                      << request.header()->command;
           switch (request.header()->command) {
@@ -90,8 +90,8 @@ TEST(interceptorTest, host_test) {
       [&](std::vector<char> buffer) {
         dppl::DPProxyMessage proxy_message(buffer);
         LOG(DEBUG) << "interceptor dp callback from "
-                   << proxy_message.get_from_ids().systemID;
-        std::vector<char> dp_message = proxy_message.get_dp_msg();
+                   << proxy_message.get_from_ids().clientID;
+        std::vector<char> dp_message = proxy_message.get_dp_msg_data();
         dppl::DPMessage response(&dp_message);
         if (response.header()->command == DPSYS_ENUMSESSIONSREPLY) {
           dpsrvr_timer.cancel();
@@ -104,7 +104,7 @@ TEST(interceptorTest, host_test) {
       [&](std::vector<char> buffer) {
         LOG(DEBUG) << "interceptor data callback";
         dppl::DPProxyMessage proxy_message(buffer);
-        std::vector<char> data_message = proxy_message.get_dp_msg();
+        std::vector<char> data_message = proxy_message.get_dp_msg_data();
         DWORD* id = reinterpret_cast<DWORD*>(&(*data_message.begin()));
         ASSERT_EQ(proxy_message.get_from_ids().playerID, *id);
         std::experimental::net::defer([&]() { io_context.stop(); });
@@ -129,7 +129,7 @@ TEST(interceptorTest, join_test) {
       [&](std::error_code const& ec) {
         if (!ec) {
           dppl::DPProxyMessage recv_proxy_message(recv_buf);
-          std::vector<char> recv_dp_msg = recv_proxy_message.get_dp_msg();
+          std::vector<char> recv_dp_msg = recv_proxy_message.get_dp_msg_data();
           send_buf = dppl::AppSimulator::process_message(recv_dp_msg);
           dppl::DPMessage recv_dp_message(&recv_dp_msg);
           dppl::DPMessage send_dp_message(&send_buf);
@@ -137,8 +137,20 @@ TEST(interceptorTest, join_test) {
               send_buf, recv_proxy_message.get_from_ids(),
               recv_proxy_message.get_to_ids());
 
-          // End of test check
-          if (recv_dp_message.header()->command == DPSYS_CREATEPLAYER) {
+          if (send_dp_message.header()->command == DPSYS_ENUMSESSIONSREPLY) {
+            // when proxies receive their first message they will initialize
+            // their client_id_ values. For hosts, the first message is a
+            // ENUMSESSIONS message, for clients, it is the ENUMSESSIONSREPLY.
+            // For this test, the from and to ids are 0, because this test
+            // doesn't use an actual client yet, we need to initialize with e
+            // from.clientID field to an arbitrary value to use
+            send_proxy_message.set_from_ids({8, 0, 0});
+          } else if (recv_dp_message.header()->command == DPSYS_CREATEPLAYER) {
+            // End of test check
+            dppl::DPProxyEndpointIDs from = send_proxy_message.get_to_ids();
+            LOG(DEBUG) << "From Client ID: " << from.clientID
+                       << "\t System ID: " << from.systemID
+                       << "\t Player ID: " << from.playerID;
             DWORD* ptr = reinterpret_cast<DWORD*>(&(*send_buf.begin()));
             DWORD data_to_id = *(++ptr);
             DWORD pm_to_id = send_proxy_message.get_to_ids().playerID;
@@ -162,7 +174,7 @@ TEST(interceptorTest, join_test) {
   std::function<void(std::vector<char>)> dp_callback =
       [&](std::vector<char> buffer) {
         dppl::DPProxyMessage proxy_message(buffer);
-        std::vector<char> dp_msg = proxy_message.get_dp_msg();
+        std::vector<char> dp_msg = proxy_message.get_dp_msg_data();
         dppl::DPMessage dp_message(&dp_msg);
         if (dp_message.header()->command > DPSYS_CREATEPLAYERVERIFY) {
           dp_message = dppl::DPMessage(&buffer);
@@ -178,6 +190,7 @@ TEST(interceptorTest, join_test) {
       };
   interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
                                                     data_callback);
+  interceptor->set_client_id(3);
   dppl::AppSimulator app(&io_context, false);
   io_context.run();
 }
@@ -198,7 +211,7 @@ TEST(interceptorTest, join) {
       [&](std::vector<char> const& buffer) {
         std::vector<char> recv_buffer = buffer;
         dppl::DPProxyMessage proxy_message(recv_buffer);
-        std::vector<char> dp_buf = proxy_message.get_dp_msg();
+        std::vector<char> dp_buf = proxy_message.get_dp_msg_data();
         dppl::DPMessage packet(&dp_buf);
         LOG(DEBUG) << "ETHERIAL SPACE: RECEIVED DATA: MESSAGE ID: "
                    << packet.header()->command;
@@ -207,6 +220,7 @@ TEST(interceptorTest, join) {
         (*send_to_internet)(buffer);
       },
       [&](std::vector<char> const& buffer) {});
+  interceptor.set_client_id(3);
 
   send_to_internet =
       std::make_shared<std::function<void(std::vector<char> const&)>>(
@@ -270,7 +284,7 @@ TEST(interceptorTest, host) {
       [&](std::error_code const& ec) {
         if (!ec) {
           dppl::DPProxyMessage proxy_message(recv_buf);
-          std::vector<char> dp_message = proxy_message.get_dp_msg();
+          std::vector<char> dp_message = proxy_message.get_dp_msg_data();
           send_buf = dppl::AppSimulator::process_message(dp_message);
           // Swap the to and from IDs
           dppl::DPProxyMessage send_proxy_message(send_buf,
@@ -317,7 +331,7 @@ TEST(interceptorTest, host) {
         dppl::DPProxyMessage proxy_message(buffer);
         LOG(DEBUG) << "interceptor dp callback from "
                    << proxy_message.get_from_ids().systemID;
-        std::vector<char> dp_message = proxy_message.get_dp_msg();
+        std::vector<char> dp_message = proxy_message.get_dp_msg_data();
         dppl::DPMessage response(&dp_message);
         if (response.header()->command == DPSYS_ENUMSESSIONSREPLY) {
           dpsrvr_timer.cancel();
@@ -330,7 +344,7 @@ TEST(interceptorTest, host) {
       [&](std::vector<char> buffer) {
         LOG(DEBUG) << "interceptor data callback";
         dppl::DPProxyMessage proxy_message(buffer);
-        std::vector<char> data_message = proxy_message.get_dp_msg();
+        std::vector<char> data_message = proxy_message.get_dp_msg_data();
         DWORD* id = reinterpret_cast<DWORD*>(&(*data_message.begin()));
         ASSERT_EQ(proxy_message.get_from_ids().playerID, *id);
         std::experimental::net::defer([&]() { io_context.stop(); });

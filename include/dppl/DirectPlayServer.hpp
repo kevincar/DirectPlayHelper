@@ -7,12 +7,16 @@
 #include "dppl/PacketSniffer.hpp"
 
 namespace dppl {
+// This server is used to capture data that originates from the DirectPlay
+// Application using the `sniffer_` and passes a vector of bytes to the
+// `forward` callback function.
 class DirectPlayServer {
  public:
   DirectPlayServer(std::experimental::net::io_context* io_context,
                    std::function<void(std::vector<char>)> forward);
 
  private:
+  // Used to initiate receive packets on `sniffer_socket_`
   void receive();
   void receive_handler(std::error_code const& ec,
                        std::size_t bytes_transmitted);

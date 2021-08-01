@@ -17,8 +17,6 @@ typedef struct {
 enum Command {
   REQUESTID,
   REQUESTIDREPLY,
-  ENUMCLIENTS,
-  ENUMCLIENTSREPLY,
   FORWARDMESSAGE
 };
 

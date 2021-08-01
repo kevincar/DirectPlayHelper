@@ -55,27 +55,6 @@ class MockServer {
           this->connection_socket_.async_send(
               std::experimental::net::buffer(this->send_buf_), handler);
         } break;
-        case dph::Command::ENUMCLIENTS: {
-          LOG(DEBUG) << "ENUMCLIENTS";
-
-          // Pack the ClientRecords
-          std::vector<char> client_record_data =
-              dph::ClientRecord::pack_records(this->client_records_);
-
-          // Set up the message
-          this->send_buf_.resize(1024);
-          dph::Message dph_message_send(0, id, dph::Command::ENUMCLIENTSREPLY,
-                                        client_record_data.size(),
-                                        client_record_data.data());
-          std::vector<char> dph_data = dph_message_send.to_vector();
-          this->send_buf_.assign(dph_data.begin(), dph_data.end());
-
-          auto handler =
-              std::bind(&MockServer::do_send, this, std::placeholders::_1,
-                        std::placeholders::_2);
-          this->connection_socket_.async_send(
-              std::experimental::net::buffer(this->send_buf_), handler);
-        } break;
         case dph::Command::FORWARDMESSAGE: {
           // Here we simulate the message being sent to all parties and send
           // back the host response. On the real server, we simply forward the
@@ -161,28 +140,25 @@ TEST(ClientTest, constructor) {
 
   mock_server.accept();
 
-  // Client Callback
-  auto client_callback = [&](std::vector<char> const& data) {
-    dph::Message dph_message(data);
-    dph::MESSAGE* dph_msg = dph_message.get_message();
-    switch (dph_msg->msg_command) {
-      case dph::Command::REQUESTIDREPLY: {
-        client->request_clients();
-      } break;
-      case dph::Command::ENUMCLIENTSREPLY: {
-        std::vector<dph::ClientRecord> records =
-            dph::ClientRecord::unpack_records(dph_message.get_payload());
-        ASSERT_EQ(records.size(), 1);
-        io_context.stop();
-      } break;
-    }
-  };
-
   // Create a client!
   std::experimental::net::ip::tcp::resolver resolver(io_context);
   auto endpoints = resolver.resolve("localhost", std::to_string(server_port));
   client =
-      std::make_unique<dph::Client>(&io_context, endpoints, client_callback);
+      std::make_unique<dph::Client>(&io_context, endpoints);
+
+  // Basically we simply want to test that the client connects after
+  // construction. This is validated by ensuring that the client ID isn't 0.
+  // We'll make a timer to test this.
+  std::experimental::net::steady_timer connection_timeout(io_context, std::chrono::seconds(2));
+  connection_timeout.async_wait([&](std::error_code const& ec){
+      if (!ec) {
+        EXPECT_NE(client->get_id(), 0);
+        std::experimental::net::defer([&](){io_context.stop();});
+      }
+      else {
+        LOG(WARNING) << "Connection timeout timer errored: " << ec.message();
+      }
+      });
 
   io_context.run();
 }

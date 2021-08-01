@@ -11,22 +11,18 @@ class Client {
  public:
   Client(
       std::experimental::net::io_context* io_context,
-      std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
-      std::function<void(std::vector<char>)> callback =
-          [](std::vector<char> x) {});
+      std::experimental::net::ip::tcp::resolver::results_type const& endpoints);
 
-  void request_clients(void);
+  uint32_t get_id(void) const;
 
  private:
   void forward_message(Message const& message);
 
   /* Message Sending */
   void request_id(void);
-  void enumerate_clients(void);
 
   /* Message Handlers */
   void request_id_reply_handler(Message const& message);
-  void enumerate_clients_reply_handler(Message const& message);
 
   /* General net initializers */
   void receive(void);
@@ -50,7 +46,6 @@ class Client {
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::socket connection_;
   std::experimental::net::steady_timer request_timer_;
-  std::function<void(std::vector<char>)> request_callback_;
   dppl::interceptor interceptor_;
 };
 }  // namespace dph

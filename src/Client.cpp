@@ -5,14 +5,12 @@
 namespace dph {
 Client::Client(
     std::experimental::net::io_context* io_context,
-    std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
-    std::function<void(std::vector<char>)> callback)
+    std::experimental::net::ip::tcp::resolver::results_type const& endpoints)
     : send_buf_(1024, '\0'),
       recv_buf_(1024, '\0'),
       io_context_(io_context),
       connection_(*io_context, std::experimental::net::ip::tcp::v4()),
       request_timer_(*io_context, std::chrono::milliseconds(5)),
-      request_callback_(callback),
       interceptor_(
           io_context,
           std::bind(&Client::dp_callback, this, std::placeholders::_1),
@@ -27,7 +25,7 @@ Client::Client(
   std::experimental::net::async_connect(this->connection_, endpoints, handler);
 }
 
-void Client::request_clients(void) { this->enumerate_clients(); }
+uint32_t Client::get_id(void) const { return this->id_; }
 
 void Client::forward_message(Message const& message) {
   std::vector<char> data = message.to_vector();
@@ -49,20 +47,6 @@ void Client::request_id(void) {
       this->connection_, std::experimental::net::buffer(this->send_buf_),
       handler);
 }
-
-void Client::enumerate_clients(void) {
-  LOG(DEBUG) << "enumerate_clients";
-  dph::Message dph_message(0, 0, dph::Command::ENUMCLIENTS, 0, NULL);
-  std::vector<char> data = dph_message.to_vector();
-  this->send_buf_.assign(data.begin(), data.end());
-  auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,
-                           std::placeholders::_2);
-  std::experimental::net::async_write(
-      this->connection_, std::experimental::net::buffer(this->send_buf_),
-      handler);
-}
-
-void Client::enumerate_clients_reply_handler(Message const& message) {}
 
 void Client::receive(void) {
   this->recv_buf_.resize(1024, '\0');
@@ -92,11 +76,7 @@ void Client::receive_handler(std::error_code const& ec,
         LOG(DEBUG) << "Received ID";
         this->id_ = dph_msg->to_id;
       } break;
-      case dph::Command::ENUMCLIENTS: {
-        LOG(DEBUG) << "Received Client Enumeration";
-      } break;
     }
-    this->request_callback_(this->recv_buf_);
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
   }

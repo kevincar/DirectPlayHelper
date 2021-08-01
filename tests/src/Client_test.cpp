@@ -1,5 +1,5 @@
-#include <g3log/g3log.hpp>
 #include <utility>
+#include <g3log/g3log.hpp>
 
 #include "Client.hpp"
 #include "ClientRecord.hpp"
@@ -146,9 +146,7 @@ class MockServer {
     return *result;
   }
 
-  void process(dppl::DPProxyMessage const&) {
-
-  }
+  void process(dppl::DPProxyMessage const&) {}
 };
 
 TEST(ClientTest, constructor) {
@@ -207,5 +205,5 @@ TEST(ClientTest, SimulateJoin) {
 
   // Start the App Simulator
   dppl::AppSimulator simulator(&io_context, false);
-  io_context.run();
+  // io_context.run();
 }

@@ -6,8 +6,8 @@
 
 namespace dppl {
 proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
-             std::function<void(DPProxyMessage const&)> dp_callback,
-             std::function<void(DPProxyMessage const&)> data_callback)
+             std::function<void(DPProxyMessage)> dp_callback,
+             std::function<void(DPProxyMessage)> data_callback)
     : io_context_(io_context),
       proxy_type_(proxy_type),
       dp_callback_(dp_callback),
@@ -62,15 +62,15 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
   return;
 }
 
-void proxy::dp_deliver(DPProxyMessage const& data) {
+void proxy::dp_deliver(DPProxyMessage data) {
   if (!this->validate_message(data)) return;
-  this->dp_send_buf_ = data.get_dp_msg();
+  this->dp_send_buf_ = data.get_dp_msg_data();
   this->dp_send();
 }
 
-void proxy::data_deliver(std::vector<char> const& data) {
+void proxy::data_deliver(DPProxyMessage data) {
   if (!this->validate_message(data)) return;
-  this->data_send_buf_ = data;
+  this->data_send_buf_ = data.get_dp_msg_data();
   this->data_send();
 }
 
@@ -172,7 +172,7 @@ void proxy::dp_receive_requestplayerreply() {
   } else {
     this->player_id_ = msg->dwID;
   }
-  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0});
+  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0, 0});
   this->dp_callback_(proxy_message);
 }
 
@@ -203,7 +203,7 @@ void proxy::dp_receive_addforwardrequest_handler() {
 
 void proxy::dp_default_receive_handler() {
   LOG(DEBUG) << "data received default handler";
-  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0});
+  DPProxyMessage proxy_message(this->dp_recv_buf_, *this, {0, 0, 0});
   this->dp_callback_(proxy_message);
 }
 
@@ -402,14 +402,14 @@ bool proxy::validate_message(DPProxyMessage const& message) {
   DWORD sender_id = sender_info.clientID;
 
   if (sender_id == 0) {
-    LOG(ERROR) << "Proxy received information from an unknown sender";
+    LOG(FATAL) << "Proxy received information from an unknown sender";
     return false;
   }
 
   if (this->client_id_ == 0) {
     this->client_id_ = sender_id;
-  } else if (this->client_id_ != = sender_id) {
-    LOG(ERROR) << "Proxy message intended for client " << sender_id
+  } else if (this->client_id_ != sender_id) {
+    LOG(FATAL) << "Proxy message intended for client " << sender_id
                << "was sent to the wrong proxy" << this->client_id_;
     return false;
   }

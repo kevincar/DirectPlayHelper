@@ -45,8 +45,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   // owns the proxy. THe `data_callback` is the same but for data that is
   // transfered once the connection is established (typically UDP 2350)
   proxy(std::experimental::net::io_context* io_context, type proxy_type,
-        std::function<void(DPProxyMessage const&)> dp_callback,
-        std::function<void(DPProxyMessage const&)> data_callback);
+        std::function<void(DPProxyMessage)> dp_callback,
+        std::function<void(DPProxyMessage)> data_callback);
 
   void stop();
 
@@ -62,8 +62,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
 
   // the `_deliver` functions are used by the owning class to send incoming
   // remote messages to the local DirectPlay application
-  void dp_deliver(DPProxyMessage const& data);
-  void data_deliver(DPProxyMessage const& data);
+  void dp_deliver(DPProxyMessage data);
+  void data_deliver(DPProxyMessage data);
 
   DWORD get_client_id() const;
   DWORD get_system_id() const;

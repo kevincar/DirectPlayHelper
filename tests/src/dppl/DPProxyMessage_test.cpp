@@ -12,6 +12,6 @@ TEST(DPProxyMessageTest, ProxyToIDs) {
                                 0, 81, 0, 0, 0,  82, 0, 0, 0,  0, 1, 2, 3, 4};
   EXPECT_EQ((observed == expected), true);
 
-  std::vector<char> re_data = dpimsg.get_dp_msg();
+  std::vector<char> re_data = dpimsg.get_dp_msg_data();
   EXPECT_EQ((re_data == test_data), true);
 }

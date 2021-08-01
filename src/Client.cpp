@@ -117,7 +117,7 @@ void Client::connection_handler(
 }
 
 void Client::dp_callback(std::vector<char> const& data) {
-  // TODO: @kevincar
+  // TODO(@kevincar): Read below
   // We cannot assume we know where message is going just yet, we must decode
   // the message and match the ID endpoints with those of the server. This is
   // where ENUMCLIENS comes in. Perhaps it doens't matter, and we can let the

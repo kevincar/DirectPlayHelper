@@ -64,8 +64,10 @@ TEST(ProxyTest, dp_initialization_host) {
 
   std::vector<char> recv_buf(255, '\0');
   std::vector<char> send_buf(255, '\0');
-  int system_id = -1;
-  int player_id = -1;
+  DWORD client_id =
+      9;  // Arbitrary, in the actual process, this will be set by server
+  DWORD system_id = -1;
+  DWORD player_id = -1;
   std::shared_ptr<dppl::proxy> proxy;
   auto const dpsrvr_timer_delay = std::chrono::seconds(5);
   auto const simulated_internet_delay = std::chrono::milliseconds(750);
@@ -76,15 +78,16 @@ TEST(ProxyTest, dp_initialization_host) {
   std::function<void(std::error_code const&)> dpsrvr_timer_callback;
   std::function<void(std::error_code const&)> internet_timer_callback;
   std::function<void(std::vector<char> const&)> send_to_server;
-  std::function<void(dppl::DPProxyMessage const&)> proxy_dp_callback =
-      [&](dppl::DPProxyMessage const& buf) {
+  std::function<void(dppl::DPProxyMessage)> proxy_dp_callback =
+      [&](dppl::DPProxyMessage buf) {
+        // buf.set_from_ids({client_id, system_id, player_id});
         // We'll use the AppSimulator::process_message to simulate a response
         // over the internet
         LOG(DEBUG) << "Proxy received message from the app";
         // Handl messages with player data that needs to have socket info
         // resolved
-        std::vector<char> dp_msg = buf.get_dp_msg();
-        dppl::DPMessage response(&dp_msg);
+        dppl::DPMessage response = buf.get_dp_msg();
+        LOG(DEBUG) << "Message Command ID: " << response.header()->command;
         switch (response.header()->command) {
           case DPSYS_SUPERENUMPLAYERSREPLY: {
             DPMSG_SUPERENUMPLAYERSREPLY* msg =
@@ -92,6 +95,7 @@ TEST(ProxyTest, dp_initialization_host) {
             DPLAYI_SUPERPACKEDPLAYER* player =
                 response.property_data<DPLAYI_SUPERPACKEDPLAYER>(
                     msg->dwPackedOffset);
+            LOG(DEBUG) << "n players: " << msg->dwPlayerCount;
             for (int i = 0; i < msg->dwPlayerCount; i++) {
               dppl::DPSuperPackedPlayer superpack(player);
               // System player
@@ -124,10 +128,10 @@ TEST(ProxyTest, dp_initialization_host) {
         send_to_server(buf.to_vector());
       };
 
-  std::function<void(dppl::DPProxyMessage const&)> proxy_data_callback =
-      [&](dppl::DPProxyMessage const& message) {
+  std::function<void(dppl::DPProxyMessage)> proxy_data_callback =
+      [&](dppl::DPProxyMessage message) {
         LOG(DEBUG) << "Proxy_test received a data message from the app";
-        std::vector<char> buf = message.get_dp_msg();
+        std::vector<char> buf = message.get_dp_msg_data();
         DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
         ASSERT_EQ(*ptr, player_id);
         proxy->stop();
@@ -144,8 +148,9 @@ TEST(ProxyTest, dp_initialization_host) {
           0xde, 0xd0, 0x11, 0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b,
           0x00, 0x00, 0x00, 0x00, 0x52, 0x00, 0x00, 0x00,
       };
-      send_buf.assign(data.begin(), data.end());
-      proxy->dp_deliver(send_buf);
+      dppl::DPProxyMessage dpp_msg(data, {0, 0, 0}, {1, 0, 0});
+      LOG(DEBUG) << "Sending from: " << dpp_msg.get_from_ids().clientID;
+      proxy->dp_deliver(dpp_msg);
       dpsrvr_timer.expires_at(dpsrvr_timer.expiry() + dpsrvr_timer_delay);
       dpsrvr_timer.async_wait(dpsrvr_timer_callback);
     } else {
@@ -158,10 +163,14 @@ TEST(ProxyTest, dp_initialization_host) {
       dpsrvr_timer.cancel();
       dppl::DPProxyMessage proxy_message(recv_buf);
       send_buf =
-          dppl::AppSimulator::process_message(proxy_message.get_dp_msg());
-      LOG(DEBUG) << "Received response from simulated player, delivering back "
+          dppl::AppSimulator::process_message(proxy_message.get_dp_msg_data());
+      LOG(DEBUG) << "Received response from simulated player with id "
+                 << proxy->get_client_id()
+                 << ", delivering back "
                     "to the app through proxy";
-      proxy->dp_deliver(send_buf);
+      proxy_message.set_to_ids({client_id, system_id, player_id});
+      proxy_message.set_from_ids(*proxy);
+      proxy->dp_deliver(proxy_message);
     } else {
       LOG(WARNING) << "Timer error: " << ec.message();
     }
@@ -185,8 +194,10 @@ TEST(ProxyTest, dp_initialization_host) {
 
 TEST(ProxyTest, dp_initialization_join) {
   auto simulated_internet_delay = std::chrono::milliseconds(750);
-  int system_id;
-  int player_id;
+  DWORD client_id = 9;
+  DWORD system_id;
+  DWORD player_id;
+  DWORD peer_id = 8;
   int playeridflags;
   std::vector<char> recv_buf(512, '\0');
   std::vector<char> send_buf(512, '\0');
@@ -199,17 +210,24 @@ TEST(ProxyTest, dp_initialization_join) {
       [&](std::error_code const& ec) {
         if (!ec) {
           dppl::DPProxyMessage proxy_message(recv_buf);
-          std::vector<char> dp_message = proxy_message.get_dp_msg();
-          dppl::DPMessage request(&dp_message);
+          dppl::DPMessage request = proxy_message.get_dp_msg();
           bool send_to_data = request.header()->command == DPSYS_CREATEPLAYER;
-          send_buf = dppl::AppSimulator::process_message(dp_message);
+          send_buf = dppl::AppSimulator::process_message(
+              proxy_message.get_dp_msg_data());
           LOG(DEBUG)
               << "Received a message from the server. Sending to app via proxy";
           dppl::DPMessage response(&send_buf);
           switch (response.header()->command) {
-            case DPSYS_ENUMSESSIONSREPLY:
+            case DPSYS_ENUMSESSIONSREPLY: {
               // NOTHING TO HANDLE HERE
-              break;
+              // The first time a messag comes in from the internet the proxy
+              // will not yet have an associated client id, here we set that.
+              dppl::DPProxyMessage send_proxy_message(
+                  send_buf, {client_id, system_id, player_id}, {peer_id, 0, 0});
+              LOG(DEBUG) << "Sending to "
+                         << send_proxy_message.get_from_ids().clientID;
+              proxy->dp_deliver(send_proxy_message);
+            } break;
             case DPSYS_REQUESTPLAYERREPLY: {
               DPMSG_REQUESTPLAYERREPLY* msg =
                   response.message<DPMSG_REQUESTPLAYERREPLY>();
@@ -252,12 +270,17 @@ TEST(ProxyTest, dp_initialization_join) {
                 ASSERT_EQ(*id, player_id);
                 proxy->stop();
                 std::experimental::net::post([&]() { io_context.stop(); });
-                return proxy->data_deliver(send_buf);
+                dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0}, *proxy);
+                return proxy->data_deliver(proxy_message);
               } else {
                 return;
               }
           }
-          proxy->dp_deliver(send_buf);
+          dppl::DPProxyMessage send_proxy_message(
+              send_buf, {client_id, system_id, player_id}, *proxy);
+          LOG(DEBUG) << "Sending to "
+                     << send_proxy_message.get_from_ids().clientID;
+          proxy->dp_deliver(send_proxy_message);
         } else {
           LOG(DEBUG) << "Timmer Error: " << ec.message();
         }
@@ -276,15 +299,15 @@ TEST(ProxyTest, dp_initialization_join) {
     dppl::DPMessage request(&buffer);
     proxy->set_return_addr(
         request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
-    dppl::DPProxyMessage proxy_message(buffer, {0, 0}, {0, 0});
+    dppl::DPProxyMessage proxy_message(buffer, {0, 0, 0},
+                                       {client_id, system_id, player_id});
     std::vector<char> proxy_message_data = proxy_message.to_vector();
     send_to_server(proxy_message_data);
   };
-  std::function<void(dppl::DPProxyMessage const&)> proxy_dp_callback =
-      [&](dppl::DPProxyMessage const& message) {
+  std::function<void(dppl::DPProxyMessage)> proxy_dp_callback =
+      [&](dppl::DPProxyMessage message) {
         LOG(DEBUG) << "Received message from proxy";
-        std::vector<char> dp_message = message.get_dp_msg();
-        dppl::DPMessage request(&dp_message);
+        dppl::DPMessage request = message.get_dp_msg();
         switch (request.header()->command) {
           case DPSYS_REQUESTPLAYERID: {
             DPMSG_REQUESTPLAYERID* msg =
@@ -329,9 +352,8 @@ TEST(ProxyTest, join) {
   std::vector<char> response_data(512, '\0');
   std::shared_ptr<dppl::proxy> host_proxy = std::make_shared<dppl::proxy>(
       &io_context, dppl::proxy::type::host,
-      [&](dppl::DPProxyMessage const& message) {
-        std::vector<char> dp_message = message.get_dp_msg();
-        dppl::DPMessage request(&dp_message);
+      [&](dppl::DPProxyMessage message) {
+        dppl::DPMessage request = message.get_dp_msg();
         EXPECT_EQ(request.header()->command, 0x5);
         host_proxy->stop();
         std::experimental::net::defer(io_context, [&]() { io_context.stop(); });
@@ -375,7 +397,8 @@ TEST(ProxyTest, join) {
     std::copy(session_name.begin(), session_name.end() + 1,
               reinterpret_cast<char16_t*>(&msg->szSessionName));
     response_data.resize(response.header()->cbSize);
-    host_proxy->dp_deliver(response_data);
+    dppl::DPProxyMessage proxy_message(response_data, {0, 0, 0}, *host_proxy);
+    host_proxy->dp_deliver(proxy_message);
   });
 
   LOG(INFO) << "Please attempt to join a session. It Will fail, but this will "
@@ -395,10 +418,9 @@ TEST(ProxyTest, host) {
                                              std::chrono::seconds(5));
   std::shared_ptr<dppl::proxy> peer_proxy = std::make_shared<dppl::proxy>(
       &io_context, dppl::proxy::type::peer,
-      [&](dppl::DPProxyMessage const& message) {
+      [&](dppl::DPProxyMessage message) {
         LOG(DEBUG) << "Peer proxy received a response rom the app";
-        std::vector<char> dp_message = message.get_dp_msg();
-        dppl::DPMessage response(&dp_message);
+        dppl::DPMessage response = message.get_dp_msg();
         peer_proxy->set_return_addr(
             response
                 .get_return_addr<std::experimental::net::ip::tcp::endpoint>());
@@ -423,7 +445,9 @@ TEST(ProxyTest, host) {
                 request.message<DPMSG_REQUESTPLAYERID>();
             msg->dwFlags = REQUESTPLAYERIDFLAGS::issystemplayer;
             send_buf.resize(request.header()->cbSize);
-            peer_proxy->dp_deliver(send_buf);
+            dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0},
+                                               *peer_proxy);
+            peer_proxy->dp_deliver(proxy_message);
             break;
           }
           case DPSYS_REQUESTPLAYERREPLY:
@@ -457,7 +481,8 @@ TEST(ProxyTest, host) {
           send_buf.resize(request.header()->cbSize);
 
           LOG(DEBUG) << "Timer: Sending sample ENUMSESSIONS request";
-          peer_proxy->dp_deliver(send_buf);
+          dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0}, *peer_proxy);
+          peer_proxy->dp_deliver(proxy_message);
           timer.expires_at(timer.expiry() + std::chrono::seconds(5));
           timer.async_wait(timer_callback);
         } else {

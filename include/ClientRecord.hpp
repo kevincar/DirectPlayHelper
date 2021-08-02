@@ -11,12 +11,23 @@ typedef struct {
   uint32_t public_address;
   uint16_t public_port;
 } CLIENT_RECORD;
+typedef struct {
+  std::size_t n_records;
+  CLIENT_RECORD records[];
+} CLIENT_RECORDS;
 #pragma pack(pop)
 class ClientRecord {
  public:
   ClientRecord(uint32_t id, std::experimental::net::ip::tcp::endpoint const&);
+  explicit ClientRecord(CLIENT_RECORD const*);
   explicit ClientRecord(std::vector<char> const&);
   std::vector<char> to_vector();
+  CLIENT_RECORD pack();
+
+  uint32_t const get_id() const;
+
+  static std::vector<char> pack_records(std::vector<ClientRecord> records);
+  static std::vector<ClientRecord> unpack_records(std::vector<char> records);
 
  private:
   uint32_t id_;

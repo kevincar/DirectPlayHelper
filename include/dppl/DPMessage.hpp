@@ -6,8 +6,10 @@
 
 #include "dppl/dplay.h"
 namespace dppl {
+// A class to simplify common operations made on DirectPlay message data
 class DPMessage {
  public:
+  // Used to decode any pointer to data. Data is reinterpreted as a char*
   template <typename T>
   explicit DPMessage(T* message_data);
 
@@ -16,22 +18,47 @@ class DPMessage {
 
   DPMSG_HEADER* header();
 
+  // All `DPMSG_HEADER`s have a `sockAddr` member that tells the receiving
+  // application what ip address to send data back on. This method modifies
+  // this endpoint in the underlying message
   template <typename T>
   void set_return_addr(T endpoint);
   template <typename T>
   T get_return_addr();
 
+  // Ensures that the `signature` member of `DPMSG_HEADER` is appropriately set
+  // to "PLAY"
   void set_signature();
 
+  // Allows a DPMessage to be returned as a pointer to the appropriate
+  // DirectPlayMessage Structure
+  // Example:
+  //   DPMessage msg(&data);
+  //   DPMSG_CREATEPLAYER* msg = DPMessage.message<DPMSG_CREATEPLAYER>();
   template <typename T>
   T* message();
 
+  // Some values within the DirectPlay message are positioned at offsets
+  // defined by members within the message structure. `property_data` is a
+  // convenience function that returns a pointer to the data at `offset` within
+  // the message data. DirectPlay message offsets are relative to the end of
+  // the `signagure` unless otherwise specified
+  // Example:
+  //   DPMessage packet(&data);
+  //   DPMSG_SUPERENUMPLAYERSREPLY* msg =
+  //       packet.message<DPMSG_SUPERENUMPLAYERSREPLY>();
+  //   DPLAYI_SUPERPACKEDPLAYER* player =
+  //       packet.property_data<DPLAYI_SUPERPACKEDPLAYER>(msg->dwPackedOffset);
   template <typename T>
   T* property_data(int offset);
 
+  // A static convenience function for convert ip addresses from little to big
+  // endien and visa versa since address are normally handle in host byte order
+  // (big endian)
   template <typename T>
   static T flip(T value);
 
+  // Convert an experimental::net endpoint to a dpsockadder
   template <typename T>
   static dpsockaddr to_dpaddr(T endpoint);
 
@@ -90,7 +117,7 @@ T DPMessage::flip(T value) {
   }
   if (len == 4) {
     return ((value & 0xff000000) >> 24) | ((value & 0xff0000) >> 8) |
-         ((value & 0xff00) << 8) | ((value & 0xff) << 24);
+           ((value & 0xff00) << 8) | ((value & 0xff) << 24);
   }
   return 0;
 }

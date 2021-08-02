@@ -3,6 +3,9 @@
 #include "dppl/dplay.h"
 #include "experimental/net"
 namespace dppl {
+// A convenience function for working with and manipulating the large
+// DPMSG_SUPERENUMPLAYERSREPLY message. This is crutial so that proxy classes
+// can be set up to act as a proxy for a connecting client.
 class DPSuperPackedPlayer {
  public:
   explicit DPSuperPackedPlayer(DPLAYI_SUPERPACKEDPLAYER* player);

@@ -3,7 +3,8 @@
 #include <experimental/net>
 #include <vector>
 
-#include "DPHMessage.hpp"
+#include "Message.hpp"
+#include "dppl/interceptor.hpp"
 
 namespace dph {
 class Client {
@@ -12,15 +13,17 @@ class Client {
       std::experimental::net::io_context* io_context,
       std::experimental::net::ip::tcp::resolver::results_type const& endpoints);
 
+  uint32_t get_id(void) const;
+  void dp_deliver(std::vector<char> const& data);
+
  private:
+  void forward_message(Message const& message);
+
   /* Message Sending */
   void request_id(void);
-  void enumerate_clients(void);
-  void forward_message(DPHMessage const& message);
 
   /* Message Handlers */
-  void request_id_reply_handler(DPHMessage const& message);
-  void enumerate_clients_reply_handler(DPHMessage const& message);
+  void request_id_reply_handler(Message const& message);
 
   /* General net initializers */
   void receive(void);
@@ -34,11 +37,17 @@ class Client {
       std::error_code const& ec,
       std::experimental::net::ip::tcp::endpoint const& endpoint);
 
+  /* Interceptor callbacks */
+  void dp_callback(std::vector<char> const& data);
+  void data_callback(std::vector<char> const& data);
+
   uint32_t id_ = 0;
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::socket connection_;
+  std::experimental::net::steady_timer request_timer_;
+  dppl::interceptor interceptor_;
 };
 }  // namespace dph
 #endif  // INCLUDE_CLIENT_HPP_

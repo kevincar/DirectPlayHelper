@@ -138,7 +138,9 @@ void interceptor::direct_play_server_callback(std::vector<char> const& buffer) {
     this->host_proxy_->set_return_addr(
         request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
   }
-  DPProxyMessage proxy_message(buffer, {0}, {0});
+  DPProxyMessage proxy_message(
+      buffer, {0, 0, 0},
+      {this->client_id_, this->system_id_, this->player_id_});
   this->dp_forward_(proxy_message.to_vector());
 }
 

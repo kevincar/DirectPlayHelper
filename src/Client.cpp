@@ -77,6 +77,21 @@ void Client::receive_handler(std::error_code const& ec,
         this->id_ = dph_msg->to_id;
         this->interceptor_.set_client_id(this->id_);
       } break;
+      case dph::Command::FORWARDMESSAGE: {
+        std::vector<char> dp_proxy_message_data = dph_message.get_payload();
+        dppl::DPProxyMessage proxy_message(dp_proxy_message_data);
+        LOG(DEBUG) << "Received forward message from "
+                   << proxy_message.get_from_ids().clientID << " to "
+                   << proxy_message.get_to_ids().clientID;
+        if (proxy_message.get_to_ids().clientID != this->id_) {
+          LOG(FATAL) << "Client received message that was not intended for it";
+        }
+        if (proxy_message.is_dp_message()) {
+          this->interceptor_.dp_deliver(proxy_message.to_vector());
+        } else {
+          this->interceptor_.data_deliver(proxy_message.to_vector());
+        }
+      } break;
     }
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
@@ -99,11 +114,14 @@ void Client::connection_handler(
 
 // data is a vector of bytes in the format of a DPProxyMessage
 void Client::dp_callback(std::vector<char> const& data) {
-  dph::dppl::DPProxyMessage message(data);
+  dppl::DPProxyMessage proxy_message(data);
 
   // Assert that we're sending this from the right client
-  assert message.get_from_ids().clientID == this->id_;
-  uint32_t to_id = message.get_to_ids().clientID;
+  if (proxy_message.get_from_ids().clientID != this->id_) {
+    LOG(FATAL)
+        << "Message being sent from client with incorrect identification";
+  }
+  uint32_t to_id = proxy_message.get_to_ids().clientID;
 
   dph::Message message(this->id_, to_id, dph::Command::FORWARDMESSAGE,
                        data.size(), data.data());

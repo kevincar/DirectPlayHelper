@@ -1,5 +1,5 @@
-#include <utility>
 #include <g3log/g3log.hpp>
+#include <utility>
 
 #include "Client.hpp"
 #include "ClientRecord.hpp"
@@ -95,7 +95,13 @@ class MockServer {
     // it was the last message. The returning message should be a data message
     // and the second four bytes represent the player ID of the client to send
     // the data to
-    if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
+    if (!msg.is_dp_message()) {
+      LOG(DEBUG) << "NICE!";
+      DWORD *ptr = reinterpret_cast<DWORD*>(&(*dp_message_data.begin()));
+      EXPECT_EQ(*(++ptr), msg.get_to_ids().playerID);
+      std::experimental::net::defer([&](){this->io_context_->stop();});
+      return;
+    } else if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
       DWORD* ptr = reinterpret_cast<DWORD*>(&(*response_data.begin()));
       DWORD player_id = msg.get_from_ids().playerID;
       EXPECT_EQ(*(++ptr), player_id);
@@ -197,6 +203,43 @@ TEST(ClientTest, constructor) {
     } else {
       LOG(WARNING) << "Connection timeout timer errored: " << ec.message();
     }
+  });
+
+  io_context.run();
+}
+
+TEST(ClientTest, SimulateHost) {
+  uint16_t port;
+  std::vector<char> recv_buf;
+  std::vector<char> send_buf;
+  std::experimental::net::io_context io_context;
+
+  // Start the mock server
+  MockServer server(&io_context);
+  port = server.get_endpoint().port();
+  server.accept();
+
+  // Start the Client
+  std::experimental::net::ip::tcp::resolver resolver(io_context);
+  auto endpoints = resolver.resolve("localhost", std::to_string(port));
+  dph::Client client(&io_context, endpoints);
+
+  // Start the App Simulator
+  dppl::AppSimulator simulator(&io_context, true);
+
+  // Create a DPSVR emitter
+  std::experimental::net::steady_timer dpsvr_timer(io_context,
+                                                   std::chrono::seconds(5));
+  dpsvr_timer.async_wait([&](std::error_code const& ec) {
+    std::vector<uint8_t> enumsession = {
+        0x34, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
+        0x61, 0x79, 0x02, 0x00, 0x0e, 0x00, 0xc0, 0x13, 0x06, 0xbf, 0x79,
+        0xde, 0xd0, 0x11, 0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b,
+        0x00, 0x00, 0x00, 0x00, 0x52, 0x00, 0x00, 0x00,
+    };
+    dppl::DPProxyMessage proxy_message(enumsession, {0, 0, 0}, {99, 0, 0});
+    client.dp_deliver(proxy_message.to_vector());
   });
 
   io_context.run();

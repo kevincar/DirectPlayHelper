@@ -50,6 +50,15 @@ void DPProxyMessage::set_from_ids(proxy const& from) {
   this->set_from_ids(this->proxy_to_ids(from));
 }
 
+bool DPProxyMessage::is_dp_message(void) const {
+  std::vector<char> data = this->get_dp_msg_data();
+  DPMessage message(&data);
+  DPMSG_HEADER* header = message.header();
+  char* pSignature = reinterpret_cast<char*>(&(*header->signature));
+  std::string signature(pSignature, 4);
+  return signature == "play";
+}
+
 DPProxyEndpointIDs DPProxyMessage::proxy_to_ids(proxy const& p) {
   DWORD client_id = p.get_client_id();
   DWORD system_id = p.get_system_id();

@@ -41,6 +41,9 @@ class Message {
 
   std::vector<char> to_vector(void) const;
 
+  // Determines whether the payload is carring a DP or Data message
+  bool is_dp_message(void) const;
+
  private:
   std::vector<char> data_;
 };

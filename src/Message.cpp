@@ -1,6 +1,7 @@
 #include <g3log/g3log.hpp>
 
 #include "Message.hpp"
+#include "dppl/DPProxyMessage.hpp"
 
 namespace dph {
 Message::Message(void) : data_(1024, '\0') {}
@@ -38,4 +39,11 @@ void Message::set_payload(std::vector<char> const& payload) {
 }
 
 std::vector<char> Message::to_vector(void) const { return this->data_; }
+
+bool Message::is_dp_message(void) const {
+  // Load the payload into a DPProxyMessage
+  dppl::DPProxyMessage proxy_message(this->to_vector());
+
+  return proxy_message.is_dp_message();
+}
 }  // namespace dph

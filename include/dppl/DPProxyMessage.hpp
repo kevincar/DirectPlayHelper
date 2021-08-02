@@ -61,6 +61,9 @@ class DPProxyMessage {
   void set_from_ids(DPProxyEndpointIDs);
   void set_from_ids(proxy const&);
 
+  // Determine whether the message is a dp message or a data message
+  bool is_dp_message(void) const;
+
   template <typename T>
   static std::vector<char> pack_message(std::vector<T> message_data,
                                         proxy const& to, proxy const& from);

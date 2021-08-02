@@ -14,6 +14,7 @@ class Client {
       std::experimental::net::ip::tcp::resolver::results_type const& endpoints);
 
   uint32_t get_id(void) const;
+  void dp_deliver(std::vector<char> const& data);
 
  private:
   void forward_message(Message const& message);

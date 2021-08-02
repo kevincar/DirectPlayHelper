@@ -37,6 +37,11 @@ void Client::forward_message(Message const& message) {
       handler);
 }
 
+void Client::dp_deliver(std::vector<char> const& data) {
+  dppl::DPProxyMessage message(data);
+  this->interceptor_.dp_deliver(message.to_vector());
+}
+
 void Client::request_id(void) {
   dph::Message dph_message(0, 0, dph::Command::REQUESTID, 0, nullptr);
   std::vector<char> data = dph_message.to_vector();

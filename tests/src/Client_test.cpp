@@ -34,43 +34,83 @@ class MockServer {
       LOG(DEBUG) << "Data Received!";
       LOG(DEBUG) << this->recv_buf_.size();
       dph::Message dph_message_recv(this->recv_buf_);
-      dph::MESSAGE* msg = dph_message_recv.get_message();
-      switch (msg->msg_command) {
-        case dph::Command::REQUESTID: {
-          LOG(DEBUG) << "REQUESTID";
-
-          // Set up the message
-          this->send_buf_.resize(1024);
-          dph::Message dph_message_send(0, id, dph::Command::REQUESTIDREPLY, 0,
-                                        nullptr);
-          std::vector<char> dph_data = dph_message_send.to_vector();
-
-          // Send it back
-          LOG(DEBUG) << "Sending back ID: " << id;
-
-          this->send_buf_.assign(dph_data.begin(), dph_data.end());
-          auto handler =
-              std::bind(&MockServer::do_send, this, std::placeholders::_1,
-                        std::placeholders::_2);
-          this->connection_socket_.async_send(
-              std::experimental::net::buffer(this->send_buf_), handler);
-        } break;
-        case dph::Command::FORWARDMESSAGE: {
-          // Here we simulate the message being sent to all parties and send
-          // back the host response. On the real server, we simply forward the
-          // message to the appropariate clinet. If the intended recipient is
-          // the host, the message is forwarded to all.
-          std::vector<char> payload = dph_message_recv.get_payload();
-          dppl::DPProxyMessage msg(payload);
-          this->process(msg);
-        } break;
-        default:
-          std::experimental::net::defer([&]() { this->io_context_->stop(); });
-      }
+      this->process_message(dph_message_recv, id);
     } else {
       LOG(WARNING) << "receive error: " << ec.message();
     }
     this->receive(id);
+  }
+
+  void process_message(dph::Message message, uint32_t const id) {
+    dph::MESSAGE* msg = message.get_message();
+    switch (msg->msg_command) {
+      case dph::Command::REQUESTID: {
+        this->process_request_id(id);
+      } break;
+      case dph::Command::FORWARDMESSAGE: {
+        this->process_forward_message(message);
+      } break;
+      default:
+        std::experimental::net::defer([&]() { this->io_context_->stop(); });
+    }
+  }
+
+  void process_request_id(uint32_t const id) {
+    LOG(DEBUG) << "REQUESTID";
+
+    // Set up the message
+    this->send_buf_.resize(1024);
+    dph::Message dph_message_send(0, id, dph::Command::REQUESTIDREPLY, 0,
+                                  nullptr);
+    std::vector<char> dph_data = dph_message_send.to_vector();
+
+    // Send it back
+    LOG(DEBUG) << "Sending back ID: " << id;
+
+    this->send_buf_.assign(dph_data.begin(), dph_data.end());
+    auto handler = std::bind(&MockServer::do_send, this, std::placeholders::_1,
+                             std::placeholders::_2);
+    this->connection_socket_.async_send(
+        std::experimental::net::buffer(this->send_buf_), handler);
+  }
+
+  void process_forward_message(dph::Message message) {
+    // Here we simulate the message being sent to all parties and send
+    // back the host response. On the real server, we simply forward the
+    // message to the appropariate clinet. If the intended recipient is
+    // the host, the message is forwarded to all.
+    std::vector<char> payload = message.get_payload();
+    dppl::DPProxyMessage msg(payload);
+    std::vector<char> dp_message_data = msg.get_dp_msg_data();
+
+    // We will simply simulate the message being processed on some other
+    // client here though
+    std::vector<char> response_data =
+        dppl::AppSimulator::process_message(dp_message_data);
+    dppl::DPProxyMessage return_dp_msg(response_data, msg.get_from_ids(),
+                                       {99, 0, 0});
+    dppl::DPMessage dp_message = return_dp_msg.get_dp_msg();
+
+    // If the message delievered from the app was the DPSYS_CREATEPLAYER, then
+    // it was the last message. The returning message should be a data message
+    // and the second four bytes represent the player ID of the client to send
+    // the data to
+    if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
+      DWORD* ptr = reinterpret_cast<DWORD*>(&(*response_data.begin()));
+      DWORD player_id = msg.get_from_ids().playerID;
+      EXPECT_EQ(*(++ptr), player_id);
+      std::experimental::net::defer([&]() { this->io_context_->stop(); });
+    }
+    std::vector<char> return_payload = return_dp_msg.to_vector();
+    dph::Message return_message(90, msg.get_from_ids().clientID,
+                                dph::Command::FORWARDMESSAGE,
+                                return_payload.size(), return_payload.data());
+    std::vector<char> return_data = return_message.to_vector();
+    this->send_buf_.assign(return_data.begin(), return_data.end());
+    auto handler = std::bind(&MockServer::do_send, this, std::placeholders::_1,
+                             std::placeholders::_2);
+    this->connection_socket_.async_send(
+        std::experimental::net::buffer(this->send_buf_), handler);
   }
 
   void receive(uint32_t const id) {
@@ -143,22 +183,21 @@ TEST(ClientTest, constructor) {
   // Create a client!
   std::experimental::net::ip::tcp::resolver resolver(io_context);
   auto endpoints = resolver.resolve("localhost", std::to_string(server_port));
-  client =
-      std::make_unique<dph::Client>(&io_context, endpoints);
+  client = std::make_unique<dph::Client>(&io_context, endpoints);
 
   // Basically we simply want to test that the client connects after
   // construction. This is validated by ensuring that the client ID isn't 0.
   // We'll make a timer to test this.
-  std::experimental::net::steady_timer connection_timeout(io_context, std::chrono::seconds(2));
-  connection_timeout.async_wait([&](std::error_code const& ec){
-      if (!ec) {
-        EXPECT_NE(client->get_id(), 0);
-        std::experimental::net::defer([&](){io_context.stop();});
-      }
-      else {
-        LOG(WARNING) << "Connection timeout timer errored: " << ec.message();
-      }
-      });
+  std::experimental::net::steady_timer connection_timeout(
+      io_context, std::chrono::seconds(2));
+  connection_timeout.async_wait([&](std::error_code const& ec) {
+    if (!ec) {
+      EXPECT_NE(client->get_id(), 0);
+      std::experimental::net::defer([&]() { io_context.stop(); });
+    } else {
+      LOG(WARNING) << "Connection timeout timer errored: " << ec.message();
+    }
+  });
 
   io_context.run();
 }
@@ -181,5 +220,5 @@ TEST(ClientTest, SimulateJoin) {
 
   // Start the App Simulator
   dppl::AppSimulator simulator(&io_context, false);
-  // io_context.run();
+  io_context.run();
 }

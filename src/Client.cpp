@@ -135,5 +135,17 @@ void Client::dp_callback(std::vector<char> const& data) {
 
 void Client::data_callback(std::vector<char> const& data) {
   LOG(DEBUG) << "Received data callback";
+  dppl::DPProxyMessage proxy_message(data);
+
+  // Assert that we're sending this from the right client
+  if (proxy_message.get_from_ids().clientID != this->id_) {
+    LOG(FATAL)
+        << "Message being sent from client with incorrect identification";
+  }
+  uint32_t to_id = proxy_message.get_to_ids().clientID;
+
+  dph::Message message(this->id_, to_id, dph::Command::FORWARDMESSAGE,
+                       data.size(), data.data());
+  this->forward_message(message);
 }
 }  // namespace dph

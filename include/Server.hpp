@@ -1,9 +1,8 @@
 #ifndef INCLUDE_SERVER_HPP_
 #define INCLUDE_SERVER_HPP_
 #include <experimental/net>
-#include <vector>
-
 #include <g3log/g3log.hpp>
+#include <vector>
 
 #include "ClientRecord.hpp"
 #include "Message.hpp"
@@ -28,8 +27,8 @@ class Server {
   void accept_handler(std::error_code const& ec,
                       std::experimental::net::ip::tcp::socket socket);
   void send_handler(std::error_code const& ec, std::size_t bytes_transmitted);
-  void receive_handler(std::error_code const& ec,
-                       std::size_t bytes_transmitted);
+  void receive_handler(std::error_code const& ec, std::size_t bytes_transmitted,
+                       uint32_t const id);
 
   uint16_t const kPort_ = 47625;
   std::vector<char> recv_buf_;

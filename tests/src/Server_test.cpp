@@ -9,8 +9,10 @@ TEST(ServerTest, Constructor) {
 
   std::experimental::net::steady_timer timer(io_context,
                                              std::chrono::seconds(3));
-  timer.async_wait(
-      [&](std::error_code const& ec) { LOG(DEBUG) << "Done waiting"; });
+  timer.async_wait([&](std::error_code const& ec) {
+    LOG(DEBUG) << "Done waiting";
+    std::experimental::net::defer([&]() { io_context.stop(); });
+  });
 
   io_context.run();
 }

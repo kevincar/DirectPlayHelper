@@ -28,8 +28,10 @@ add_executable("${TEST_PROJECT_NAME}"
   ../src/Message.cpp
   ../src/ClientRecord.cpp
   ../src/Client.cpp
+  ../src/Server.cpp
 
   # Should be listed in order of dependecies
+  ./src/Server_test.cpp
   ./src/dppl/hardware_test.cpp
   ./src/dppl/PacketSniffer_test.cpp
   ./src/dppl/DPProxyMessage_test.cpp

@@ -2,8 +2,8 @@
 
 namespace dph {
 Server::Server(std::experimental::net::io_context* io_context)
-    : recv_buf_('\0', 1024),
-      send_buf_('\0', 1024),
+    : recv_buf_(1024, '\0'),
+      send_buf_(1024, '\0'),
       io_context_(io_context),
       server_socket_(*io_context,
                      std::experimental::net::ip::tcp::endpoint(
@@ -71,9 +71,9 @@ void Server::receive_handler(std::error_code const& ec,
   LOG(DEBUG) << "Server received a message for client " << id;
   dph::Message message(this->recv_buf_);
   dph::MESSAGE* dph_msg = message.get_message();
-  if (dph_msg->from_id != id) {
-    LOG(FATAL)
-        << "Server received a message froma a client on the wrong stream";
+  if (dph_msg->from_id != id && dph_msg->from_id != 0) {
+    LOG(FATAL) << "Server received a message from client " << dph_msg->from_id
+               << " which is on a different socket";
   }
   this->process_message(message);
 }

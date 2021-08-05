@@ -1,9 +1,9 @@
 #ifndef INCLUDE_SERVER_HPP_
 #define INCLUDE_SERVER_HPP_
 #include <experimental/net>
-#include <g3log/g3log.hpp>
 #include <vector>
 
+#include <g3log/g3log.hpp>
 #include "ClientRecord.hpp"
 #include "Message.hpp"
 

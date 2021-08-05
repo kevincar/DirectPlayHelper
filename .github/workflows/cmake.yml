@@ -18,7 +18,7 @@ jobs:
         os:
           # - ubuntu-latest
           - macos-latest
-          # - windows-latest
+          - windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -40,10 +40,11 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Windows Test
-      working-directory: ${{github.workspace}}/build/tests
+      working-directory: ${{github.workspace}}/build/tests/Release
       if: runner.os == 'Windows'
-      shell: pwsh
-      run: ./Release/DirectPlayHelperTest.exe
+      run: |
+          echo "Starting Test"
+          ./DirectPlayHelperTest.exe
 
     - name: unix test
       working-directory: ${{github.workspace}}/build/tests

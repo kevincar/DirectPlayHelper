@@ -43,6 +43,8 @@ jobs:
       working-directory: ${{github.workspace}}/build/tests/Release
       if: runner.os == 'Windows'
       run: |
+          echo "Installing WinPCap"
+          ../../../scripts/windows/install-dependencies.ps1
           echo "Starting Test"
           ./DirectPlayHelperTest.exe
 

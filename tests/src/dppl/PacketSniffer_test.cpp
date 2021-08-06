@@ -62,9 +62,10 @@ TEST(PacketSnifferTest, JoinSim) {
         io_context.stop();
       });
 
-  // We'll also create a timeout 
-  std::experimental::net::steady_timer timer(io_context, std::chrono::seconds(30));
-  timer.async_wait([&](std::error_code const& ec){
+  // We'll also create a timeout
+  std::experimental::net::steady_timer timer(io_context,
+                                             std::chrono::seconds(30));
+  timer.async_wait([&](std::error_code const& ec) {
     if (!ec) {
       EXPECT_EQ(completed, true);
     } else {

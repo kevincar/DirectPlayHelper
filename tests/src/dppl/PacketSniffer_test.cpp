@@ -45,7 +45,7 @@ TEST(PacketSnifferTest, JoinSim) {
   std::experimental::net::io_context io_context;
   std::experimental::net::ip::udp::socket receiver(
       io_context, std::experimental::net::ip::udp::endpoint(
-                      std::experimental::net::ip::udp::v4(), 0));
+                      std::experimental::net::ip::address_v4::loopback(), 0));
 
   dppl::AppSimulator app(&io_context, false);
   dppl::PacketSniffer sniffer(receiver.local_endpoint());

@@ -39,14 +39,14 @@ jobs:
       ## Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: WinPCap
+      if: runner.os == 'Windows'
+      run: ./scripts/windows/install-dependencies.ps1
+
     - name: Windows Test
       working-directory: ${{github.workspace}}/build/tests/Release
       if: runner.os == 'Windows'
-      run: |
-          echo "Installing WinPCap"
-          ../../../scripts/windows/install-dependencies.ps1
-          echo "Starting Test"
-          ./DirectPlayHelperTest.exe
+      run: ./DirectPlayHelperTest.exe
 
     - name: unix test
       working-directory: ${{github.workspace}}/build/tests

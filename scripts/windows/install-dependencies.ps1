@@ -7,4 +7,3 @@ choco install 7zip -y
 7z e "nmap-7.12-setup.exe" "winpcap-nmap-4.13.exe"
 .\winpcap-nmap-4.13.exe /S
 Set-Location -Path "..\"
-Remove-Item -Force -Recurse ".\temp"

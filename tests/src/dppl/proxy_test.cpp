@@ -100,15 +100,15 @@ TEST(ProxyTest, dp_initialization_host) {
               dppl::DPSuperPackedPlayer superpack(player);
               // System player
               if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::issystemplayer) {
-                LOG(DEBUG) << "Found system player";
+                LOG(DEBUG) << "Found system player. system_id: " << player->ID;
                 if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
                   system_id = player->ID;
                 } else {
                   proxy->register_player(player);
                 }
               } else {
-                LOG(DEBUG) << "Found Application Player";
-                if (player->dwSystemPlayerID == system_id) {
+                LOG(DEBUG) << "Found Application Player, player_id: " << player->ID;
+                if (superpack.getSystemPlayerID() == system_id) {
                   player_id = player->ID;
                 } else {
                   proxy->register_player(player);
@@ -133,9 +133,11 @@ TEST(ProxyTest, dp_initialization_host) {
         LOG(DEBUG) << "Proxy_test received a data message from the app";
         std::vector<char> buf = message.get_dp_msg_data();
         DWORD* ptr = reinterpret_cast<DWORD*>(&(*buf.begin()));
-        ASSERT_EQ(*ptr, player_id);
         proxy->stop();
-        std::experimental::net::post([&]() { io_context.stop(); });
+        std::experimental::net::post([&]() { 
+          io_context.stop();
+        });
+        ASSERT_EQ(*ptr, player_id);
       };
 
   dpsrvr_timer_callback = [&](std::error_code const& ec) {

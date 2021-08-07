@@ -251,7 +251,7 @@ TEST(ProxyTest, dp_initialization_join) {
                   proxy->register_player(player);
                 } else {
                   if (player->ID == system_id ||
-                      player->dwSystemPlayerID == system_id) {
+                      superpack.getSystemPlayerID() == system_id) {
                     LOG(DEBUG) << "Found our player :)";
                   } else {
                     LOG(DEBUG) << "Unregsitered player!";
@@ -299,8 +299,9 @@ TEST(ProxyTest, dp_initialization_join) {
                                                                 buffer) {
     LOG(DEBUG) << "Received DPS MESSAGE";
     dppl::DPMessage request(&buffer);
-    proxy->set_return_addr(
-        request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
+    auto return_addr = request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
+    return_addr.address(std::experimental::net::ip::address_v4::loopback());
+    proxy->set_return_addr(return_addr);
     dppl::DPProxyMessage proxy_message(buffer, {0, 0, 0},
                                        {client_id, system_id, player_id});
     std::vector<char> proxy_message_data = proxy_message.to_vector();

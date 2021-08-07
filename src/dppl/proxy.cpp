@@ -13,16 +13,16 @@ proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
       dp_callback_(dp_callback),
       data_callback_(data_callback),
       dp_acceptor_(*io_context, std::experimental::net::ip::tcp::endpoint(
-                                    std::experimental::net::ip::tcp::v4(), 0)),
+                                    std::experimental::net::ip::address_v4::loopback(), 0)),
       dp_recv_socket_(*io_context),
       dp_send_socket_(*io_context,
                       std::experimental::net::ip::tcp::endpoint(
-                          std::experimental::net::ip::tcp::v4(), 0)),
+                          std::experimental::net::ip::address_v4::loopback(), 0)),
       dpsrvr_socket_(*io_context,
                      std::experimental::net::ip::udp::endpoint(
-                         std::experimental::net::ip::udp::v4(), 0)),
+                         std::experimental::net::ip::address_v4::loopback(), 0)),
       data_socket_(*io_context, std::experimental::net::ip::udp::endpoint(
-                                    std::experimental::net::ip::udp::v4(), 0)) {
+                                    std::experimental::net::ip::address_v4::loopback(), 0)) {
   this->dpsrvr_socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
   this->dp_accept();
@@ -133,6 +133,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
+    this->app_dp_endpoint_.address(std::experimental::net::ip::address_v4::loopback());
     PILOG(DEBUG) << "dp received message: " << packet.header()->command
                  << PELOG;
     switch (packet.header()->command) {

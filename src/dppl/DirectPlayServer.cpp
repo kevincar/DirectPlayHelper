@@ -12,7 +12,7 @@ DirectPlayServer::DirectPlayServer(
       forward_(forward),
       sniffer_socket_(*io_context,
                       std::experimental::net::ip::udp::endpoint(
-                          std::experimental::net::ip::udp::v4(), 0)),
+                          std::experimental::net::ip::address_v4::loopback(), 0)),
       sniffer_(sniffer_socket_.local_endpoint()) {
   this->receive();
 }

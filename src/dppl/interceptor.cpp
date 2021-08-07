@@ -135,8 +135,9 @@ void interceptor::direct_play_server_callback(std::vector<char> const& buffer) {
                                   std::placeholders::_1);
     this->host_proxy_ = std::make_shared<proxy>(
         this->io_context_, proxy::type::host, dp_handler, data_handler);
-    this->host_proxy_->set_return_addr(
-        request.get_return_addr<std::experimental::net::ip::tcp::endpoint>());
+    auto return_addr = request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
+    return_addr.address(std::experimental::net::ip::address_v4::loopback());
+    this->host_proxy_->set_return_addr(return_addr);
   }
   DPProxyMessage proxy_message(
       buffer, {0, 0, 0},
@@ -263,7 +264,7 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
     system_id = player->ID;
   } else {
     LOG(DEBUG) << "Player";
-    system_id = player->dwSystemPlayerID;
+    system_id = superpack.getSystemPlayerID();
     player_id = player->ID;
   }
 
@@ -274,7 +275,7 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
     return superpack.size();
   }
 
-  if (player->dwSystemPlayerID == this->host_proxy_->get_system_id()) {
+  if (superpack.getSystemPlayerID() == this->host_proxy_->get_system_id()) {
     LOG(DEBUG) << "Registering the host player (player ID)";
     this->host_proxy_->register_player(player);
     return superpack.size();
@@ -327,8 +328,8 @@ void interceptor::dp_recv_superenumplayersreply() {
       }
     }
 
-    if (this->system_id_ == player->dwSystemPlayerID) {
-      this->system_id_ = player->dwSystemPlayerID;
+    if (this->system_id_ == superpack.getSystemPlayerID()) {
+      this->system_id_ = superpack.getSystemPlayerID();
       this->player_id_ = player->ID;
     }
 

@@ -44,6 +44,11 @@ class Message {
   // Determines whether the payload is carring a DP or Data message
   bool is_dp_message(void) const;
 
+  uint32_t get_from_id(void);
+  void set_from_id(uint32_t const id);
+
+  uint32_t get_to_id(void);
+
  private:
   std::vector<char> data_;
 };

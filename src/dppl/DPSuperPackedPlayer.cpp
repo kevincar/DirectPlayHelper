@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "dppl/DPSuperPackedPlayer.hpp"
 
@@ -6,8 +7,54 @@ namespace dppl {
 DPSuperPackedPlayer::DPSuperPackedPlayer(DPLAYI_SUPERPACKEDPLAYER* player)
     : sp_data_(player), data_(reinterpret_cast<char*>(player)) {}
 
+bool DPSuperPackedPlayer::getShortNamePresent() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _shortNamePresent = (*mask & 0x1);
+  return static_cast<bool>(_shortNamePresent);
+}
+
+bool DPSuperPackedPlayer::getLongNamePresent() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _longNamePresent = (*mask & 0x2) >> 1;
+  return static_cast<bool>(_longNamePresent);
+}
+
+BYTE DPSuperPackedPlayer::getServiceProviderLength() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _serviceProviderLength = (*mask & 0x6) >> 2;
+  return static_cast<BYTE>(_serviceProviderLength);
+}
+
+BYTE DPSuperPackedPlayer::getPlayerDataLength() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _playerDataLength = (*mask & 0x30) >> 4;
+  return static_cast<BYTE>(_playerDataLength);
+}
+
+BYTE DPSuperPackedPlayer::getPlayerCountLength() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _playerCountLength = (*mask & 0xC0) >> 6;
+  return static_cast<BYTE>(_playerCountLength);
+}
+
+bool DPSuperPackedPlayer::getParentIDPresent() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _parentIDPresent = (*mask & 0x0100) >> 8;
+  return static_cast<bool>(_parentIDPresent);
+}
+
+BYTE DPSuperPackedPlayer::getShortcutCountLength() {
+  DWORD* mask = this->_getPlayerInfoMask();
+  DWORD _shortcutCountLength = (*mask & 0x0600) >> 9;
+  return static_cast<BYTE>(_shortcutCountLength);
+}
+
+DWORD DPSuperPackedPlayer::getSystemPlayerID() {
+  return *this->_getSystemPlayerID();
+}
+
 char16_t* DPSuperPackedPlayer::getShortName() {
-  if (!this->sp_data_->dwPlayerInfoMask.shortNamePresent) {
+  if (!this->getShortNamePresent()) {
     return nullptr;
   }
   return this->_getShortName();
@@ -25,7 +72,7 @@ std::size_t DPSuperPackedPlayer::getShortNameSize() {
 }
 
 char16_t* DPSuperPackedPlayer::getLongName() {
-  if (!this->sp_data_->dwPlayerInfoMask.longNamePresent) {
+  if (!this->getLongNamePresent()) {
     return nullptr;
   }
 
@@ -44,7 +91,7 @@ std::size_t DPSuperPackedPlayer::getLongNameSize() {
 }
 
 std::size_t DPSuperPackedPlayer::getPlayerDataSize() {
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.playerDataLength;
+  int bit_factor = static_cast<int>(this->getPlayerDataLength());
   if (bit_factor == 0) {
     return 0;
   }
@@ -72,8 +119,9 @@ char* DPSuperPackedPlayer::getPlayerData() {
 }
 
 std::size_t DPSuperPackedPlayer::getServiceProviderSize() {
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.serviceProviderLength;
+  int bit_factor = static_cast<int>(this->getServiceProviderLength());
   char* service_provider_size_ptr = this->_getServiceProviderSize();
+  char* sp_ptr = reinterpret_cast<char*>(this->sp_data_);
   std::size_t retval = 0;
   switch (bit_factor) {
     case 0:
@@ -110,7 +158,7 @@ void DPSuperPackedPlayer::setDataEndpoint(
 }
 
 std::size_t DPSuperPackedPlayer::getNumPlayerIDs() {
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.playerCountLength;
+  int bit_factor = static_cast<int>(this->getPlayerCountLength());
   char* player_count_ptr = this->_getNumPlayerIDs();
   std::size_t retval = 0;
   switch (bit_factor) {
@@ -138,14 +186,14 @@ DWORD* DPSuperPackedPlayer::getPlayerIDs() {
 }
 
 DWORD* DPSuperPackedPlayer::getParentID() {
-  if (!this->sp_data_->dwPlayerInfoMask.parentIDPresent) {
+  if (!this->getParentIDPresent()) {
     return nullptr;
   }
   return this->_getParentID();
 }
 
 std::size_t DPSuperPackedPlayer::getNumShortcutIDs() {
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.shortcutCountLength;
+  int bit_factor = static_cast<int>(this->getShortcutCountLength());
   char* shortcut_count_ptr = this->_getNumShortcutIDs();
   std::size_t retval = 0;
   switch (bit_factor) {
@@ -178,8 +226,23 @@ std::size_t DPSuperPackedPlayer::size() {
 }
 
 /* Private Methods */
+DWORD* DPSuperPackedPlayer::_getPlayerInfoMask() {
+  return reinterpret_cast<DWORD*>(&this->sp_data_->dwPlayerInfoMask);
+}
+
+DWORD* DPSuperPackedPlayer::_getSystemPlayerID() {
+  std::size_t bytes_to_id = 0x10;
+  uint8_t* sp_ptr = reinterpret_cast<uint8_t*>(this->sp_data_);
+  DWORD* systemPlayerID = reinterpret_cast<DWORD*>(sp_ptr + bytes_to_id);
+  return systemPlayerID;
+}
+
 char16_t* DPSuperPackedPlayer::_getShortName() {
-  return reinterpret_cast<char16_t*>(this->sp_data_->data);
+  DWORD* id_ptr = this->_getSystemPlayerID();
+  std::size_t id_len = sizeof(DWORD);
+  char* short_name_ptr = reinterpret_cast<char*>(id_ptr) + id_len;
+  char16_t* shortName = reinterpret_cast<char16_t*>(short_name_ptr);
+  return shortName;
 }
 
 char16_t* DPSuperPackedPlayer::_getLongName() {
@@ -198,7 +261,7 @@ char* DPSuperPackedPlayer::_getPlayerDataSize() {
 
 char* DPSuperPackedPlayer::_getPlayerData() {
   char* player_data_size_ptr = this->_getPlayerDataSize();
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.playerDataLength;
+  int bit_factor = static_cast<int>(this->getPlayerDataLength());
   std::size_t player_data_size_type_size = std::pow(2, bit_factor - 1);
   return player_data_size_ptr + player_data_size_type_size;
 }
@@ -211,7 +274,7 @@ char* DPSuperPackedPlayer::_getServiceProviderSize() {
 
 dpsockaddr* DPSuperPackedPlayer::_getServiceProviders() {
   char* service_provider_size_ptr = this->_getServiceProviderSize();
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.serviceProviderLength;
+  int bit_factor = static_cast<int>(this->getServiceProviderLength());
   std::size_t service_provider_size_type_size = std::pow(2, bit_factor - 1);
   return reinterpret_cast<dpsockaddr*>(service_provider_size_ptr +
                                        service_provider_size_type_size);
@@ -226,7 +289,7 @@ char* DPSuperPackedPlayer::_getNumPlayerIDs() {
 
 DWORD* DPSuperPackedPlayer::_getPlayerIDs() {
   char* num_player_ids_ptr = this->_getNumPlayerIDs();
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.playerCountLength;
+  int bit_factor = static_cast<int>(this->getPlayerCountLength());
   std::size_t player_id_count_type_size = std::pow(2, bit_factor - 1);
   return reinterpret_cast<DWORD*>(num_player_ids_ptr +
                                   player_id_count_type_size);
@@ -240,56 +303,56 @@ DWORD* DPSuperPackedPlayer::_getParentID() {
 
 char* DPSuperPackedPlayer::_getNumShortcutIDs() {
   DWORD* parent_id_ptr = this->_getParentID();
-  std::size_t parent_id_size =
-      this->sp_data_->dwPlayerInfoMask.parentIDPresent ? 1 : 0;
+  bool parentIDPresent = this->getParentIDPresent();
+  std::size_t parent_id_size = parentIDPresent ? 1 : 0;
   return reinterpret_cast<char*>(parent_id_ptr + parent_id_size);
 }
 
 DWORD* DPSuperPackedPlayer::_getShortcutIDs() {
   char* num_shortcut_ids_ptr = this->_getNumShortcutIDs();
-  int bit_factor = this->sp_data_->dwPlayerInfoMask.shortcutCountLength;
+  int bit_factor = static_cast<int>(this->getShortcutCountLength());
   std::size_t shortcut_id_count_type_size = std::pow(2, bit_factor - 1);
   return reinterpret_cast<DWORD*>(num_shortcut_ids_ptr +
                                   shortcut_id_count_type_size);
 }
 
 char* DPSuperPackedPlayer::_endPtr() {
-  if (this->sp_data_->dwPlayerInfoMask.shortcutCountLength != 0) {
+  if (this->getShortcutCountLength() != 0) {
     DWORD* ptr = this->_getShortcutIDs();
     std::size_t len = this->getNumShortcutIDs();
     return reinterpret_cast<char*>(ptr + len);
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.parentIDPresent != 0) {
+  if (this->getParentIDPresent()) {
     DWORD* ptr = this->_getParentID();
     return reinterpret_cast<char*>(ptr + 1);
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.playerCountLength != 0) {
+  if (this->getPlayerCountLength() != 0) {
     DWORD* ptr = this->_getPlayerIDs();
     std::size_t len = this->getNumPlayerIDs();
     return reinterpret_cast<char*>(ptr + len);
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.serviceProviderLength != 0) {
+  if (this->getServiceProviderLength() != 0) {
     char* ptr = reinterpret_cast<char*>(this->_getServiceProviders());
     std::size_t len = this->getServiceProviderSize();
     return ptr + len;
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.playerDataLength != 0) {
+  if (this->getPlayerDataLength() != 0) {
     char* ptr = this->_getPlayerData();
     std::size_t len = this->getPlayerDataSize();
     return ptr + len;
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.longNamePresent != 0) {
+  if (this->getLongNamePresent()) {
     char16_t* ptr = this->_getLongName();
     std::size_t len = this->getLongNameSize();
     return reinterpret_cast<char*>(ptr + len);
   }
 
-  if (this->sp_data_->dwPlayerInfoMask.shortNamePresent != 0) {
+  if (this->getShortNamePresent()) {
     char16_t* ptr = this->_getShortName();
     std::size_t len = this->getShortNameSize();
     return reinterpret_cast<char*>(ptr + len);

@@ -46,4 +46,16 @@ bool Message::is_dp_message(void) const {
 
   return proxy_message.is_dp_message();
 }
+
+uint32_t Message::get_from_id(void) {
+  return this->get_message()->from_id;
+}
+
+void Message::set_from_id(uint32_t const id) {
+  this->get_message()->from_id = id;
+}
+
+uint32_t Message::get_to_id(void) {
+  return this->get_message()->to_id;
+}
 }  // namespace dph

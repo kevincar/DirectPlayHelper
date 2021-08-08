@@ -28,19 +28,22 @@ add_executable("${TEST_PROJECT_NAME}"
   ../src/Message.cpp
   ../src/ClientRecord.cpp
   ../src/Client.cpp
+  ../src/Server.cpp
 
   # Should be listed in order of dependecies
   ./src/dppl/hardware_test.cpp
+  ./src/dppl/AppSimulator.cpp
+  ./src/dppl/dplay_size_test.cpp
   ./src/dppl/PacketSniffer_test.cpp
   ./src/dppl/DPProxyMessage_test.cpp
   ./src/dppl/DPSuperPackedPlayer_test.cpp
-  ./src/dppl/AppSimulator.cpp
   ./src/dppl/DirectPlayServer_test.cpp
   ./src/dppl/proxy_test.cpp
   ./src/dppl/interceptor_test.cpp
   ./src/Message_test.cpp
   ./src/ClientRecord_test.cpp
   ./src/Client_test.cpp
+  ./src/Server_test.cpp
 	./src/main_test.cpp
 
 	#./src/nathp/Packet_test.cpp

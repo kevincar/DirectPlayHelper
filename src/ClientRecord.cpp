@@ -31,7 +31,7 @@ std::vector<char> ClientRecord::pack_records(
   // Calculate the size
   std::size_t n_records = records.size();
   std::size_t pack_size =
-      sizeof(std::size_t) + (n_records + sizeof(CLIENT_RECORD));
+      sizeof(std::size_t) + (n_records * sizeof(CLIENT_RECORD));
 
   // prepare the data
   std::vector<char> packed_data(pack_size, '\0');

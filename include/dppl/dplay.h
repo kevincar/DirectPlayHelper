@@ -9,6 +9,7 @@
 #include <windows.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
+typedef uint64_t QWORD;
 #else
 #include <netinet/in.h>
 

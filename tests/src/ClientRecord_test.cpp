@@ -13,6 +13,8 @@ TEST(ClientRecord, constructor) {
   ASSERT_EQ(p_record->id, 1);
 
   dph::ClientRecord client_record_data(data);
+
+  ASSERT_EQ(sizeof(dph::CLIENT_RECORD), 10);
 }
 
 TEST(ClientRecord, packing) {

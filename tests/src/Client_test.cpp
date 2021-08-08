@@ -106,6 +106,7 @@ class MockServer {
       DWORD player_id = msg.get_from_ids().playerID;
       EXPECT_EQ(*(++ptr), player_id);
       std::experimental::net::defer([&]() { this->io_context_->stop(); });
+      return;
     }
     std::vector<char> return_payload = return_dp_msg.to_vector();
     dph::Message return_message(90, msg.get_from_ids().clientID,
@@ -195,7 +196,7 @@ TEST(ClientTest, constructor) {
   // construction. This is validated by ensuring that the client ID isn't 0.
   // We'll make a timer to test this.
   std::experimental::net::steady_timer connection_timeout(
-      io_context, std::chrono::seconds(2));
+      io_context, std::chrono::seconds(5));
   connection_timeout.async_wait([&](std::error_code const& ec) {
     if (!ec) {
       EXPECT_NE(client->get_id(), 0);

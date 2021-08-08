@@ -33,6 +33,7 @@ add_executable("${TEST_PROJECT_NAME}"
   # Should be listed in order of dependecies
   ./src/dppl/hardware_test.cpp
   ./src/dppl/AppSimulator.cpp
+  ./src/dppl/dplay_size_test.cpp
   ./src/dppl/PacketSniffer_test.cpp
   ./src/dppl/DPProxyMessage_test.cpp
   ./src/dppl/DPSuperPackedPlayer_test.cpp

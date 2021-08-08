@@ -9,6 +9,14 @@ namespace dppl {
 class DPSuperPackedPlayer {
  public:
   explicit DPSuperPackedPlayer(DPLAYI_SUPERPACKEDPLAYER* player);
+  bool getShortNamePresent();
+  bool getLongNamePresent();
+  BYTE getServiceProviderLength();
+  BYTE getPlayerDataLength();
+  BYTE getPlayerCountLength();
+  bool getParentIDPresent();
+  BYTE getShortcutCountLength();
+  DWORD getSystemPlayerID();
   char16_t* getShortName();
   std::size_t getShortNameSize();
   char16_t* getLongName();
@@ -40,6 +48,8 @@ class DPSuperPackedPlayer {
    * These private functions return the pointer to the byte in the data
    * structure where the element should exist even if it doesn't
    */
+  DWORD* _getPlayerInfoMask();
+  DWORD* _getSystemPlayerID();
   char16_t* _getShortName();
   char16_t* _getLongName();
   char* _getPlayerDataSize();

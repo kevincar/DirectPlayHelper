@@ -5,24 +5,26 @@
 #include "dppl/proxy.hpp"
 
 namespace dppl {
-proxy::proxy(std::experimental::net::io_context* io_context, type proxy_type,
+proxy::proxy(std::experimental::net::io_context *io_context, type proxy_type,
              std::function<void(DPProxyMessage)> dp_callback,
              std::function<void(DPProxyMessage)> data_callback)
-    : io_context_(io_context),
-      proxy_type_(proxy_type),
-      dp_callback_(dp_callback),
-      data_callback_(data_callback),
-      dp_acceptor_(*io_context, std::experimental::net::ip::tcp::endpoint(
-                                    std::experimental::net::ip::address_v4::loopback(), 0)),
+    : io_context_(io_context), proxy_type_(proxy_type),
+      dp_callback_(dp_callback), data_callback_(data_callback),
+      dp_acceptor_(*io_context,
+                   std::experimental::net::ip::tcp::endpoint(
+                       std::experimental::net::ip::address_v4::loopback(), 0)),
       dp_recv_socket_(*io_context),
-      dp_send_socket_(*io_context,
-                      std::experimental::net::ip::tcp::endpoint(
-                          std::experimental::net::ip::address_v4::loopback(), 0)),
-      dpsrvr_socket_(*io_context,
-                     std::experimental::net::ip::udp::endpoint(
-                         std::experimental::net::ip::address_v4::loopback(), 0)),
-      data_socket_(*io_context, std::experimental::net::ip::udp::endpoint(
-                                    std::experimental::net::ip::address_v4::loopback(), 0)) {
+      dp_send_socket_(
+          *io_context,
+          std::experimental::net::ip::tcp::endpoint(
+              std::experimental::net::ip::address_v4::loopback(), 0)),
+      dpsrvr_socket_(
+          *io_context,
+          std::experimental::net::ip::udp::endpoint(
+              std::experimental::net::ip::address_v4::loopback(), 0)),
+      data_socket_(*io_context,
+                   std::experimental::net::ip::udp::endpoint(
+                       std::experimental::net::ip::address_v4::loopback(), 0)) {
   this->dpsrvr_socket_.set_option(
       std::experimental::net::socket_base::broadcast(true));
   this->dp_accept();
@@ -42,11 +44,11 @@ std::experimental::net::ip::tcp::endpoint const proxy::get_return_addr() {
 }
 
 void proxy::set_return_addr(
-    std::experimental::net::ip::tcp::endpoint const& app_endpoint) {
+    std::experimental::net::ip::tcp::endpoint const &app_endpoint) {
   this->app_dp_endpoint_ = app_endpoint;
 }
 
-void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
+void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER *player) {
   DPSuperPackedPlayer superpack = DPSuperPackedPlayer(player);
 
   // Regsister a System Player
@@ -63,13 +65,15 @@ void proxy::register_player(DPLAYI_SUPERPACKEDPLAYER* player) {
 }
 
 void proxy::dp_deliver(DPProxyMessage data) {
-  if (!this->validate_message(data)) return;
+  if (!this->validate_message(data))
+    return;
   this->dp_send_buf_ = data.get_dp_msg_data();
   this->dp_send();
 }
 
 void proxy::data_deliver(DPProxyMessage data) {
-  if (!this->validate_message(data)) return;
+  if (!this->validate_message(data))
+    return;
   this->data_send_buf_ = data.get_dp_msg_data();
   this->data_send();
 }
@@ -80,11 +84,11 @@ DWORD proxy::get_system_id() const { return this->system_id_; }
 
 DWORD proxy::get_player_id() const { return this->player_id_; }
 
-bool proxy::operator==(proxy const& rhs) {
+bool proxy::operator==(proxy const &rhs) {
   return this->system_id_ == rhs.system_id_;
 }
 
-bool proxy::operator<(proxy const& rhs) {
+bool proxy::operator<(proxy const &rhs) {
   return this->system_id_ < rhs.system_id_;
 }
 
@@ -104,7 +108,7 @@ void proxy::dp_accept() {
 }
 
 void proxy::dp_accept_handler(
-    std::error_code const& ec,
+    std::error_code const &ec,
     std::experimental::net::ip::tcp::socket new_socket) {
   if (!ec) {
     LOG(DEBUG) << "dp accepted a new socket";
@@ -126,37 +130,38 @@ void proxy::dp_receive() {
       std::experimental::net::buffer(this->dp_recv_buf_), handler);
 }
 
-void proxy::dp_receive_handler(std::error_code const& ec,
+void proxy::dp_receive_handler(std::error_code const &ec,
                                std::size_t bytes_transmitted) {
   if (!ec) {
     DPMessage packet(&this->dp_recv_buf_);
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    this->app_dp_endpoint_.address(std::experimental::net::ip::address_v4::loopback());
+    this->app_dp_endpoint_.address(
+        std::experimental::net::ip::address_v4::loopback());
     PILOG(DEBUG) << "dp received message: " << packet.header()->command
                  << PELOG;
     switch (packet.header()->command) {
-      case DPSYS_REQUESTPLAYERID: {
-        DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
-        this->recent_request_flags_ = msg->dwFlags;
-        this->dp_default_receive_handler();
-      } break;
-      case DPSYS_REQUESTPLAYERREPLY:
-        this->dp_receive_requestplayerreply();
-        break;
-      case DPSYS_ADDFORWARDREQUEST: {
-        this->dp_receive_addforwardrequest_handler();
-      } break;
-      case DPSYS_ENUMSESSIONSREPLY:
-      case DPSYS_CREATEPLAYER:
-      case DPSYS_SUPERENUMPLAYERSREPLY:
-        this->dp_default_receive_handler();
-        break;
-      default:
-        LOG(WARNING) << TXCR << TXFB
-                     << "dp proxy received an unrecognized command "
-                     << packet.header()->command << TXRS;
+    case DPSYS_REQUESTPLAYERID: {
+      DPMSG_REQUESTPLAYERID *msg = packet.message<DPMSG_REQUESTPLAYERID>();
+      this->recent_request_flags_ = msg->dwFlags;
+      this->dp_default_receive_handler();
+    } break;
+    case DPSYS_REQUESTPLAYERREPLY:
+      this->dp_receive_requestplayerreply();
+      break;
+    case DPSYS_ADDFORWARDREQUEST: {
+      this->dp_receive_addforwardrequest_handler();
+    } break;
+    case DPSYS_ENUMSESSIONSREPLY:
+    case DPSYS_CREATEPLAYER:
+    case DPSYS_SUPERENUMPLAYERSREPLY:
+      this->dp_default_receive_handler();
+      break;
+    default:
+      LOG(WARNING) << TXCR << TXFB
+                   << "dp proxy received an unrecognized command "
+                   << packet.header()->command << TXRS;
     }
   } else {
     LOG(WARNING) << "dp receive error: " << ec.message();
@@ -167,7 +172,7 @@ void proxy::dp_receive_handler(std::error_code const& ec,
 void proxy::dp_receive_requestplayerreply() {
   PILOG(DEBUG) << "dp receive REQUESTPLAYERREPLY" << PELOG;
   DPMessage packet(&this->dp_recv_buf_);
-  DPMSG_REQUESTPLAYERREPLY* msg = packet.message<DPMSG_REQUESTPLAYERREPLY>();
+  DPMSG_REQUESTPLAYERREPLY *msg = packet.message<DPMSG_REQUESTPLAYERREPLY>();
   if (this->recent_request_flags_ & REQUESTPLAYERIDFLAGS::issystemplayer) {
     this->system_id_ = msg->dwID;
   } else {
@@ -180,16 +185,16 @@ void proxy::dp_receive_requestplayerreply() {
 void proxy::dp_receive_addforwardrequest_handler() {
   PILOG(DEBUG) << "dp receive handling ADDFORWARDREQUEST" << PELOG;
   DPMessage packet(&this->dp_recv_buf_);
-  DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
-  DPLAYI_PACKEDPLAYER* player_data =
+  DPMSG_ADDFORWARDREQUEST *msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
+  DPLAYI_PACKEDPLAYER *player_data =
       packet.property_data<DPLAYI_PACKEDPLAYER>(msg->dwCreateOffset);
-  char* data = reinterpret_cast<char*>(&player_data->data);
-  dpsockaddr* sp_data = reinterpret_cast<dpsockaddr*>(
+  char *data = reinterpret_cast<char *>(&player_data->data);
+  dpsockaddr *sp_data = reinterpret_cast<dpsockaddr *>(
       player_data->data + player_data->dwShortNameLength +
       player_data->dwLongNameLength);
 
-  dpsockaddr* dp_conn = sp_data;
-  dpsockaddr* data_conn = sp_data + 1;
+  dpsockaddr *dp_conn = sp_data;
+  dpsockaddr *data_conn = sp_data + 1;
   uint16_t data_port = DPMessage::flip(data_conn->sin_port);
   uint32_t addr = DPMessage::flip(data_conn->sin_addr);
   std::experimental::net::ip::udp::endpoint data_endpoint(
@@ -214,29 +219,28 @@ void proxy::dp_send() {
   DPMessage packet(&this->dp_send_buf_);
   POLOG(DEBUG) << "dp sending message " << packet.header()->command << PELOG;
   switch (packet.header()->command) {
-    case DPSYS_ENUMSESSIONS:
-      this->dp_send_enumsession_handler();
-      break;
-    case DPSYS_ENUMSESSIONSREPLY:
-      this->dp_send_enumsessionreply_handler();
-      break;
-    case DPSYS_REQUESTPLAYERID:
-      this->dp_send_requestplayerid();
-      break;
-    case DPSYS_ADDFORWARDREQUEST:
-      this->dp_send_addforwardrequest();
-      break;
-    case DPSYS_CREATEPLAYER:
-      this->dp_send_createplayer_handler();
-      break;
-    case DPSYS_REQUESTPLAYERREPLY:
-    case DPSYS_SUPERENUMPLAYERSREPLY:
-      this->dp_default_send_handler();
-      break;
-    default:
-      LOG(WARNING) << TXCR << TXFB
-                   << "dp proxy received an unrecognized command "
-                   << packet.header()->command << TXRS;
+  case DPSYS_ENUMSESSIONS:
+    this->dp_send_enumsession_handler();
+    break;
+  case DPSYS_ENUMSESSIONSREPLY:
+    this->dp_send_enumsessionreply_handler();
+    break;
+  case DPSYS_REQUESTPLAYERID:
+    this->dp_send_requestplayerid();
+    break;
+  case DPSYS_ADDFORWARDREQUEST:
+    this->dp_send_addforwardrequest();
+    break;
+  case DPSYS_CREATEPLAYER:
+    this->dp_send_createplayer_handler();
+    break;
+  case DPSYS_REQUESTPLAYERREPLY:
+  case DPSYS_SUPERENUMPLAYERSREPLY:
+    this->dp_default_send_handler();
+    break;
+  default:
+    LOG(WARNING) << TXCR << TXFB << "dp proxy received an unrecognized command "
+                 << packet.header()->command << TXRS;
   }
 }
 
@@ -296,7 +300,7 @@ void proxy::dp_send_enumsessionreply_handler() {
 void proxy::dp_send_requestplayerid() {
   POLOG(DEBUG) << "dp sending REQUESTPLAYERID" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
-  DPMSG_REQUESTPLAYERID* msg = packet.message<DPMSG_REQUESTPLAYERID>();
+  DPMSG_REQUESTPLAYERID *msg = packet.message<DPMSG_REQUESTPLAYERID>();
   this->recent_request_flags_ = msg->dwFlags;
   this->dp_assert_connection();
   this->dp_default_send_handler();
@@ -305,13 +309,13 @@ void proxy::dp_send_requestplayerid() {
 void proxy::dp_send_addforwardrequest() {
   PILOG(DEBUG) << "dp sending ADDFORWARDREQUEST" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
-  DPMSG_ADDFORWARDREQUEST* msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
-  DPLAYI_PACKEDPLAYER* player =
+  DPMSG_ADDFORWARDREQUEST *msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
+  DPLAYI_PACKEDPLAYER *player =
       packet.property_data<DPLAYI_PACKEDPLAYER>(msg->dwCreateOffset);
-  char* data = reinterpret_cast<char*>(msg->data);
-  dpsockaddr* stream_sock = reinterpret_cast<dpsockaddr*>(
+  char *data = reinterpret_cast<char *>(msg->data);
+  dpsockaddr *stream_sock = reinterpret_cast<dpsockaddr *>(
       data + player->dwShortNameLength + player->dwLongNameLength);
-  dpsockaddr* data_sock = stream_sock + 1;
+  dpsockaddr *data_sock = stream_sock + 1;
   *stream_sock = DPMessage::to_dpaddr(this->dp_acceptor_.local_endpoint());
   *data_sock = DPMessage::to_dpaddr(this->data_socket_.local_endpoint());
   this->dp_default_send_handler();
@@ -320,13 +324,13 @@ void proxy::dp_send_addforwardrequest() {
 void proxy::dp_send_createplayer_handler() {
   POLOG(DEBUG) << "dp send CREATEPLAYER" << PELOG;
   DPMessage packet(&this->dp_send_buf_);
-  DPMSG_CREATEPLAYER* msg = packet.message<DPMSG_CREATEPLAYER>();
-  DPLAYI_PACKEDPLAYER* player =
+  DPMSG_CREATEPLAYER *msg = packet.message<DPMSG_CREATEPLAYER>();
+  DPLAYI_PACKEDPLAYER *player =
       packet.property_data<DPLAYI_PACKEDPLAYER>(msg->dwCreateOffset);
-  dpsockaddr* stream_sock = reinterpret_cast<dpsockaddr*>(
-      reinterpret_cast<char*>(player->data) + player->dwShortNameLength +
+  dpsockaddr *stream_sock = reinterpret_cast<dpsockaddr *>(
+      reinterpret_cast<char *>(player->data) + player->dwShortNameLength +
       player->dwLongNameLength);
-  dpsockaddr* data_sock = stream_sock + 1;
+  dpsockaddr *data_sock = stream_sock + 1;
   *stream_sock = DPMessage::to_dpaddr(this->dp_acceptor_.local_endpoint());
   *data_sock = DPMessage::to_dpaddr(this->data_socket_.local_endpoint());
   this->dp_default_send_handler();
@@ -341,7 +345,7 @@ void proxy::dp_default_send_handler() {
       std::experimental::net::buffer(this->dp_send_buf_), handler);
 }
 
-void proxy::dp_receipt_handler(std::error_code const& ec,
+void proxy::dp_receipt_handler(std::error_code const &ec,
                                std::size_t bytes_transmitted) {
   if (ec) {
     LOG(WARNING) << "dp send error: " << ec.message();
@@ -371,14 +375,14 @@ void proxy::data_send() {
       std::experimental::net::buffer(this->data_recv_buf_), handler);
 }
 
-void proxy::data_receive_handler(std::error_code const& ec,
+void proxy::data_receive_handler(std::error_code const &ec,
                                  std::size_t bytes_transmitted) {
   if (!ec) {
     DPMessage packet(&this->data_recv_buf_);
     switch (packet.header()->command) {
-      // TODO(kevincar): Add more
-      default:
-        this->data_default_receive_handler();
+    // TODO(kevincar): Add more
+    default:
+      this->data_default_receive_handler();
     }
   } else {
     LOG(WARNING) << "data receive error: " << ec.message();
@@ -391,14 +395,14 @@ void proxy::data_default_receive_handler() {
   this->data_callback_(proxy_message);
 }
 
-void proxy::data_send_handler(std::error_code const& ec,
+void proxy::data_send_handler(std::error_code const &ec,
                               std::size_t bytes_transmitted) {
   if (ec) {
     LOG(WARNING) << "data send error: " << ec.message();
   }
 }
 
-bool proxy::validate_message(DPProxyMessage const& message) {
+bool proxy::validate_message(DPProxyMessage const &message) {
   DPProxyEndpointIDs sender_info = message.get_from_ids();
   DWORD sender_id = sender_info.clientID;
 

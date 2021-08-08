@@ -317,7 +317,6 @@ DWORD* DPSuperPackedPlayer::_getShortcutIDs() {
 }
 
 char* DPSuperPackedPlayer::_endPtr() {
-
   if (this->getShortcutCountLength() != 0) {
     DWORD* ptr = this->_getShortcutIDs();
     std::size_t len = this->getNumShortcutIDs();

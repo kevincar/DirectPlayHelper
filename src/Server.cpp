@@ -94,7 +94,14 @@ void Server::accept_handler(std::error_code const& ec,
 }
 
 void Server::send_handler(std::error_code const& ec,
-                          std::size_t bytes_transmitted) {}
+                          std::size_t bytes_transmitted) {
+  if (!ec) {
+    LOG(DEBUG) << "Server sent " << bytes_transmitted << " byte(s) of data";
+
+  } else {
+    LOG(WARNING) << "Server failed to send data: " << ec.message();
+  }
+}
 
 void Server::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted, uint32_t const id) {

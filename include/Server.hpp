@@ -20,7 +20,7 @@ class Server {
 
   // Net Calls
   void accept(void);
-  void send(void);
+  void send(uint32_t const id);
   void receive(uint32_t const id);
 
   // Net Handlers

@@ -28,10 +28,32 @@ void Server::process_message(dph::Message message) {
 
 void Server::process_request_id(dph::Message message) {
   LOG(DEBUG) << "Server processing incoming ID reqest";
+  uint32_t const from_id = 0;                    // Server ID
+  uint32_t const to_id = message.get_from_id();  // Send back
+
+  // No need to send any data since the ID is sent back in the `to_id` location
+  dph::Message response_message(from_id, to_id, dph::Command::REQUESTIDREPLY, 0,
+                                nullptr);
+  std::vector<char> response_data = response_message.to_vector();
+  this->send_buf_.resize(1024);
+  this->send_buf_.assign(response_data.begin(), response_data.end());
+  this->send(to_id);
 }
 
 void Server::process_forward_message(dph::Message message) {
   LOG(DEBUG) << "Server processing incoming foward message request";
+  std::vector<char> forward_data = message.to_vector();
+  this->send_buf_.resize(1024);
+  this->send_buf_.assign(forward_data.begin(), forward_data.end());
+
+  // Broadcast
+  if (message.get_from_id() == 0) {
+    for (uint32_t id = 1; id <= this->connection_sockets_.size(); id++) {
+      this->send(id);
+    }
+  } else {
+    this->send(message.get_to_id());
+  }
 }
 
 // Net Calls
@@ -42,7 +64,15 @@ void Server::accept(void) {
   this->server_socket_.async_accept(handler);
 }
 
-void Server::send(void) {}
+void Server::send(uint32_t const id) {
+  LOG(DEBUG) << "Server sending data";
+  std::experimental::net::ip::tcp::socket& socket =
+      this->connection_sockets_.at(id - 1);
+  auto handler = std::bind(&Server::send_handler, this, std::placeholders::_1,
+                           std::placeholders::_2);
+  socket.async_send(std::experimental::net::buffer(this->send_buf_), handler);
+}
+
 void Server::receive(uint32_t const id) {
   LOG(DEBUG) << "Server listening for data on connection " << id;
   std::experimental::net::ip::tcp::socket& socket =
@@ -70,10 +100,17 @@ void Server::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted, uint32_t const id) {
   LOG(DEBUG) << "Server received a message for client " << id;
   dph::Message message(this->recv_buf_);
-  dph::MESSAGE* dph_msg = message.get_message();
-  if (dph_msg->from_id != id && dph_msg->from_id != 0) {
-    LOG(FATAL) << "Server received a message from client " << dph_msg->from_id
-               << " which is on a different socket";
+  uint32_t const from_id = message.get_from_id();
+
+  // New Connection
+  if (from_id == 0) {
+    message.set_from_id(id);
+  }
+
+  // Assert
+  if (from_id != id) {
+    LOG(FATAL) << "Server received a message from client "
+               << message.get_from_id() << " which is on a different socket";
   }
   this->process_message(message);
 }

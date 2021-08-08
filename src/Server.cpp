@@ -107,11 +107,12 @@ void Server::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted, uint32_t const id) {
   LOG(DEBUG) << "Server received a message for client " << id;
   dph::Message message(this->recv_buf_);
-  uint32_t const from_id = message.get_from_id();
+  uint32_t from_id = message.get_from_id();
 
   // New Connection
   if (from_id == 0) {
     message.set_from_id(id);
+    from_id = id;
   }
 
   // Assert

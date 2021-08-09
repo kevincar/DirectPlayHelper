@@ -118,8 +118,10 @@ set(ARGPARSE_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse/include")
 add_executable("${PROJECT_NAME}"
 	src/main.cpp
   src/Message.cpp
-  src/Client.cpp
   src/ClientRecord.cpp
+  src/Client.cpp
+  src/Server.cpp
+  src/DirectPlayHelper.cpp
 	)
 
 # Add dependency targets to this main target

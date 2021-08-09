@@ -1,13 +1,14 @@
 #include "Server.hpp"
 
 namespace dph {
-Server::Server(std::experimental::net::io_context* io_context)
+Server::Server(std::experimental::net::io_context* io_context, uint16_t port)
     : recv_buf_(1024, '\0'),
       send_buf_(1024, '\0'),
+      port_(port),
       io_context_(io_context),
       server_socket_(*io_context,
                      std::experimental::net::ip::tcp::endpoint(
-                         std::experimental::net::ip::tcp::v4(), kPort_)) {
+                         std::experimental::net::ip::tcp::v4(), port)) {
   LOG(DEBUG) << "Server constructed";
   this->accept();
 }
@@ -86,11 +87,16 @@ void Server::receive(uint32_t const id) {
 // Net Handlers
 void Server::accept_handler(std::error_code const& ec,
                             std::experimental::net::ip::tcp::socket socket) {
-  LOG(DEBUG) << "Server accepting an incoming connection";
-  uint32_t const connection_id = this->connection_sockets_.size() + 1;
-  this->client_records_.emplace_back(connection_id, socket.remote_endpoint());
-  this->connection_sockets_.push_back(std::move(socket));
-  this->receive(connection_id);
+  if (!ec) {
+    LOG(DEBUG) << "Server accepting an incoming connection";
+    uint32_t const connection_id = this->connection_sockets_.size() + 1;
+    this->client_records_.emplace_back(connection_id, socket.remote_endpoint());
+    this->connection_sockets_.push_back(std::move(socket));
+    this->receive(connection_id);
+    this->accept();
+  } else {
+    LOG(WARNING) << "Server failed to accept connectiosn: " << ec.message();
+  }
 }
 
 void Server::send_handler(std::error_code const& ec,
@@ -106,21 +112,25 @@ void Server::send_handler(std::error_code const& ec,
 void Server::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted, uint32_t const id) {
   LOG(DEBUG) << "Server received a message for client " << id;
-  dph::Message message(this->recv_buf_);
-  uint32_t from_id = message.get_from_id();
+  if (!ec) {
+    dph::Message message(this->recv_buf_);
+    uint32_t from_id = message.get_from_id();
 
-  // New Connection
-  if (from_id == 0) {
-    message.set_from_id(id);
-    from_id = id;
-  }
+    // New Connection
+    if (from_id == 0) {
+      message.set_from_id(id);
+      from_id = id;
+    }
 
-  // Assert
-  if (from_id != id) {
-    LOG(FATAL) << "Server received a message from client "
-               << message.get_from_id() << " which is on a different socket";
+    // Assert
+    if (from_id != id) {
+      LOG(FATAL) << "Server received a message from client "
+                 << message.get_from_id() << " which is on a different socket";
+    }
+    this->process_message(message);
+  } else {
+    LOG(WARNING) << "Server failed to receive message from the client: "
+                 << ec.message();
   }
-  this->process_message(message);
 }
-
 }  // namespace dph

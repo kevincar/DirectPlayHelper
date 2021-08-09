@@ -10,7 +10,6 @@ Client::Client(
       recv_buf_(1024, '\0'),
       io_context_(io_context),
       connection_(*io_context, std::experimental::net::ip::tcp::v4()),
-      request_timer_(*io_context, std::chrono::milliseconds(5)),
       interceptor_(
           io_context,
           std::bind(&Client::dp_callback, this, std::placeholders::_1),
@@ -107,14 +106,16 @@ void Client::receive_handler(std::error_code const& ec,
 void Client::connection_handler(
     std::error_code const& ec,
     std::experimental::net::ip::tcp::endpoint const& endpoint) {
+  LOG(DEBUG) << "Client connection handler";
   if (!ec) {
     this->request_id();
+    this->receive();
   } else {
     LOG(WARNING)
         << "Error attempting to connect with the DirectPlayHelper client: "
         << ec.message();
+    std::experimental::net::defer([&]() { this->io_context_->stop(); });
   }
-  this->receive();
 }
 
 // data is a vector of bytes in the format of a DPProxyMessage

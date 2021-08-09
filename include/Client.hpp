@@ -46,7 +46,6 @@ class Client {
   std::vector<char> recv_buf_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::socket connection_;
-  std::experimental::net::steady_timer request_timer_;
   dppl::interceptor interceptor_;
 };
 }  // namespace dph

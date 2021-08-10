@@ -28,6 +28,7 @@ uint32_t Client::get_id(void) const { return this->id_; }
 
 void Client::forward_message(Message const& message) {
   std::vector<char> data = message.to_vector();
+  this->send_buf_.clear();
   this->send_buf_.assign(data.begin(), data.end());
   auto handler = std::bind(&Client::write_handler, this, std::placeholders::_1,
                            std::placeholders::_2);
@@ -63,7 +64,7 @@ void Client::receive(void) {
 void Client::write_handler(std::error_code const& ec,
                            std::size_t bytes_transmitted) {
   if (!ec) {
-    LOG(DEBUG) << "Transmitted Message";
+    LOG(DEBUG) << "Transmitted Message of " << bytes_transmitted << " byte(s)";
   } else {
     LOG(WARNING) << "Client::write_handler error: " << ec.message();
   }
@@ -99,6 +100,11 @@ void Client::receive_handler(std::error_code const& ec,
     }
   } else {
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
+    if (ec.value() == 2) {
+      LOG(WARNING) << "Lost connection with the server";
+      std::experimental::net::defer([&](){this->io_context_->stop();});
+      return;
+    }
   }
   this->receive();
 }
@@ -120,6 +126,7 @@ void Client::connection_handler(
 
 // data is a vector of bytes in the format of a DPProxyMessage
 void Client::dp_callback(std::vector<char> const& data) {
+  LOG(DEBUG) << "Received dp callback from interceptor";
   dppl::DPProxyMessage proxy_message(data);
 
   // Assert that we're sending this from the right client

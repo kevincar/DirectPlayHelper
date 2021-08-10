@@ -58,4 +58,8 @@ void Message::set_from_id(uint32_t const id) {
 uint32_t Message::get_to_id(void) {
   return this->get_message()->to_id;
 }
+
+void Message::set_to_id(uint32_t const id) {
+  this->get_message()->to_id = id;
+}
 }  // namespace dph

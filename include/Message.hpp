@@ -48,6 +48,7 @@ class Message {
   void set_from_id(uint32_t const id);
 
   uint32_t get_to_id(void);
+  void set_to_id(uint32_t const id);
 
  private:
   std::vector<char> data_;

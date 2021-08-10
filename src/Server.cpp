@@ -43,17 +43,22 @@ void Server::process_request_id(dph::Message message) {
 
 void Server::process_forward_message(dph::Message message) {
   LOG(DEBUG) << "Server processing incoming foward message request";
-  std::vector<char> forward_data = message.to_vector();
-  this->send_buf_.resize(1024);
-  this->send_buf_.assign(forward_data.begin(), forward_data.end());
-
   // Broadcast
   if (message.get_to_id() == 0) {
+    LOG(DEBUG) << "Forwarding to all clients";
     for (uint32_t id = 1; id <= this->connection_sockets_.size(); id++) {
       if (id == message.get_from_id()) continue;  // Skip self
+      message.set_to_id(id);
+      LOG(DEBUG) << "Forwarding to client " << message.get_to_id();
+      std::vector<char> forward_data = message.to_vector();
+      this->send_buf_.resize(1024);
+      this->send_buf_.assign(forward_data.begin(), forward_data.end());
       this->send(id);
     }
   } else {
+    std::vector<char> forward_data = message.to_vector();
+    this->send_buf_.resize(1024);
+    this->send_buf_.assign(forward_data.begin(), forward_data.end());
     this->send(message.get_to_id());
   }
 }
@@ -146,8 +151,9 @@ void Server::receive_handler(std::error_code const& ec,
 
     // Assert
     if (from_id != id) {
-      LOG(FATAL) << "Server received a message from client "
-                 << message.get_from_id() << " which is on a different socket";
+      LOG(WARNING) << "Server received a message from client "
+                   << message.get_from_id()
+                   << " which is on a different socket";
     }
     this->process_message(message);
   } else {

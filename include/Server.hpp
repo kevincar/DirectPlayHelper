@@ -24,6 +24,7 @@ class Server {
   void accept(void);
   void send(uint32_t const id);
   void receive(uint32_t const id);
+  void stop(uint32_t const id);
 
   // Net Handlers
   void accept_handler(std::error_code const& ec,

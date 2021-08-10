@@ -48,8 +48,9 @@ void Server::process_forward_message(dph::Message message) {
   this->send_buf_.assign(forward_data.begin(), forward_data.end());
 
   // Broadcast
-  if (message.get_from_id() == 0) {
+  if (message.get_to_id() == 0) {
     for (uint32_t id = 1; id <= this->connection_sockets_.size(); id++) {
+      if (id == message.get_from_id()) continue;  // Skip self
       this->send(id);
     }
   } else {
@@ -69,6 +70,7 @@ void Server::send(uint32_t const id) {
   LOG(DEBUG) << "Server sending data";
   std::experimental::net::ip::tcp::socket& socket =
       this->connection_sockets_.at(id - 1);
+  if (!socket.is_open()) return;
   auto handler = std::bind(&Server::send_handler, this, std::placeholders::_1,
                            std::placeholders::_2);
   socket.async_send(std::experimental::net::buffer(this->send_buf_), handler);
@@ -82,6 +84,26 @@ void Server::receive(uint32_t const id) {
                            std::placeholders::_1, std::placeholders::_2, id);
   socket.async_receive(std::experimental::net::buffer(this->recv_buf_),
                        handler);
+}
+
+void Server::stop(uint32_t const id) {
+  LOG(DEBUG) << "Server stopping client id " << id;
+  std::experimental::net::ip::tcp::socket& socket =
+      this->connection_sockets_.at(id - 1);
+
+  std::error_code ec;
+  socket.cancel(ec);
+  if (!!ec) {
+    LOG(WARNING) << "Failed to cancel socket operations for client " << id
+                 << "Error: " << ec.message();
+    return;
+  }
+
+  socket.close(ec);
+  if (!!ec) {
+    LOG(WARNING) << "Failed to close socket for client " << id
+                 << "Error: " << ec.message();
+  }
 }
 
 // Net Handlers
@@ -130,7 +152,12 @@ void Server::receive_handler(std::error_code const& ec,
     this->process_message(message);
   } else {
     LOG(WARNING) << "Server failed to receive message from the client: "
-                 << ec.message();
+                 << ec.message() << " (" << ec.value() << ")";
+    if (ec.value() == 2) {
+      this->stop(id);
+      return;
+    }
   }
+  this->receive(id);
 }
 }  // namespace dph

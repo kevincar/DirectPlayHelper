@@ -88,7 +88,8 @@ void Client::receive_handler(std::error_code const& ec,
         LOG(DEBUG) << "Received forward message from "
                    << proxy_message.get_from_ids().clientID << " to "
                    << proxy_message.get_to_ids().clientID;
-        if (proxy_message.get_to_ids().clientID != this->id_) {
+        uint32_t intended_recipient_id = proxy_message.get_to_ids().clientID;
+        if (intended_recipient_id != this->id_ && intended_recipient_id != 0) {
           LOG(FATAL) << "Client received message that was not intended for it";
         }
         if (proxy_message.is_dp_message()) {

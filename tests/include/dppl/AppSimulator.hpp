@@ -49,6 +49,7 @@ class AppSimulator {
                          std::size_t bytes_transmitted);
 
   bool hosting_;
+  static unsigned int n_id_requests;
   GUID guidInstance_;
   GUID guidApplication_;
   std::vector<char> dp_recv_buf_;

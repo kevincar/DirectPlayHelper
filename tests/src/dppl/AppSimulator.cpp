@@ -3,6 +3,7 @@
 #include "g3log/g3log.hpp"
 
 namespace dppl {
+unsigned int AppSimulator::n_id_requests = 0;
 AppSimulator::AppSimulator(std::experimental::net::io_context* io_context,
                            bool host, GUID app, GUID instance)
     : io_context_(io_context),
@@ -135,8 +136,9 @@ std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
           0x00, 0x00, 0x00, 0x00, 0x00};
       DPMSG_REQUESTPLAYERREPLY* msg =
           message.message<DPMSG_REQUESTPLAYERREPLY>();
-      if (msg->dwID == 0x0197fdad) {
+      if (msg->dwID == 0x0197fdad || AppSimulator::n_id_requests == 0) {
         return_data.assign(temp1.begin(), temp1.end());
+        AppSimulator::n_id_requests++;
       } else {
         return_data.assign(temp2.begin(), temp2.end());
       }

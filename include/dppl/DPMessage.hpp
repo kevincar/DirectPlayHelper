@@ -65,7 +65,7 @@ class DPMessage {
   template <typename T>
   static T from_dpaddr(dpsockaddr* paddr);
 
-  static int const kSignatureOffset = sizeof(DWORD) + sizeof(sockaddr_in);
+  static int const kSignatureOffset = sizeof(DWORD) + sizeof(dpsockaddr);
 
  private:
   char* data_;
@@ -124,7 +124,7 @@ T DPMessage::flip(T value) {
 
 template <typename T>
 dpsockaddr DPMessage::to_dpaddr(T endpoint) {
-  dpsockaddr ret;
+  dpsockaddr ret = {0};
   sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(endpoint.data());
   ret.sin_family = addr->sin_family;
   ret.sin_port = addr->sin_port;

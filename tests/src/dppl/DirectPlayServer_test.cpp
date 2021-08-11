@@ -19,4 +19,7 @@ TEST(DirectPlayServerTest, constructor) {
   std::string input;
   std::getline(std::cin, input, '\n');
   io_context.run();
+
+  std::cout << "Please exit the game and press enter to continue";
+  std::getline(std::cin, input, '\n');
 }

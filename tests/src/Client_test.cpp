@@ -1,10 +1,11 @@
 #include <utility>
-#include <g3log/g3log.hpp>
 
 #include "Client.hpp"
 #include "ClientRecord.hpp"
 #include "Message.hpp"
 #include "dppl/AppSimulator.hpp"
+#include "dppl/hardware_test.hpp"
+#include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
 class MockServer {
@@ -97,9 +98,9 @@ class MockServer {
     // the data to
     if (!msg.is_dp_message()) {
       LOG(DEBUG) << "NICE!";
-      DWORD *ptr = reinterpret_cast<DWORD*>(&(*dp_message_data.begin()));
+      DWORD* ptr = reinterpret_cast<DWORD*>(&(*dp_message_data.begin()));
       EXPECT_EQ(*(++ptr), msg.get_to_ids().playerID);
-      std::experimental::net::defer([&](){this->io_context_->stop();});
+      std::experimental::net::defer([&]() { this->io_context_->stop(); });
       return;
     } else if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
       DWORD* ptr = reinterpret_cast<DWORD*>(&(*response_data.begin()));
@@ -263,6 +264,12 @@ TEST(ClientTest, SimulateJoin) {
   dph::Client client(&io_context, endpoints);
 
   // Start the App Simulator
-  dppl::AppSimulator simulator(&io_context, false);
-  io_context.run();
+  if (hardware_test_check() || test_check("TEST_CLIENT_JOIN")) {
+    prompt("Please attempt to join a session and press enter...");
+    io_context.run();
+    prompt("Please shut down the application and press enter...");
+  } else {
+    dppl::AppSimulator simulator(&io_context, false);
+    io_context.run();
+  }
 }

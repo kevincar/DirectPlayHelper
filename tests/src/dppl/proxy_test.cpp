@@ -161,16 +161,17 @@ TEST(ProxyTest, dp_initialization_host) {
   internet_timer_callback = [&](std::error_code const &ec) {
     if (!ec) {
       dpsrvr_timer.cancel();
-      dppl::DPProxyMessage proxy_message(recv_buf);
-      send_buf =
-          dppl::AppSimulator::process_message(proxy_message.get_dp_msg_data());
+      dppl::DPProxyMessage proxy_request_message(recv_buf);
+      send_buf = dppl::AppSimulator::process_message(
+          proxy_request_message.get_dp_msg_data());
+      dppl::DPMessage response_message(&send_buf);
       LOG(DEBUG) << "Received response from simulated player with id "
-                 << proxy->get_client_id()
-                 << ", delivering back "
-                    "to the app through proxy";
-      proxy_message.set_to_ids({client_id, system_id, player_id});
-      proxy_message.set_from_ids(*proxy);
-      proxy->dp_deliver(proxy_message);
+                 << proxy->get_client_id() << ", delivering back message id "
+                 << response_message.header()->command
+                 << "to the app through proxy";
+      dppl::DPProxyMessage proxy_response_message(
+          send_buf, {client_id, system_id, player_id}, *proxy);
+      proxy->dp_deliver(proxy_response_message);
     } else {
       LOG(WARNING) << "Timer error: " << ec.message();
     }
@@ -186,10 +187,18 @@ TEST(ProxyTest, dp_initialization_host) {
   proxy = std::make_shared<dppl::proxy>(&io_context, dppl::proxy::type::peer,
                                         proxy_dp_callback, proxy_data_callback);
 
-  dppl::AppSimulator app(&io_context, true);
-
-  dpsrvr_timer.async_wait(dpsrvr_timer_callback);
-  io_context.run();
+  if (hardware_test_check() || test_check("TEST_PROXY_HOST")) {
+    prompt(
+        "Please begin a host session on your direct play application and press "
+        "enter...");
+    dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    io_context.run();
+    prompt("Please shutdown your application and press enter...");
+  } else {
+    dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    dppl::AppSimulator app(&io_context, true);
+    io_context.run();
+  }
 }
 
 TEST(ProxyTest, dp_initialization_join) {

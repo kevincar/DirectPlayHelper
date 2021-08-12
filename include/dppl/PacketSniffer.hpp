@@ -20,9 +20,15 @@ class PacketSniffer {
   // the `forward_endpoint` is the network socket that the PacketSniffer should
   // forward the data. Because `PacketSniffer` sniffs on a separate thread,
   // data is transfered over a network socket in order to avoid race conditions
-  // or using mutex classes
-  explicit PacketSniffer(
-      std::experimental::net::ip::udp::endpoint const& forward_endpoint);
+  // or using mutex classes.
+  // use_localhost will cause the packet sniffer to sniff on localhost. This is
+  // useful if the use will want to ensure that the system only captures
+  // packets explicitly sent to the client by the direct play application. This
+  // is accomplished by using "localhost" as the ip address within the direct
+  // play application.
+  PacketSniffer(
+      std::experimental::net::ip::udp::endpoint const& forward_endpoint,
+      bool use_localhost = false);
   ~PacketSniffer();
 
  private:

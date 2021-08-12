@@ -3,19 +3,28 @@
 
 namespace dppl {
 PacketSniffer::PacketSniffer(
-    std::experimental::net::ip::udp::endpoint const& forward_endpoint)
+    std::experimental::net::ip::udp::endpoint const& forward_endpoint,
+    bool use_localhost)
     : forward_endpoint_(forward_endpoint),
       forward_socket_(io_context_,
                       std::experimental::net::ip::udp::endpoint(
                           std::experimental::net::ip::udp::v4(), 0)) {
-  Tins::NetworkInterface iface = Tins::NetworkInterface::default_interface();
+  Tins::NetworkInterface dflt = Tins::NetworkInterface::default_interface();
+  Tins::NetworkInterface lo;
+  try {
+    lo = Tins::NetworkInterface(Tins::IPv4Address("127.0.0.1"));
+  } catch (Tins::invalid_interface const& e) {
+    LOG(WARNING) << "Loopback interface unavailable";
+  }
+  Tins::NetworkInterface iface = use_localhost ? lo : dflt;
+
+  std::string dst_addr = use_localhost ? "127.0.0.1" : "255.255.255.255";
+
   this->sniffer_ = std::make_unique<Tins::Sniffer>(iface.name());
 
-  std::string filter_string = std::string("ip src ") +
-                              iface.addresses().ip_addr.to_string() +
-                              " and ip dst 255.255.255.255" +
-                              " and udp port " +
-                              std::to_string(kPort_);
+  std::string filter_string =
+      std::string("ip src ") + iface.addresses().ip_addr.to_string() +
+      " and ip dst " + dst_addr + " and udp port " + std::to_string(kPort_);
   this->sniffer_->set_filter(filter_string);
 
   this->start_sniffing();

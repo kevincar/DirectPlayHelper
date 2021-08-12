@@ -8,7 +8,7 @@ DirectPlayHelper::DirectPlayHelper(
 
 DirectPlayHelper::DirectPlayHelper(
     std::experimental::net::io_context* io_context, std::string host_address,
-    uint16_t host_port)
+    uint16_t host_port, bool use_localhost)
     : io_context_(io_context), is_server_(false) {
   std::error_code ec;
   std::experimental::net::ip::tcp::resolver resolver(*this->io_context_);
@@ -19,5 +19,6 @@ DirectPlayHelper::DirectPlayHelper(
                << host_port;
   }
 
-  this->client_ = std::make_unique<dph::Client>(this->io_context_, endpoints);
+  this->client_ = std::make_unique<dph::Client>(this->io_context_, endpoints,
+                                                use_localhost);
 }

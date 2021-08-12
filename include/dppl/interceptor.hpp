@@ -29,7 +29,8 @@ class interceptor {
   // forwarded through these callbacks.
   interceptor(std::experimental::net::io_context* io_context,
               std::function<void(std::vector<char> const&)> dp_forward,
-              std::function<void(std::vector<char> const&)> data_forward);
+              std::function<void(std::vector<char> const&)> data_forward,
+              bool use_localhost = false);
 
   // These `_deliver` functions allow the owning class to send data to the
   // local DirectPlay Application through one of the `interceptor`'s proxies.

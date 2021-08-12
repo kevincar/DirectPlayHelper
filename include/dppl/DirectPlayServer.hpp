@@ -13,7 +13,8 @@ namespace dppl {
 class DirectPlayServer {
  public:
   DirectPlayServer(std::experimental::net::io_context* io_context,
-                   std::function<void(std::vector<char>)> forward);
+                   std::function<void(std::vector<char>)> forward,
+                   bool use_localhost = false);
 
  private:
   // Used to initiate receive packets on `sniffer_socket_`

@@ -7,13 +7,14 @@
 namespace dppl {
 DirectPlayServer::DirectPlayServer(
     std::experimental::net::io_context *io_context,
-    std::function<void(std::vector<char>)> forward)
-    : io_context_(io_context), forward_(forward),
+    std::function<void(std::vector<char>)> forward, bool use_localhost)
+    : io_context_(io_context),
+      forward_(forward),
       sniffer_socket_(
           *io_context,
           std::experimental::net::ip::udp::endpoint(
               std::experimental::net::ip::address_v4::loopback(), 0)),
-      sniffer_(sniffer_socket_.local_endpoint()) {
+      sniffer_(sniffer_socket_.local_endpoint(), use_localhost) {
   this->receive();
 }
 

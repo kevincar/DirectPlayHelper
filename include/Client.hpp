@@ -11,7 +11,8 @@ class Client {
  public:
   Client(
       std::experimental::net::io_context* io_context,
-      std::experimental::net::ip::tcp::resolver::results_type const& endpoints);
+      std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
+      bool use_localhost = false);
 
   uint32_t get_id(void) const;
   void dp_deliver(std::vector<char> const& data);

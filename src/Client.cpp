@@ -5,7 +5,8 @@
 namespace dph {
 Client::Client(
     std::experimental::net::io_context* io_context,
-    std::experimental::net::ip::tcp::resolver::results_type const& endpoints)
+    std::experimental::net::ip::tcp::resolver::results_type const& endpoints,
+    bool use_localhost)
     : send_buf_(1024, '\0'),
       recv_buf_(1024, '\0'),
       io_context_(io_context),
@@ -13,7 +14,8 @@ Client::Client(
       interceptor_(
           io_context,
           std::bind(&Client::dp_callback, this, std::placeholders::_1),
-          std::bind(&Client::data_callback, this, std::placeholders::_1)) {
+          std::bind(&Client::data_callback, this, std::placeholders::_1),
+          use_localhost) {
   LOG(INFO) << "Starting Client";
   for (auto it : endpoints) {
     std::experimental::net::ip::tcp::endpoint ep = it;
@@ -103,7 +105,7 @@ void Client::receive_handler(std::error_code const& ec,
     LOG(WARNING) << "Client::receive_handler error: " << ec.message();
     if (ec.value() == 2) {
       LOG(WARNING) << "Lost connection with the server";
-      std::experimental::net::defer([&](){this->io_context_->stop();});
+      std::experimental::net::defer([&]() { this->io_context_->stop(); });
       return;
     }
   }

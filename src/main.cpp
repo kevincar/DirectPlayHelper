@@ -33,6 +33,11 @@ int main(int argc, char const* argv[]) {
       .help("the host address to connect to")
       .default_value("localhost");
 
+  app.add_argument("-l", "--localhost")
+    .help("whether to capture packets directed at localhost rather than broadcast packets")
+    .default_value(false)
+    .implicit_value(true);
+
   app.add_argument("-v", "--verbose")
       .help("verbose output")
       .action([](std::string const& value) {
@@ -83,7 +88,8 @@ int main(int argc, char const* argv[]) {
     LOG(DEBUG) << "Getting client ready";
     auto host =
         app.is_used("--host") ? app.get<std::string>("--host") : "localhost";
-    DirectPlayHelper dph(&io_context, host, port);
+    auto use_localhost = app.get<bool>("--localhost");
+    DirectPlayHelper dph(&io_context, host, port, use_localhost);
     io_context.run();
   }
   return 0;

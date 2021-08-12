@@ -14,7 +14,8 @@ class DirectPlayHelper {
                    uint16_t port);
   // Client
   DirectPlayHelper(std::experimental::net::io_context* io_context,
-                   std::string host_address, uint16_t host_port);
+                   std::string host_address, uint16_t host_port,
+                   bool use_localhost);
 
  private:
   bool is_server_;

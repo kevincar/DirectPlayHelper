@@ -34,9 +34,11 @@ int main(int argc, char const* argv[]) {
       .default_value("localhost");
 
   app.add_argument("-l", "--localhost")
-    .help("whether to capture packets directed at localhost rather than broadcast packets")
-    .default_value(false)
-    .implicit_value(true);
+      .help(
+          "whether to capture packets directed at localhost rather than "
+          "broadcast packets")
+      .default_value(false)
+      .implicit_value(true);
 
   app.add_argument("-v", "--verbose")
       .help("verbose output")

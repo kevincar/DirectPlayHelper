@@ -10,7 +10,12 @@ PacketSniffer::PacketSniffer(
                       std::experimental::net::ip::udp::endpoint(
                           std::experimental::net::ip::udp::v4(), 0)) {
   Tins::NetworkInterface dflt = Tins::NetworkInterface::default_interface();
-  Tins::NetworkInterface lo(Tins::IPv4Address("127.0.0.1"));
+  Tins::NetworkInterface lo;
+  try {
+    lo = Tins::NetworkInterface(Tins::IPv4Address("127.0.0.1"));
+  } catch (Tins::invalid_interface const& e) {
+    LOG(WARNING) << "Loopback interface unavailable";
+  }
   Tins::NetworkInterface iface = use_localhost ? lo : dflt;
 
   std::string dst_addr = use_localhost ? "127.0.0.1" : "255.255.255.255";

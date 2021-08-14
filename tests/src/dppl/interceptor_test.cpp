@@ -128,7 +128,8 @@ TEST(interceptorTest, join_test) {
   std::experimental::net::io_context io_context;
   std::experimental::net::steady_timer internet_timer(io_context,
                                                       internet_delay);
-  std::experimental::net::steady_timer end_timer(io_context, std::chrono::seconds(4));
+  std::experimental::net::steady_timer end_timer(io_context,
+                                                 std::chrono::seconds(4));
 
   std::shared_ptr<dppl::interceptor> interceptor;
   std::function<void(std::error_code const&)> internet_callback =
@@ -161,9 +162,8 @@ TEST(interceptorTest, join_test) {
             DWORD data_to_id = *(++ptr);
             DWORD pm_to_id = send_proxy_message.get_to_ids().playerID;
             ASSERT_EQ(data_to_id, pm_to_id);
-            end_timer.async_wait([&](std::error_code const& ec){
-                io_context.stop();
-                });
+            end_timer.async_wait(
+                [&](std::error_code const& ec) { io_context.stop(); });
           }
           LOG(DEBUG) << "Received data from host. Command: "
                      << send_dp_message.header()->command;

@@ -144,8 +144,8 @@ void proxy::dp_receive_handler(std::error_code const &ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    //this->app_dp_endpoint_.address(
-        //std::experimental::net::ip::address_v4::loopback());
+    this->app_dp_endpoint_.address(
+        std::experimental::net::ip::address_v4::loopback());
     PILOG(DEBUG) << "dp received message: " << packet.header()->command
                  << PELOG;
     switch (packet.header()->command) {

@@ -213,6 +213,8 @@ TEST(ProxyTest, dp_initialization_join) {
   std::experimental::net::io_context io_context;
   std::experimental::net::steady_timer timer(io_context,
                                              simulated_internet_delay);
+  std::experimental::net::steady_timer end_timer(io_context,
+                                                 std::chrono::seconds(4));
   std::shared_ptr<dppl::proxy> proxy;
 
   std::function<void(std::error_code const &)> internet_callback =
@@ -278,7 +280,8 @@ TEST(ProxyTest, dp_initialization_join) {
                 id++;
                 ASSERT_EQ(*id, player_id);
                 proxy->stop();
-                std::experimental::net::post([&]() { io_context.stop(); });
+                end_timer.async_wait(
+                    [&](std::error_code const &ec) { io_context.stop(); });
                 dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0}, *proxy);
                 return proxy->data_deliver(proxy_message);
               } else {

@@ -15,7 +15,8 @@ class MockServer {
         server_socket_(*io_context,
                        std::experimental::net::ip::tcp::endpoint(
                            std::experimental::net::ip::tcp::v4(), 0)),
-        connection_socket_(*io_context) {}
+        connection_socket_(*io_context),
+        end_timer(*io_context, std::chrono::seconds(4)) {}
 
   std::experimental::net::ip::tcp::endpoint const& get_endpoint(void) {
     return this->server_socket_.local_endpoint();
@@ -100,14 +101,15 @@ class MockServer {
       LOG(DEBUG) << "NICE!";
       DWORD* ptr = reinterpret_cast<DWORD*>(&(*dp_message_data.begin()));
       EXPECT_EQ(*(++ptr), msg.get_to_ids().playerID);
-      std::experimental::net::defer([&]() { this->io_context_->stop(); });
+      this->end_timer.async_wait(
+          [&](std::error_code const& ec) { this->io_context_->stop(); });
       return;
     } else if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
       DWORD* ptr = reinterpret_cast<DWORD*>(&(*response_data.begin()));
       DWORD player_id = msg.get_from_ids().playerID;
       EXPECT_EQ(*(++ptr), player_id);
-      std::experimental::net::defer([&]() { this->io_context_->stop(); });
-      return;
+      this->end_timer.async_wait(
+          [&](std::error_code const& ec) { this->io_context_->stop(); });
     }
     std::vector<char> return_payload = return_dp_msg.to_vector();
     dph::Message return_message(90, msg.get_from_ids().clientID,
@@ -161,6 +163,7 @@ class MockServer {
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::acceptor server_socket_;
   std::experimental::net::ip::tcp::socket connection_socket_;
+  std::experimental::net::steady_timer end_timer;
 
   dph::ClientRecord const get_client_record_by_id_(uint32_t const id) const {
     dph::ClientRecord const* result;

@@ -53,7 +53,10 @@ void interceptor::data_deliver(std::vector<char> const &buffer) {
   this->send_buf_ = buffer;
   dppl::DPProxyMessage proxy_message(buffer);
   DWORD const from_id = proxy_message.get_from_ids().playerID;
-  this->find_peer_proxy_by_playerid(from_id)->data_deliver(proxy_message);
+  IILOG(DEBUG) << "interceptor data deliver" << IELOG;
+  auto proxy = this->find_peer_proxy_by_playerid(from_id);
+  LOG(DEBUG) << "Data found proxy";
+  proxy->data_deliver(proxy_message);
 }
 
 void interceptor::set_client_id(DWORD id) { this->client_id_ = id; }

@@ -73,8 +73,15 @@ void proxy::dp_deliver(DPProxyMessage data) {
 }
 
 void proxy::data_deliver(DPProxyMessage data) {
+  LOG(DEBUG) << "proxy data deliver";
   if (!this->validate_message(data)) return;
+  LOG(DEBUG) << "validated";
   this->data_send_buf_ = data.get_dp_msg_data();
+  DWORD *from_player_id =
+      reinterpret_cast<DWORD *>(&(*this->data_send_buf_.begin()));
+  DWORD *to_player_id = from_player_id + 1;
+  LOG(DEBUG) << "Data message from player id 0x" << std::hex << *from_player_id
+             << " to player id " << std::hex << *to_player_id;
   this->data_send();
 }
 
@@ -137,8 +144,8 @@ void proxy::dp_receive_handler(std::error_code const &ec,
     this->dp_recv_buf_.resize(packet.header()->cbSize);
     this->app_dp_endpoint_ =
         packet.get_return_addr<decltype(this->app_dp_endpoint_)>();
-    this->app_dp_endpoint_.address(
-        std::experimental::net::ip::address_v4::loopback());
+    //this->app_dp_endpoint_.address(
+        //std::experimental::net::ip::address_v4::loopback());
     PILOG(DEBUG) << "dp received message: " << packet.header()->command
                  << PELOG;
     switch (packet.header()->command) {
@@ -292,7 +299,6 @@ void proxy::dp_send_enumsession_handler() {
 
 void proxy::dp_send_enumsessionreply_handler() {
   POLOG(DEBUG) << "dp sending ENUMSESSIONREPLY" << PELOG;
-
   // Received information from a host pass it on to the app
   this->dp_assert_connection();
   this->dp_default_send_handler();
@@ -404,8 +410,13 @@ void proxy::data_send_handler(std::error_code const &ec,
 }
 
 bool proxy::validate_message(DPProxyMessage const &message) {
+  LOG(DEBUG) << "Validation";
   DPProxyEndpointIDs sender_info = message.get_from_ids();
+  LOG(DEBUG) << "Obtained Sender info";
   DWORD sender_id = sender_info.clientID;
+  LOG(DEBUG) << "Proxy system id: " << this->system_id_;
+  LOG(DEBUG) << "Proxy ID: " << this->client_id_;
+  LOG(DEBUG) << "Recieved message from client id " << sender_id;
 
   if (sender_id == 0) {
     LOG(FATAL) << "Proxy received information from an unknown sender";

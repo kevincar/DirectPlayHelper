@@ -14,8 +14,10 @@ interceptor::interceptor(
     : io_context_(io_context),
       dp_forward_(dp_forward),
       data_forward_(data_forward),
-      dps(io_context, std::bind(&interceptor::direct_play_server_callback, this,
-                                std::placeholders::_1), use_localhost) {}
+      dps(io_context,
+          std::bind(&interceptor::direct_play_server_callback, this,
+                    std::placeholders::_1),
+          use_localhost) {}
 
 void interceptor::dp_deliver(std::vector<char> const &buffer) {
   this->send_buf_ = buffer;
@@ -52,9 +54,8 @@ void interceptor::dp_deliver(std::vector<char> const &buffer) {
 void interceptor::data_deliver(std::vector<char> const &buffer) {
   this->send_buf_ = buffer;
   dppl::DPProxyMessage proxy_message(buffer);
-  DWORD const from_id = proxy_message.get_from_ids().playerID;
   IILOG(DEBUG) << "interceptor data deliver" << IELOG;
-  auto proxy = this->find_peer_proxy_by_playerid(from_id);
+  auto proxy = this->find_proxy(proxy_message.get_from_ids());
   LOG(DEBUG) << "Data found proxy";
   proxy->data_deliver(proxy_message);
 }
@@ -69,58 +70,24 @@ void interceptor::set_client_id(DWORD id) { this->client_id_ = id; }
  *******************************************************************************
  */
 
-inline bool interceptor::has_proxies() {
-  bool has_host_proxy = this->host_proxy_ != nullptr;
-  bool has_peer_proxy = !this->peer_proxies_.empty();
-  return has_host_proxy || has_peer_proxy;
-}
+inline bool interceptor::has_proxies() { return !this->proxies_.empty(); }
 
-std::shared_ptr<proxy> interceptor::find_peer_proxy(DWORD const &clientid) {
-  LOG(DEBUG) << "Searching for Proxy " << clientid;
-  for (auto peer_proxy : this->peer_proxies_) {
-    int cur_proxy_id = peer_proxy->get_client_id();
-    LOG(DEBUG) << "Found Proxy id " << cur_proxy_id;
-    if (cur_proxy_id == clientid) return peer_proxy;
+std::shared_ptr<proxy> interceptor::find_proxy(DPProxyEndpointIDs const &ids) {
+  LOG(DEBUG) << "Searching for Proxy " << ids_to_str(ids);
+  for (auto proxy : this->proxies_) {
+    DPProxyEndpointIDs proxy_ids = proxy->get_ids();
+    LOG(DEBUG) << "Found Proxy id " << ids_to_str(proxy_ids);
+    bool client_id_match =
+        ids.clientID == 0 ? true : ids.clientID == proxy_ids.clientID;
+    bool system_id_match =
+        ids.systemID == 0 ? true : proxy_ids.systemID == ids.systemID;
+    bool player_id_match =
+        ids.playerID == 0 ? true : proxy_ids.playerID == ids.playerID;
+    bool match = client_id_match || system_id_match || player_id_match;
+    if (!match) continue;
+    return proxy;
   }
   return nullptr;
-}
-
-std::shared_ptr<proxy> interceptor::find_peer_proxy_by_systemid(
-    DWORD const &systemid) {
-  for (auto peer_proxy : this->peer_proxies_) {
-    int cur_proxy_id = peer_proxy->get_system_id();
-    if (cur_proxy_id == systemid) return peer_proxy;
-  }
-  return nullptr;
-}
-
-std::shared_ptr<proxy> interceptor::find_peer_proxy_by_playerid(
-    DWORD const &id) {
-  for (auto peer_proxy : this->peer_proxies_) {
-    int cur_proxy_id = peer_proxy->get_player_id();
-    if (cur_proxy_id == id) return peer_proxy;
-  }
-
-  return nullptr;
-}
-
-bool interceptor::has_free_peer_proxy() {
-  if (this->peer_proxies_.size() == 0) return false;
-  return this->find_peer_proxy(0) != nullptr;
-}
-
-std::shared_ptr<proxy> interceptor::get_free_peer_proxy() {
-  if (!this->has_free_peer_proxy()) {
-    LOG(DEBUG) << "Creating a temporary Proxy";
-    auto dp_handler =
-        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
-    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
-                                  std::placeholders::_1);
-    this->peer_proxies_.emplace_back(std::make_shared<proxy>(
-        this->io_context_, proxy::type::peer, dp_handler, data_handler));
-  }
-
-  return this->find_peer_proxy(0);
 }
 
 void interceptor::direct_play_server_callback(std::vector<char> const &buffer) {
@@ -130,20 +97,20 @@ void interceptor::direct_play_server_callback(std::vector<char> const &buffer) {
   DPMessage request(&this->recv_buf_);
   if (request.header()->command != DPSYS_ENUMSESSIONS) return;
 
-  // Joining peers should not have any peers
-  if (this->peer_proxies_.size() > 0) return;
-  if (this->host_proxy_ == nullptr) {
-    auto dp_handler =
-        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
-    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
-                                  std::placeholders::_1);
-    this->host_proxy_ = std::make_shared<proxy>(
-        this->io_context_, proxy::type::host, dp_handler, data_handler);
-    auto return_addr =
-        request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
-    return_addr.address(std::experimental::net::ip::address_v4::loopback());
-    this->host_proxy_->set_return_addr(return_addr);
-  }
+  // Use the dps_proxy to send out the message
+  // if (this->dps_proxy_ == nullptr) {
+  // auto dp_handler =
+  // std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+  // auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
+  // std::placeholders::_1);
+  // this->dps_proxy_ = std::make_shared<proxy>(
+  // this->io_context_, proxy::type::host, dp_handler, data_handler);
+  // auto return_addr =
+  // request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
+  // return_addr.address(std::experimental::net::ip::address_v4::loopback());
+  // this->dps_proxy_->set_return_addr(return_addr);
+  //}
+  this->dps_return_addr = request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
   DPProxyMessage proxy_message(
       buffer, {0, 0, 0},
       {this->client_id_, this->system_id_, this->player_id_});
@@ -191,20 +158,43 @@ void interceptor::proxy_data_callback(DPProxyMessage const &buffer) {
 void interceptor::dp_send_enumsessions() {
   DPProxyMessage message = this->get_send_msg();
   IILOG(DEBUG) << "dp send ENUMSESSIONS" << IELOG;
-  std::shared_ptr<proxy> peer_proxy = this->get_free_peer_proxy();
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(message.get_from_ids());
+  if (peer_proxy == nullptr) {
+    LOG(DEBUG) << "ENUMSESSIONS sent from a new proxy";
+    auto dp_handler =
+        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
+                                  std::placeholders::_1);
+    peer_proxy = std::make_shared<proxy>(this->io_context_, proxy::type::peer,
+                                         dp_handler, data_handler);
+    this->proxies_.push_back(peer_proxy);
+  }
   peer_proxy->dp_deliver(message);
 }
 
 void interceptor::dp_send_enumsessionsreply() {
   DPProxyMessage message = this->get_send_msg();
-  this->host_proxy_->dp_deliver(message);
+  IILOG(DEBUG) << "dp send ENUMSESSIONSREPLY" << IELOG;
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(message.get_from_ids());
+  if (peer_proxy == nullptr) {
+    LOG(DEBUG) << "ENUMSESSIONSREPLY sent from a new host proxy";
+    auto dp_handler =
+        std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
+    auto data_handler = std::bind(&interceptor::proxy_data_callback, this,
+                                  std::placeholders::_1);
+    peer_proxy = std::make_shared<proxy>(this->io_context_, proxy::type::host,
+                                         dp_handler, data_handler);
+    this->proxies_.push_back(peer_proxy);
+    peer_proxy->set_return_addr(this->dps_return_addr);
+  }
+  peer_proxy->dp_deliver(message);
 }
 
 void interceptor::dp_send_requestplayerid() {
   DPProxyMessage message = this->get_send_msg();
   DWORD id = message.get_from_ids().clientID;
   IILOG(DEBUG) << "dp send REQUESTPLAYERID for player " << id << IELOG;
-  std::shared_ptr<proxy> peer_proxy = this->find_peer_proxy(id);
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(message.get_from_ids());
   IILOG(DEBUG) << "player found: " << (peer_proxy != nullptr) << IELOG;
   peer_proxy->dp_deliver(message);
 }
@@ -219,14 +209,14 @@ void interceptor::dp_send_requestplayerreply() {
   } else {
     this->player_id_ = msg->dwID;
   }
-  this->host_proxy_->dp_deliver(message);
+  auto peer_proxy = this->find_proxy(message.get_from_ids());
+  peer_proxy->dp_deliver(message);
 }
 
 void interceptor::dp_send_createplayer() {
   DPProxyMessage message = this->get_send_msg();
-  DWORD id = message.get_from_ids().clientID;
   IILOG(DEBUG) << "dp send CREATEPLAYER" << IELOG;
-  std::shared_ptr<proxy> peer_proxy = this->find_peer_proxy(id);
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(message.get_from_ids());
   peer_proxy->dp_deliver(message);
 }
 
@@ -236,8 +226,7 @@ void interceptor::dp_send_addforwardrequest() {
   DPMessage packet = message.get_dp_msg();
   DPMSG_ADDFORWARDREQUEST *msg = packet.message<DPMSG_ADDFORWARDREQUEST>();
   int system_id = msg->dwPlayerID;
-  std::shared_ptr<proxy> peer_proxy =
-      this->find_peer_proxy_by_systemid(system_id);
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(message.get_from_ids());
   peer_proxy->dp_deliver(message);
 }
 
@@ -256,13 +245,15 @@ void interceptor::dp_send_superenumplayersreply() {
     char *next_player_ptr = reinterpret_cast<char *>(player) + len;
     player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER *>(next_player_ptr);
   }
-  this->host_proxy_->dp_deliver(message);
+  auto peer_proxy = this->find_proxy(message.get_from_ids());
+  peer_proxy->dp_deliver(message);
 }
 
 std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER *player) {
   DPSuperPackedPlayer superpack = DPSuperPackedPlayer(player);
   DWORD system_id = 0;
   DWORD player_id = 0;
+  auto host_proxy = this->find_proxy(this->get_send_msg().get_from_ids());
 
   if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::issystemplayer) {
     LOG(DEBUG) << "System Player";
@@ -274,39 +265,50 @@ std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER *player) {
   }
 
   // Check if this is the host system player
+  LOG(DEBUG) << "NICE1";
   if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
     LOG(DEBUG) << "Registering the host player (system ID)";
-    this->host_proxy_->register_player(player);
+    host_proxy->register_player(player);
     return superpack.size();
   }
 
-  if (superpack.getSystemPlayerID() == this->host_proxy_->get_system_id()) {
+  LOG(DEBUG) << "NICE2";
+  LOG(DEBUG) << "systemPlayerID: " << superpack.getSystemPlayerID();
+  LOG(DEBUG) << "host_proxy == nullptr: " << (host_proxy == nullptr);
+  LOG(DEBUG) << "host syste id: " << host_proxy->get_system_id();
+  if (superpack.getSystemPlayerID() == host_proxy->get_system_id()) {
     LOG(DEBUG) << "Registering the host player (player ID)";
-    this->host_proxy_->register_player(player);
+    host_proxy->register_player(player);
     return superpack.size();
   }
 
+  LOG(DEBUG) << "NICE3";
+  LOG(DEBUG) << "player->ID: " << player->ID;
+  LOG(DEBUG) << "system_id_: " << this->system_id_;
   if (player->ID == this->system_id_) {
     LOG(DEBUG) << "Registering the local player";
     return superpack.size();
   }
 
   // check if this is another peer
-  std::shared_ptr<proxy> peer = this->find_peer_proxy(system_id);
+  LOG(DEBUG) << "NICE4";
+  std::shared_ptr<proxy> peer = this->find_proxy({0, system_id, player_id});
   if (peer != nullptr) {
     peer->register_player(player);
     return superpack.size();
   }
 
   // New player
+  LOG(DEBUG) << "NICE5";
   std::u16string uname(superpack.getShortName(), superpack.getShortNameSize());
+  LOG(DEBUG) << "NICE6";
   std::string name(uname.begin(), uname.end());
   LOG(INFO) << "New player: " << name;
   auto dp_handler =
       std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
   auto data_handler =
       std::bind(&interceptor::proxy_data_callback, this, std::placeholders::_1);
-  this->peer_proxies_.push_back(std::make_shared<proxy>(
+  this->proxies_.push_back(std::make_shared<proxy>(
       this->io_context_, proxy::type::peer, dp_handler, data_handler));
   peer->register_player(player);
   return superpack.size();

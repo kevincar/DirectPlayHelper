@@ -45,13 +45,8 @@ class interceptor {
  private:
   // Proxy Helper Funcs
   inline bool has_proxies();
-  std::shared_ptr<proxy> find_peer_proxy(DWORD const& clientid);
-  std::shared_ptr<proxy> find_peer_proxy_by_systemid(DWORD const& id);
-  std::shared_ptr<proxy> find_peer_proxy_by_playerid(DWORD const& id);
-  bool has_free_peer_proxy();
+  std::shared_ptr<proxy> find_proxy(DPProxyEndpointIDs const& ids);
 
-  //
-  std::shared_ptr<proxy> get_free_peer_proxy();
   void direct_play_server_callback(std::vector<char> const& buffer);
   void proxy_dp_callback(DPProxyMessage const& message);
   void proxy_data_callback(DPProxyMessage const& message);
@@ -85,8 +80,8 @@ class interceptor {
   std::experimental::net::io_context* io_context_;
 
   DirectPlayServer dps;
-  std::shared_ptr<proxy> host_proxy_;
-  std::vector<std::shared_ptr<proxy>> peer_proxies_;
+  std::experimental::net::ip::tcp::endpoint dps_return_addr;
+  std::vector<std::shared_ptr<proxy>> proxies_;
 };
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_INTERCEPTOR_HPP_

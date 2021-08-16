@@ -4,21 +4,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "dppl/dplay.h"
-#include "dppl/proxy.hpp"
+#include "dplay.h"
+#include "DPMessage.hpp"
+#include "DPProxyEndpointIDs.hpp"
+#include "proxy.hpp"
 namespace dppl {
-#pragma pack(push, 1)
-typedef struct {
-  DWORD clientID;
-  DWORD systemID;
-  DWORD playerID;
-} DPProxyEndpointIDs;
-typedef struct {
-  DPProxyEndpointIDs to;
-  DPProxyEndpointIDs from;
-  BYTE dp_message[];
-} DPPROXYMSG;
-#pragma pack(pop)
+std::string ids_to_str(DPProxyEndpointIDs const& ids);
 
 class proxy;
 // A `DPProxyMessage` is a DirectPlay message associated with endpoint

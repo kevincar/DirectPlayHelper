@@ -68,6 +68,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
   DWORD get_client_id() const;
   DWORD get_system_id() const;
   DWORD get_player_id() const;
+  DPProxyEndpointIDs get_ids() const;
 
   bool operator==(proxy const& rhs);
   bool operator<(proxy const& rhs);

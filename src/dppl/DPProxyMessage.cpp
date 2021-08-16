@@ -1,6 +1,13 @@
 #include "dppl/DPProxyMessage.hpp"
 
 namespace dppl {
+
+std::string ids_to_str(DPProxyEndpointIDs const& ids) {
+  return std::string("clientID: ") + std::to_string(ids.clientID) +
+         ", systemID: " + std::to_string(ids.systemID) +
+         ", playerID: " + std::to_string(ids.playerID);
+}
+
 DPProxyMessage::DPProxyMessage(DPProxyMessage const& other)
     : data_(other.data_) {}
 

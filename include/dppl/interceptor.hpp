@@ -80,7 +80,7 @@ class interceptor {
   std::experimental::net::io_context* io_context_;
 
   DirectPlayServer dps;
-  std::experimental::net::ip::tcp::endpoint dps_return_addr;
+  std::experimental::net::ip::tcp::endpoint dps_return_addr_;
   std::vector<std::shared_ptr<proxy>> proxies_;
 };
 }  // namespace dppl

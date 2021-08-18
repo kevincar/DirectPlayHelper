@@ -446,7 +446,7 @@ void proxy::data_default_receive_handler() {
 void proxy::data_send_handler(std::error_code const &ec,
                               std::size_t bytes_transmitted) {
   if (!ec) {
-    LOG(DEBUG) << "Send " << bytes_transmitted << "byte(s) to data stream";
+    LOG(DEBUG) << "Send " << bytes_transmitted << " byte(s) to data stream";
   } else {
     LOG(WARNING) << "data send error: " << ec.message();
   }

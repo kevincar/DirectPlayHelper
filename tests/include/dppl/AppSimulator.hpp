@@ -12,7 +12,9 @@ class AppSimulator {
                GUID app = AppSimulator::app,
                GUID instance = AppSimulator::instance);
 
+  bool is_complete(void) const;
   static std::vector<char> process_message(std::vector<char> message);
+  static bool is_dp_message(std::vector<char> message);
 
   static GUID constexpr app = {0xbf0613c0, 0xde79, 0x11d0, 0x99, 0xc9, 0x00,
                                0xa0,       0x24,   0x76,   0xad, 0x4b};
@@ -21,7 +23,11 @@ class AppSimulator {
                                     0xef,       0x3c,   0xbb};
 
  private:
-  std::vector<char> handle_message(std::vector<char> message);
+  static std::vector<char> process_dp_message(std::vector<char> message);
+  static std::vector<char> process_data_message(std::vector<char> message);
+  std::vector<char> handle_dp_message(std::vector<char> message);
+  std::vector<char> handle_data_message(std::vector<char> message);
+
   void dp_accept();
   void dp_accept_handler(std::error_code const& ec,
                          std::experimental::net::ip::tcp::socket new_socket);
@@ -49,6 +55,7 @@ class AppSimulator {
                          std::size_t bytes_transmitted);
 
   bool hosting_;
+  bool complete_ = false;
   static unsigned int n_id_requests;
   GUID guidInstance_;
   GUID guidApplication_;

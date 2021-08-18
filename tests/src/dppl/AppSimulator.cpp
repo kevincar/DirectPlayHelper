@@ -1,5 +1,7 @@
 #include "dppl/AppSimulator.hpp"
 #include "dppl/DPMessage.hpp"
+#include "dppl/DPSuperPackedPlayer.hpp"
+#include "dppl/dpmsgtmps.h"
 #include "g3log/g3log.hpp"
 
 namespace dppl {
@@ -48,13 +50,33 @@ AppSimulator::AppSimulator(std::experimental::net::io_context* io_context,
   this->data_receive();
 }
 
-std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
+bool AppSimulator::is_complete(void) const { return this->complete_; }
+
+std::vector<char> AppSimulator::process_message(std::vector<char> message) {
+  bool is_dp_message = AppSimulator::is_dp_message(message);
+  if (is_dp_message) {
+    return AppSimulator::process_dp_message(message);
+  } else {
+    return AppSimulator::process_data_message(message);
+  }
+}
+
+bool AppSimulator::is_dp_message(std::vector<char> message) {
+  DPMessage request(&message);
+  DPMSG_HEADER* header = request.header();
+  char* psignature = reinterpret_cast<char*>(&(*header->signature));
+  std::string signature(psignature, 4);
+  return signature == "play";
+}
+
+std::vector<char> AppSimulator::process_dp_message(
+    std::vector<char> raw_bytes) {
   std::vector<char> return_data(512, '\0');
   DPMessage message(&raw_bytes);
   int command = message.header()->command;
   switch (command) {
     case DPSYS_ENUMSESSIONSREPLY: {
-      std::vector<uint8_t> temp TMP_REQUESTPLAYERID_1;
+      std::vector<uint8_t> temp = TMP_REQUESTPLAYERID_1;
       return_data.assign(temp.begin(), temp.end());
     } break;
     case DPSYS_ENUMSESSIONS: {
@@ -63,7 +85,7 @@ std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
     } break;
     case DPSYS_REQUESTPLAYERID: {
       DPMSG_REQUESTPLAYERID* msg = message.message<DPMSG_REQUESTPLAYERID>();
-      std::vector<uint8_t> temp1 = TMP_REQUEASTPLAYERREPLY_1 ;
+      std::vector<uint8_t> temp1 = TMP_REQUESTPLAYERREPLY_1;
       std::vector<uint8_t> temp2 = TMP_REQUESTPLAYERREPLY_2;
       if (msg->dwFlags & REQUESTPLAYERIDFLAGS::issystemplayer) {
         return_data.assign(temp1.begin(), temp1.end());
@@ -88,47 +110,11 @@ std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
       return_data.assign(temp.begin(), temp.end());
     } break;
     case DPSYS_ADDFORWARDREQUEST: {
-      std::vector<uint8_t> temp = {
-          0x69, 0x01, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
-          0x61, 0x79, 0x29, 0x00, 0x0e, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x24, 0x00, 0x00, 0x00, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x50, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x4a, 0xc1,
-          0xcd, 0x87, 0xf0, 0x15, 0x21, 0x47, 0x8f, 0x94, 0x76, 0xc8, 0x4c,
-          0xef, 0x3c, 0xbb, 0xc0, 0x13, 0x06, 0xbf, 0x79, 0xde, 0xd0, 0x11,
-          0x99, 0xc9, 0x00, 0xa0, 0x24, 0x76, 0xad, 0x4b, 0x04, 0x00, 0x00,
-          0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0xa9, 0xfd, 0x95, 0x01, 0x00, 0x00, 0x00, 0x00, 0xa4,
-          0x00, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x08, 0x00,
-          0xb4, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x65, 0x00, 0x76, 0x00, 0x69,
-          0x00, 0x6e, 0x00, 0x27, 0x00, 0x73, 0x00, 0x20, 0x00, 0x47, 0x00,
-          0x61, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x3a, 0x00, 0x4a, 0x00, 0x4b,
-          0x00, 0x31, 0x00, 0x4d, 0x00, 0x50, 0x00, 0x3a, 0x00, 0x6d, 0x00,
-          0x31, 0x00, 0x30, 0x00, 0x2e, 0x00, 0x6a, 0x00, 0x6b, 0x00, 0x6c,
-          0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
-          0xad, 0xfd, 0x97, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
-          0x00, 0x20, 0x02, 0x00, 0x08, 0xfc, 0xc0, 0xa8, 0x01, 0x47, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e,
-          0xc0, 0xa8, 0x01, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x10, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0xa9, 0xfd,
-          0x94, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x20,
-          0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-          0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0xa8, 0xfd, 0x94, 0x01,
-          0x05, 0x00, 0x00, 0x00, 0xa9, 0xfd, 0x94, 0x01, 0x4b, 0x00, 0x65,
-          0x00, 0x76, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x00, 0x00, 0x20, 0x02,
-          0x00, 0x08, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x2e, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      std::vector<uint8_t> temp = TMP_SUPERENUMPLAYERSREPLY;
       return_data.assign(temp.begin(), temp.end());
     } break;
     case DPSYS_SUPERENUMPLAYERSREPLY: {
-      std::vector<uint8_t> temp = {
-          0x20, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x6c,
-          0x61, 0x79, 0x05, 0x00, 0x0e, 0x00, 0x08, 0x00, 0x00, 0x00};
+      std::vector<uint8_t> temp = TMP_CREATEPLAYER;
       return_data.assign(temp.begin(), temp.end());
     } break;
     default:
@@ -137,7 +123,25 @@ std::vector<char> AppSimulator::process_message(std::vector<char> raw_bytes) {
   return return_data;
 }
 
-std::vector<char> AppSimulator::handle_message(std::vector<char> raw_bytes) {
+std::vector<char> AppSimulator::process_data_message(
+    std::vector<char> message) {
+  std::vector<char> return_data(512, '\0');
+  std::vector<uint8_t> data;
+  DWORD* ptr = reinterpret_cast<DWORD*>(&(*message.begin()));
+  DWORD cmd = *(ptr + 2);
+  switch (cmd) {
+    case 0x20: {
+      data = TMP_DATACOMMAND_22;
+    } break;
+    case 0x22: {
+      data = TMP_DATACOMMAND_29;
+    } break;
+  }
+  return_data.assign(data.begin(), data.end());
+  return return_data;
+}
+
+std::vector<char> AppSimulator::handle_dp_message(std::vector<char> raw_bytes) {
   DPMessage request(&raw_bytes);
   LOG(DEBUG) << "App received dp message: " << request.header()->command;
   // Preprocessing
@@ -148,6 +152,28 @@ std::vector<char> AppSimulator::handle_message(std::vector<char> raw_bytes) {
       this->dp_endpoint_ =
           request.get_return_addr<decltype(this->dp_endpoint_)>();
       break;
+    case DPSYS_SUPERENUMPLAYERSREPLY: {
+      DPMSG_SUPERENUMPLAYERSREPLY* msg =
+          request.message<DPMSG_SUPERENUMPLAYERSREPLY>();
+      DPLAYI_SUPERPACKEDPLAYER* player =
+          request.property_data<DPLAYI_SUPERPACKEDPLAYER>(msg->dwPackedOffset);
+      for (int player_idx = 0; player_idx < msg->dwPlayerCount; player_idx++) {
+        DPSuperPackedPlayer superplayer(player);
+        if (player->dwFlags & (SUPERPACKEDPLAYERFLAGS::isnameserver |
+                               SUPERPACKEDPLAYERFLAGS::issystemplayer)) {
+          dpsockaddr* dp_addr = superplayer.getServiceProviders();
+          dpsockaddr* data_addr = ++dp_addr;
+          uint16_t port = DPMessage::flip(data_addr->sin_port);
+          uint32_t addr = DPMessage::flip(data_addr->sin_addr);
+          std::experimental::net::ip::udp::endpoint data_endpoint(
+              std::experimental::net::ip::address_v4(addr), port);
+          this->data_connect(data_endpoint);
+        }
+        char* next_player_ptr =
+            reinterpret_cast<char*>(player) + superplayer.size();
+        player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(next_player_ptr);
+      }
+    } break;
     case DPSYS_CREATEPLAYER: {
       DPMSG_CREATEPLAYER* msg = request.message<DPMSG_CREATEPLAYER>();
       DPLAYI_PACKEDPLAYER* player =
@@ -166,6 +192,9 @@ std::vector<char> AppSimulator::handle_message(std::vector<char> raw_bytes) {
           DPMessage::from_dpaddr<decltype(endpoint)>(data_sock);
       this->data_connect(endpoint);
     } break;
+    case DPSYS_REQUESTPLAYERID:
+      LOG(DEBUG) << "Received DPSYS_REQUESTPLAYERID";
+      break;
     default:
       LOG(WARNING) << "Handle Message Request Unhandled command: " << command;
   }
@@ -181,10 +210,26 @@ std::vector<char> AppSimulator::handle_message(std::vector<char> raw_bytes) {
           request.get_return_addr<decltype(this->dp_endpoint_)>();
       response.set_return_addr(this->dp_acceptor_.local_endpoint());
       break;
+    case DPSYS_REQUESTPLAYERREPLY:
+      LOG(DEBUG) << "Sending DPSYS_REQUESTPLAYERREPLY";
+      break;
     default:
       LOG(WARNING) << "Handle Message Response Unhandled command: " << command;
   }
   return return_data;
+}
+
+std::vector<char> AppSimulator::handle_data_message(
+    std::vector<char> raw_bytes) {
+  DWORD* ptr = reinterpret_cast<DWORD*>(&(*raw_bytes.begin()));
+  DWORD data_command = *(ptr + 2);
+  switch (data_command) {
+    case 0x22:
+    case 0x29:
+      this->complete_ = true;
+      break;
+  }
+  return this->process_message(raw_bytes);
 }
 
 void AppSimulator::dp_accept() {
@@ -223,14 +268,16 @@ void AppSimulator::dp_receive() {
 void AppSimulator::dp_receive_handler(std::error_code const& ec,
                                       std::size_t bytes_transmitted) {
   if (!ec) {
-    DPMessage request(&this->dp_recv_buf_);
-    int command = request.header()->command;
-    this->dp_send_buf_ = this->handle_message(this->dp_recv_buf_);
-    if (command != DPSYS_CREATEPLAYER) {
+    if (this->is_dp_message(this->dp_recv_buf_)) {
+      this->dp_send_buf_ = this->handle_dp_message(this->dp_recv_buf_);
+    } else {
+      LOG(FATAL) << "Should have been passed to the data_receive_handler";
+    }
+
+    if (this->is_dp_message(this->dp_send_buf_)) {
       this->dp_send();
     } else {
       this->data_send_buf_ = this->dp_send_buf_;
-      this->data_receive();
       this->data_send();
     }
   } else {
@@ -288,7 +335,7 @@ void AppSimulator::dpsrvr_receive() {
 void AppSimulator::dpsrvr_receive_handler(std::error_code const& ec,
                                           std::size_t bytes_transmitted) {
   if (!ec) {
-    this->dp_send_buf_ = this->handle_message(this->dpsrvr_recv_buf_);
+    this->dp_send_buf_ = this->handle_dp_message(this->dpsrvr_recv_buf_);
     this->dp_send();
     this->dpsrvr_receive();
   }
@@ -349,7 +396,8 @@ void AppSimulator::data_receive() {
 void AppSimulator::data_receive_handler(std::error_code const& ec,
                                         std::size_t bytes_transmitted) {
   if (!ec) {
-    LOG(DEBUG) << "data receive";
+    this->data_send_buf_ = this->handle_data_message(this->data_recv_buf_);
+    this->data_send();
   } else {
     switch (ec.value()) {
       default:

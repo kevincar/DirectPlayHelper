@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
 typedef uint64_t QWORD;
@@ -338,7 +338,7 @@ typedef struct {
   //  ShortcutIDCount multiplied by four.I
 } DPLAYI_SUPERPACKEDPLAYER;
 #pragma pack(pop)
-enum class SUPERPACKEDPLAYERFLAGS {
+enum class SUPERPACKEDPLAYERFLAGS : int {
   issystemplayer = 0x1,
   isnameserver = 0x2,
   isingroup = 0x4,
@@ -346,6 +346,11 @@ enum class SUPERPACKEDPLAYERFLAGS {
 };
 inline bool operator&(DWORD const& lhs, SUPERPACKEDPLAYERFLAGS const& rhs) {
   return lhs & static_cast<DWORD>(rhs);
+}
+inline constexpr SUPERPACKEDPLAYERFLAGS operator|(
+    SUPERPACKEDPLAYERFLAGS const& lhs, SUPERPACKEDPLAYERFLAGS const& rhs) {
+  return static_cast<SUPERPACKEDPLAYERFLAGS>(static_cast<int>(lhs) |
+                                             static_cast<int>(rhs));
 }
 /*
  * DPSECURITYDESC

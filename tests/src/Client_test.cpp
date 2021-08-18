@@ -100,16 +100,12 @@ class MockServer {
     if (!msg.is_dp_message()) {
       LOG(DEBUG) << "NICE!";
       DWORD* ptr = reinterpret_cast<DWORD*>(&(*dp_message_data.begin()));
-      EXPECT_EQ(*(++ptr), msg.get_to_ids().playerID);
-      this->end_timer.async_wait(
-          [&](std::error_code const& ec) { this->io_context_->stop(); });
-      return;
-    } else if (msg.get_dp_msg().header()->command == DPSYS_CREATEPLAYER) {
-      DWORD* ptr = reinterpret_cast<DWORD*>(&(*response_data.begin()));
-      DWORD player_id = msg.get_from_ids().playerID;
-      EXPECT_EQ(*(++ptr), player_id);
-      this->end_timer.async_wait(
-          [&](std::error_code const& ec) { this->io_context_->stop(); });
+      DWORD command = *(ptr + 2);
+      if (command == 0x20 || command == 0x22)  {
+          this->end_timer.async_wait(
+              [&](std::error_code const& ec) { this->io_context_->stop(); });
+          return;
+      }
     }
     std::vector<char> return_payload = return_dp_msg.to_vector();
     dph::Message return_message(90, msg.get_from_ids().clientID,

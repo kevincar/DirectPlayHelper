@@ -69,7 +69,7 @@ TEST(interceptorTest, host_test) {
             default:
               LOG(DEBUG) << "Unhandled message from server "
                          << request.header()->command;
-              return;
+              if (send_proxy_message.is_dp_message()) return;
           }
           if (send_proxy_message.is_dp_message()) {
             interceptor->dp_deliver(send_proxy_message.to_vector());
@@ -109,9 +109,13 @@ TEST(interceptorTest, host_test) {
         LOG(DEBUG) << "interceptor data callback";
         dppl::DPProxyMessage proxy_message(buffer);
         std::vector<char> data_message = proxy_message.get_dp_msg_data();
-        DWORD* id = reinterpret_cast<DWORD*>(&(*data_message.begin()));
-        ASSERT_EQ(proxy_message.get_from_ids().playerID, *id);
-        std::experimental::net::defer([&]() { io_context.stop(); });
+        DWORD* ptr = reinterpret_cast<DWORD*>(&(*data_message.begin()));
+        DWORD command = *(ptr + 2);
+        if (command == 0x29) {
+          std::experimental::net::defer([&]() { io_context.stop(); });
+        } else {
+          send_to_peer(buffer);
+        }
       };
 
   interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
@@ -152,19 +156,7 @@ TEST(interceptorTest, join_test) {
             // doesn't use an actual client yet, we need to initialize with e
             // from.clientID field to an arbitrary value to use
             send_proxy_message.set_from_ids({8, 0, 0});
-          } else if (recv_dp_message.header()->command == DPSYS_CREATEPLAYER) {
-            // End of test check
-            dppl::DPProxyEndpointIDs from = send_proxy_message.get_to_ids();
-            LOG(DEBUG) << "From Client ID: " << from.clientID
-                       << "\t System ID: " << from.systemID
-                       << "\t Player ID: " << from.playerID;
-            DWORD* ptr = reinterpret_cast<DWORD*>(&(*send_buf.begin()));
-            DWORD data_to_id = *(++ptr);
-            DWORD pm_to_id = send_proxy_message.get_to_ids().playerID;
-            ASSERT_EQ(data_to_id, pm_to_id);
-            end_timer.async_wait(
-                [&](std::error_code const& ec) { io_context.stop(); });
-          }
+          } 
           LOG(DEBUG) << "Received data from host. Command: "
                      << send_dp_message.header()->command;
           if (send_proxy_message.is_dp_message()) {
@@ -199,6 +191,14 @@ TEST(interceptorTest, join_test) {
   std::function<void(std::vector<char>)> data_callback =
       [&](std::vector<char> buffer) {
         LOG(DEBUG) << "interceptor data callback";
+        dppl::DPProxyMessage proxy_message(buffer);
+        std::vector<char> data = proxy_message.get_dp_msg_data();
+        DWORD* ptr = reinterpret_cast<DWORD*>(&(*data.begin()));
+        DWORD command = *(ptr + 2);
+        if (command == 0x22) {
+          std::experimental::net::defer([&](){ io_context.stop(); });
+        }
+        send_to_internet(proxy_message.to_vector());
       };
   interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
                                                     data_callback);

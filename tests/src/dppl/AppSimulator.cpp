@@ -126,7 +126,7 @@ std::vector<char> AppSimulator::process_dp_message(
 std::vector<char> AppSimulator::process_data_message(
     std::vector<char> message) {
   std::vector<char> return_data(512, '\0');
-  std::vector<uint8_t> data;
+  std::vector<uint8_t> data(512, '\0');
   DWORD* ptr = reinterpret_cast<DWORD*>(&(*message.begin()));
   DWORD cmd = *(ptr + 2);
   switch (cmd) {

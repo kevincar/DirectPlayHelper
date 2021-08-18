@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
 typedef uint64_t QWORD;
@@ -20,19 +20,18 @@ typedef unsigned char STR, *LPSTR;
 typedef char16_t WSTR, *LPWSTR;
 
 // GUID
-// 
+//
 // Global Unique Identifier
 #pragma pack(push, 1)
 typedef struct {
-    DWORD Data1;
-      WORD Data2;
-        WORD Data3;
-          BYTE Data4[8];
+  DWORD Data1;
+  WORD Data2;
+  WORD Data3;
+  BYTE Data4[8];
 } GUID;
 #pragma pack(pop)
 
 #endif  // define(WIN32)
-
 
 // dpsockadder
 //
@@ -41,10 +40,10 @@ typedef struct {
 // os-independent use
 #pragma pack(push, 1)
 typedef struct {
-    uint16_t sin_family;
-      uint16_t sin_port;
-        uint32_t sin_addr;
-          uint8_t sin_zero[8];
+  uint16_t sin_family;
+  uint16_t sin_port;
+  uint32_t sin_addr;
+  uint8_t sin_zero[8];
 } dpsockaddr;
 #pragma pack(pop)
 

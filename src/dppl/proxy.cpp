@@ -213,7 +213,7 @@ void proxy::dp_receive_addforwardrequest_handler() {
   uint16_t data_port = DPMessage::flip(data_conn->sin_port);
   uint32_t addr = DPMessage::flip(data_conn->sin_addr);
   std::experimental::net::ip::udp::endpoint data_endpoint(
-      std::experimental::net::ip::address_v4(addr), data_port);
+      std::experimental::net::ip::address_v4::loopback(), data_port);
   std::error_code ec;
   this->data_socket_.connect(data_endpoint, ec);
   if (ec) {

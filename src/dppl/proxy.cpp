@@ -77,14 +77,13 @@ void proxy::data_deliver(DPProxyMessage data) {
   if (!this->validate_message(data)) return;
   LOG(DEBUG) << "validated";
   this->data_send_buf_ = data.get_dp_msg_data();
-  DWORD *datum=
-      reinterpret_cast<DWORD *>(&(*this->data_send_buf_.begin()));
+  DWORD *datum = reinterpret_cast<DWORD *>(&(*this->data_send_buf_.begin()));
   DWORD from_player_id = *datum++;
   DWORD to_player_id = *datum++;
   DWORD data_command = *datum;
-  LOG(DEBUG) << "Sending Data Message - From Player ID: 0x" << std::hex << from_player_id
-             << ", To Player ID: 0x" << std::hex << to_player_id
-             << ", command: 0x" << std::hex << data_command;
+  LOG(DEBUG) << "Sending Data Message - From Player ID: 0x" << std::hex
+             << from_player_id << ", To Player ID: 0x" << std::hex
+             << to_player_id << ", command: 0x" << std::hex << data_command;
   this->data_send();
 }
 
@@ -167,9 +166,11 @@ void proxy::dp_receive_handler(std::error_code const &ec,
       case DPSYS_ADDFORWARDREQUEST: {
         this->dp_receive_addforwardrequest_handler();
       } break;
+      case DPSYS_SUPERENUMPLAYERSREPLY: {
+        this->dp_receive_superenumplayersreply_handler();
+      } break;
       case DPSYS_ENUMSESSIONSREPLY:
       case DPSYS_CREATEPLAYER:
-      case DPSYS_SUPERENUMPLAYERSREPLY:
         this->dp_default_receive_handler();
         break;
       default:
@@ -217,6 +218,36 @@ void proxy::dp_receive_addforwardrequest_handler() {
   this->data_socket_.connect(data_endpoint, ec);
   if (ec) {
     LOG(WARNING) << "Failed to connect data socket";
+  }
+  this->dp_default_receive_handler();
+}
+
+void proxy::dp_receive_superenumplayersreply_handler() {
+  POLOG(DEBUG) << "dp receive handling SUPERENUMSPLAYERREPLY" << PELOG;
+  DPMessage packet(&this->dp_recv_buf_);
+  DPMSG_SUPERENUMPLAYERSREPLY *msg =
+      packet.message<DPMSG_SUPERENUMPLAYERSREPLY>();
+  DPLAYI_SUPERPACKEDPLAYER *player =
+      packet.property_data<DPLAYI_SUPERPACKEDPLAYER>(msg->dwPackedOffset);
+  for (int player_idx = 0; player_idx < msg->dwPlayerCount; player_idx++) {
+    dppl::DPSuperPackedPlayer superplayer(player);
+    if (player->dwFlags & (SUPERPACKEDPLAYERFLAGS::islocalplayer |
+                            SUPERPACKEDPLAYERFLAGS::isnameserver)) {
+      dpsockaddr *dp_addr = superplayer.getServiceProviders();
+      dpsockaddr *data_addr = ++dp_addr;
+      uint16_t data_port = DPMessage::flip(data_addr->sin_port);
+      uint32_t addr = DPMessage::flip(data_addr->sin_addr);
+      std::experimental::net::ip::udp::endpoint data_endpoint(
+          std::experimental::net::ip::address_v4(addr), data_port);
+      std::error_code ec;
+      this->data_socket_.connect(data_endpoint, ec);
+      if (!!ec) {
+        LOG(WARNING) << "Failed to connect data socket: " << ec.message();
+      }
+    }
+    char *next_player_addr =
+        reinterpret_cast<char *>(player) + superplayer.size();
+    player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER *>(next_player_addr);
   }
   this->dp_default_receive_handler();
 }
@@ -369,7 +400,7 @@ void proxy::dp_receipt_handler(std::error_code const &ec,
 /*
  ******************************************************************************
  *                                                                            *
- *                          App Data Socket Processes                         *
+ *                          App Data Socket Processes *
  *                                                                            *
  ******************************************************************************
  */
@@ -399,8 +430,7 @@ void proxy::data_receive_handler(std::error_code const &ec,
     DWORD data_command = *datum;
     LOG(DEBUG) << "Processing Data Command - From Player: 0x" << std::hex
                << from_player_id << ", to player id: 0x" << std::hex
-               << to_player_id
-               << ", command : 0x " << std::hex << data_command;
+               << to_player_id << ", command : 0x " << std::hex << data_command;
     this->data_default_receive_handler();
   } else {
     LOG(WARNING) << "data receive error: " << ec.message();
@@ -417,8 +447,7 @@ void proxy::data_send_handler(std::error_code const &ec,
                               std::size_t bytes_transmitted) {
   if (!ec) {
     LOG(DEBUG) << "Send " << bytes_transmitted << "byte(s) to data stream";
-  }
-  else {
+  } else {
     LOG(WARNING) << "data send error: " << ec.message();
   }
 }

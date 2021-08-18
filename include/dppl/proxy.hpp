@@ -84,6 +84,7 @@ class proxy : public std::enable_shared_from_this<proxy> {
                           std::size_t bytes_transmitted);
   void dp_receive_requestplayerreply();
   void dp_receive_addforwardrequest_handler();
+  void dp_receive_superenumplayersreply_handler();
   void dp_default_receive_handler();
   void dp_send();
   void dp_assert_connection();

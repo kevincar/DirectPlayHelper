@@ -36,7 +36,7 @@ class DPProxyMessage {
   // Convert the DPProxyMessage into a byte vector
   std::vector<char> to_vector() const;
 
-  // Get the DirectPlay Message as a byte vactor
+  // Get the DirectPlay Message as a byte vector
   std::vector<char> get_dp_msg_data() const;
   // Return a copy of a DPMessage whos internal data structure is a pointer to
   // the same data here. Thus manipulations on the DPMessage structure returned

@@ -74,6 +74,7 @@ TEST(ProxyTest, dp_initialization_host) {
                                                       simulated_internet_delay);
   std::experimental::net::steady_timer dpsrvr_timer(io_context,
                                                     dpsrvr_timer_delay);
+  std::shared_ptr<dppl::AppSimulator> app;
   std::function<void(std::error_code const &)> dpsrvr_timer_callback;
   std::function<void(std::error_code const &)> internet_timer_callback;
   std::function<void(std::vector<char> const &)> send_to_server;
@@ -124,18 +125,24 @@ TEST(ProxyTest, dp_initialization_host) {
         }
 
         LOG(DEBUG) << "Simulating sending this data over the internet to the "
-                      "server/other player";
+                      "server/other player. Message ID: "
+                   << buf.get_dp_msg().header()->command;
         send_to_server(buf.to_vector());
       };
 
   std::function<void(dppl::DPProxyMessage)> proxy_data_callback =
       [&](dppl::DPProxyMessage message) {
         LOG(DEBUG) << "Proxy_test received a data message from the app";
-        std::vector<char> buf = message.get_dp_msg_data();
-        DWORD *ptr = reinterpret_cast<DWORD *>(&(*buf.begin()));
-        proxy->stop();
-        std::experimental::net::post([&]() { io_context.stop(); });
-        ASSERT_EQ(*ptr, player_id);
+        std::vector<char> stream_data = message.get_dp_msg_data();
+        DWORD *ptr = reinterpret_cast<DWORD *>(&(*stream_data.begin()));
+        DWORD cmd = *(ptr + 2);
+        if (cmd == 0x29) {
+          ASSERT_EQ(app->is_complete(), true);
+          proxy->stop();
+          std::experimental::net::post([&]() { io_context.stop(); });
+        } else {
+          send_to_server(message.to_vector());
+        }
       };
 
   dpsrvr_timer_callback = [&](std::error_code const &ec) {
@@ -168,10 +175,14 @@ TEST(ProxyTest, dp_initialization_host) {
       LOG(DEBUG) << "Received response from simulated player with id "
                  << proxy->get_client_id() << ", delivering back message id "
                  << response_message.header()->command
-                 << "to the app through proxy";
+                 << " to the app through proxy";
       dppl::DPProxyMessage proxy_response_message(
           send_buf, {client_id, system_id, player_id}, *proxy);
-      proxy->dp_deliver(proxy_response_message);
+      if (proxy_request_message.is_dp_message()) {
+        proxy->dp_deliver(proxy_response_message);
+      } else {
+        proxy->data_deliver(proxy_response_message);
+      }
     } else {
       LOG(WARNING) << "Timer error: " << ec.message();
     }
@@ -196,7 +207,7 @@ TEST(ProxyTest, dp_initialization_host) {
     prompt("Please shutdown your application and press enter...");
   } else {
     dpsrvr_timer.async_wait(dpsrvr_timer_callback);
-    dppl::AppSimulator app(&io_context, true);
+    app = std::make_shared<dppl::AppSimulator>(&io_context, true);
     io_context.run();
   }
 }
@@ -215,6 +226,7 @@ TEST(ProxyTest, dp_initialization_join) {
                                              simulated_internet_delay);
   std::experimental::net::steady_timer end_timer(io_context,
                                                  std::chrono::seconds(4));
+  std::shared_ptr<dppl::AppSimulator> app;
   std::shared_ptr<dppl::proxy> proxy;
 
   std::function<void(std::error_code const &)> internet_callback =
@@ -222,7 +234,6 @@ TEST(ProxyTest, dp_initialization_join) {
         if (!ec) {
           dppl::DPProxyMessage proxy_message(recv_buf);
           dppl::DPMessage request = proxy_message.get_dp_msg();
-          bool send_to_data = request.header()->command == DPSYS_CREATEPLAYER;
           send_buf = dppl::AppSimulator::process_message(
               proxy_message.get_dp_msg_data());
           LOG(DEBUG)
@@ -275,13 +286,16 @@ TEST(ProxyTest, dp_initialization_join) {
             default:
               LOG(DEBUG) << "Unhandled DP Message command "
                          << response.header()->command;
-              if (send_to_data) {
-                DWORD *id = reinterpret_cast<DWORD *>(&(*send_buf.begin()));
-                id++;
-                ASSERT_EQ(*id, player_id);
-                proxy->stop();
-                end_timer.async_wait(
-                    [&](std::error_code const &ec) { io_context.stop(); });
+              if (!dppl::AppSimulator::is_dp_message(send_buf)) {
+                DWORD *ptr = reinterpret_cast<DWORD *>(&(*send_buf.begin()));
+                DWORD cmd = *(ptr + 2);
+                if (cmd == 0x29) {
+                  proxy->stop();
+                  end_timer.async_wait([&](std::error_code const &ec) {
+                    ASSERT_EQ(app->is_complete(), true);
+                    io_context.stop();
+                  });
+                }
                 dppl::DPProxyMessage proxy_message(send_buf, {0, 0, 0}, *proxy);
                 return proxy->data_deliver(proxy_message);
               } else {
@@ -345,6 +359,7 @@ TEST(ProxyTest, dp_initialization_join) {
   std::function<void(dppl::DPProxyMessage const &)> proxy_data_callback =
       [&](dppl::DPProxyMessage const &message) {
         LOG(DEBUG) << "Received data message from proxy";
+        send_to_server(message.to_vector());
       };
 
   dppl::DirectPlayServer dps(&io_context, dps_callback);
@@ -358,7 +373,7 @@ TEST(ProxyTest, dp_initialization_join) {
     io_context.run();
     prompt("Please shut down the application now");
   } else {
-    dppl::AppSimulator app(&io_context, false);
+    app = std::make_shared<dppl::AppSimulator>(&io_context, false);
     io_context.run();
   }
 }

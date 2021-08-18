@@ -1,7 +1,7 @@
 #ifndef INCLUDE_DPPL_DPPROXYENDPOINTIDS_HPP_
 #define INCLUDE_DPPL_DPPROXYENDPOINTIDS_HPP_
 
-#include "dplay.h"
+#include "dppl/dplay.h"
 
 namespace dppl {
 #pragma pack(push, 1)
@@ -16,5 +16,5 @@ typedef struct {
   BYTE dp_message[];
 } DPPROXYMSG;
 #pragma pack(pop)
-}
+}  // namespace dppl
 #endif  // INCLUDE_DPPL_DPPROXYENDPOINTIDS_HPP_

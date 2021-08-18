@@ -2,9 +2,10 @@
 #define INCLUDE_DPPL_DPPROXYMESSAGE_HPP_
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
-#include "dplay.h"
+#include "dppl/dplay.h"
 #include "DPMessage.hpp"
 #include "DPProxyEndpointIDs.hpp"
 #include "proxy.hpp"

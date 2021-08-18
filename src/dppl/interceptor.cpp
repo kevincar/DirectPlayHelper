@@ -110,7 +110,8 @@ void interceptor::direct_play_server_callback(std::vector<char> const &buffer) {
   // return_addr.address(std::experimental::net::ip::address_v4::loopback());
   // this->dps_proxy_->set_return_addr(return_addr);
   //}
-  this->dps_return_addr = request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
+  this->dps_return_addr =
+      request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
   DPProxyMessage proxy_message(
       buffer, {0, 0, 0},
       {this->client_id_, this->system_id_, this->player_id_});

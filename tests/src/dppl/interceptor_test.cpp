@@ -156,7 +156,7 @@ TEST(interceptorTest, join_test) {
             // doesn't use an actual client yet, we need to initialize with e
             // from.clientID field to an arbitrary value to use
             send_proxy_message.set_from_ids({8, 0, 0});
-          } 
+          }
           LOG(DEBUG) << "Received data from host. Command: "
                      << send_dp_message.header()->command;
           if (send_proxy_message.is_dp_message()) {
@@ -196,7 +196,7 @@ TEST(interceptorTest, join_test) {
         DWORD* ptr = reinterpret_cast<DWORD*>(&(*data.begin()));
         DWORD command = *(ptr + 2);
         if (command == 0x22) {
-          std::experimental::net::defer([&](){ io_context.stop(); });
+          std::experimental::net::defer([&]() { io_context.stop(); });
         }
         send_to_internet(proxy_message.to_vector());
       };

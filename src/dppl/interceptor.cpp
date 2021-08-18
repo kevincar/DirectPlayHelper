@@ -11,8 +11,7 @@ interceptor::interceptor(
     std::function<void(std::vector<char> const &)> dp_forward,
     std::function<void(std::vector<char> const &)> data_forward,
     bool use_localhost)
-    : io_context_(io_context),
-      dp_forward_(dp_forward),
+    : io_context_(io_context), dp_forward_(dp_forward),
       data_forward_(data_forward),
       dps(io_context,
           std::bind(&interceptor::direct_play_server_callback, this,
@@ -26,28 +25,28 @@ void interceptor::dp_deliver(std::vector<char> const &buffer) {
   IILOG(DEBUG) << "interceptor dp deliver command "
                << response.header()->command << IELOG;
   switch (response.header()->command) {
-    case DPSYS_ENUMSESSIONS: {
-      this->dp_send_enumsessions();
-    } break;
-    case DPSYS_REQUESTPLAYERID: {
-      this->dp_send_requestplayerid();
-    } break;
-    case DPSYS_REQUESTPLAYERREPLY:
-      this->dp_send_requestplayerreply();
-      break;
-    case DPSYS_CREATEPLAYER:
-      IILOG(DEBUG) << "interceptor dp deliver: CREATEPLAYER" << IELOG;
-      this->dp_send_createplayer();
-      break;
-    case DPSYS_ENUMSESSIONSREPLY:
-      this->dp_send_enumsessionsreply();
-      break;
-    case DPSYS_ADDFORWARDREQUEST:
-      this->dp_send_addforwardrequest();
-      break;
-    case DPSYS_SUPERENUMPLAYERSREPLY:
-      this->dp_send_superenumplayersreply();
-      break;
+  case DPSYS_ENUMSESSIONS: {
+    this->dp_send_enumsessions();
+  } break;
+  case DPSYS_REQUESTPLAYERID: {
+    this->dp_send_requestplayerid();
+  } break;
+  case DPSYS_REQUESTPLAYERREPLY:
+    this->dp_send_requestplayerreply();
+    break;
+  case DPSYS_CREATEPLAYER:
+    IILOG(DEBUG) << "interceptor dp deliver: CREATEPLAYER" << IELOG;
+    this->dp_send_createplayer();
+    break;
+  case DPSYS_ENUMSESSIONSREPLY:
+    this->dp_send_enumsessionsreply();
+    break;
+  case DPSYS_ADDFORWARDREQUEST:
+    this->dp_send_addforwardrequest();
+    break;
+  case DPSYS_SUPERENUMPLAYERSREPLY:
+    this->dp_send_superenumplayersreply();
+    break;
   }
 }
 
@@ -84,7 +83,8 @@ std::shared_ptr<proxy> interceptor::find_proxy(DPProxyEndpointIDs const &ids) {
     bool player_id_match =
         ids.playerID == 0 ? true : proxy_ids.playerID == ids.playerID;
     bool match = client_id_match || system_id_match || player_id_match;
-    if (!match) continue;
+    if (!match)
+      continue;
     return proxy;
   }
   return nullptr;
@@ -95,7 +95,8 @@ void interceptor::direct_play_server_callback(std::vector<char> const &buffer) {
                << IELOG;
   this->recv_buf_ = buffer;
   DPMessage request(&this->recv_buf_);
-  if (request.header()->command != DPSYS_ENUMSESSIONS) return;
+  if (request.header()->command != DPSYS_ENUMSESSIONS)
+    return;
 
   // Use the dps_proxy to send out the message
   // if (this->dps_proxy_ == nullptr) {
@@ -112,7 +113,8 @@ void interceptor::direct_play_server_callback(std::vector<char> const &buffer) {
   //}
   this->dps_return_addr_ =
       request.get_return_addr<std::experimental::net::ip::tcp::endpoint>();
-  this->dps_return_addr_.address(std::experimental::net::ip::address_v4::loopback());
+  this->dps_return_addr_.address(
+      std::experimental::net::ip::address_v4::loopback());
   DPProxyMessage proxy_message(
       buffer, {0, 0, 0},
       {this->client_id_, this->system_id_, this->player_id_});
@@ -124,12 +126,12 @@ void interceptor::proxy_dp_callback(DPProxyMessage const &buffer) {
   this->recv_buf_ = buffer.get_dp_msg_data();
   DPMessage packet(&this->recv_buf_);
   switch (packet.header()->command) {
-    case DPSYS_REQUESTPLAYERID:
-      this->dp_recv_requestplayerid();
-      break;
-    case DPSYS_SUPERENUMPLAYERSREPLY:
-      this->dp_recv_superenumplayersreply();
-      break;
+  case DPSYS_REQUESTPLAYERID:
+    this->dp_recv_requestplayerid();
+    break;
+  case DPSYS_SUPERENUMPLAYERSREPLY:
+    this->dp_recv_superenumplayersreply();
+    break;
   }
 
   DPProxyMessage forward_message(

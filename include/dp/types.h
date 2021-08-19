@@ -31,6 +31,18 @@ typedef struct {
 } GUID;
 #pragma pack(pop)
 
+inline bool operator==(GUID const& lhs, GUID const& rhs) {
+  bool data4 = true;
+  for (int i = 0; i < 8; i++) {
+    data4 = data4 && (lhs.Data4[i] == rhs.Data4[i]);
+  }
+  return
+    lhs.Data1 == rhs.Data1 &&
+    lhs.Data2 == rhs.Data2 &&
+    lhs.Data3 == rhs.Data3 &&
+    data4;
+}
+
 #endif  // define(WIN32)
 
 #endif  // INCLUDE_DP_TYPES_H_

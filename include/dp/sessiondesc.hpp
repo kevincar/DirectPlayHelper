@@ -2,10 +2,11 @@
 #define INCLUDE_DP_SESSIONDESC_HPP_
 
 #include <vector>
+
 #include "dp/types.h"
 
 // DPSESSIONDESC2
-// 
+//
 // Used to describe the properties of a DirectPlay
 // session instance
 #pragma pack(push, 1)
@@ -53,16 +54,61 @@ enum DPSESSIONDESCFLAGS {
   nosessiondescchanges = 0x20000
 };
 
-namespace dp {
-  class sessiondesc {
-    public:
-      sessiondesc(std::vector<BYTE> *message_data, BYTE *data);
-
-    private:
-      std::vector<BYTE> *message_data_;
-      BYTE *data_;
-      DPSESSIONDESC2 *session_;
-  };
+inline DPSESSIONDESCFLAGS operator|(DPSESSIONDESCFLAGS const &lhs,
+                                    DPSESSIONDESCFLAGS const &rhs) {
+  return static_cast<DPSESSIONDESCFLAGS>(static_cast<int>(lhs) |
+                                         static_cast<int>(rhs));
 }
 
-#endif INCLUDE_DP_SESSIONDESC_HPP_
+namespace dp {
+class sessiondesc {
+ public:
+  sessiondesc(std::shared_ptr<std::vector<BYTE>> message_data, BYTE *data);
+
+  DWORD get_size(void);
+  void set_size(DWORD size);
+
+  DPSESSIONDESCFLAGS get_flags(void);
+  void set_flags(DPSESSIONDESCFLAGS flags);
+
+  GUID get_guid_instance(void);
+  void set_guid_instance(GUID guid);
+
+  GUID get_guid_application(void);
+  void set_guid_application(GUID guid);
+
+  DWORD get_max_players(void);
+  void set_max_players(DWORD max_players);
+
+  DWORD get_num_current_players(void);
+  void set_num_current_players(DWORD current_players);
+
+  // Skipping session name and password since documention requires that these
+  // be NULL
+
+  DWORD get_session_id(void);
+  void set_session_id(DWORD session_id);
+
+  DWORD get_reserved_2(void);
+  void set_reserved_2(DWORD reserved_value);
+
+  DWORD get_user_1(void);
+  void set_user_1(DWORD user_1_value);
+
+  DWORD get_user_2(void);
+  void set_user_2(DWORD user_2_value);
+
+  DWORD get_user_3(void);
+  void set_user_3(DWORD user_3_value);
+
+  DWORD get_user_4(void);
+  void set_user_4(DWORD user_4_value);
+
+ private:
+  std::shared_ptr<std::vector<BYTE>> message_data_;
+  BYTE *data_;
+  DPSESSIONDESC2 *session_;
+};
+}  // namespace dp
+
+#endif  // INCLUDE_DP_SESSIONDESC_HPP_

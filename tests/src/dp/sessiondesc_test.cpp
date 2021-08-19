@@ -18,7 +18,8 @@ TEST(session, constructor) {
   ASSERT_EQ(session.get_size(), 0x040);
 
   // flags
-  DPSESSIONDESCFLAGS e_flags = DPSESSIONDESCFLAGS::useping | DPSESSIONDESCFLAGS::noplayerupdates;
+  DPSESSIONDESCFLAGS e_flags =
+      DPSESSIONDESCFLAGS::useping | DPSESSIONDESCFLAGS::noplayerupdates;
   DPSESSIONDESCFLAGS o_flags = session.get_flags();
   ASSERT_EQ(o_flags, e_flags);
 
@@ -27,23 +28,13 @@ TEST(session, constructor) {
   ASSERT_EQ(session.get_flags(), e_flags);
 
   // GUID instance
-  GUID e_instance = {
-    0x87cdc14a,
-    0x15f0,
-    0x4721,
-    0x8f, 0x94, 0x76, 0xc8,
-    0x4c, 0xef, 0x3c, 0xbb
-  };
+  GUID e_instance = {0x87cdc14a, 0x15f0, 0x4721, 0x8f, 0x94, 0x76,
+                     0xc8,       0x4c,   0xef,   0x3c, 0xbb};
   GUID o_instance = session.get_guid_instance();
   ASSERT_EQ(o_instance, e_instance);
 
-  e_instance = {
-    0x87cdc14a,
-    0x15f0,
-    0x4721,
-    0x00, 0x00, 0x00, 0x00,
-    0x4c, 0xef, 0x3c, 0xbb
-  };
+  e_instance = {0x87cdc14a, 0x15f0, 0x4721, 0x00, 0x00, 0x00,
+                0x00,       0x4c,   0xef,   0x3c, 0xbb};
   session.set_guid_instance(e_instance);
   ASSERT_EQ(session.get_guid_instance(), e_instance);
 

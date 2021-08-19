@@ -1,6 +1,7 @@
 #ifndef INCLUDE_DP_SESSIONDESC_HPP_
 #define INCLUDE_DP_SESSIONDESC_HPP_
 
+#include <memory>
 #include <vector>
 
 #include "dp/types.h"

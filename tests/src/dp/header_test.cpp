@@ -3,7 +3,8 @@
 #include "gtest/gtest.h"
 
 TEST(header, constructor) {
-  auto data = std::make_shared<std::vector<BYTE>>(std::vector<BYTE>(TMP_HEADER));
+  auto data =
+      std::make_shared<std::vector<BYTE>>(std::vector<BYTE>(TMP_HEADER));
   dp::header header(data);
 
   // cbSize

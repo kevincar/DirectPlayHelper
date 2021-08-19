@@ -33,18 +33,4 @@ typedef struct {
 
 #endif  // define(WIN32)
 
-// dpsockadder
-//
-// Thanks to macOS, the socakkdr_in structure has a sin_len at the beginning
-// that messes up the byte order of the sin_family value. Thus, this is an
-// os-independent use
-#pragma pack(push, 1)
-typedef struct {
-  uint16_t sin_family;
-  uint16_t sin_port;
-  uint32_t sin_addr;
-  uint8_t sin_zero[8];
-} dpsockaddr;
-#pragma pack(pop)
-
 #endif  // INCLUDE_DP_TYPES_H_

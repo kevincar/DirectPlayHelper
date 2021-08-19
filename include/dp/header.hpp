@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "dp/types.h"
+#include "dp/sockaddr.hpp"
 #include "experimental/net"
 
 // DPMSG_HEADER
@@ -25,7 +26,7 @@ typedef struct {
                         //    0xBAB = Indicates that the message
                         //            was received from a
                         //            DirectPlay server.
-  dpsockaddr sockAddr;  //  16 bytes of data containing the sockets
+  dp::sockaddr sockAddr;  //  16 bytes of data containing the sockets
   STR signature[4];     //  MUST be set to the value 0x79616c70
                         //  (ASCII 'play')
   WORD command;         //  For messages below
@@ -48,10 +49,10 @@ class header {
   void set_token(token new_token);
 
   std::experimental::net::ip::tcp::endpoint get_sock_addr(void);
-  void get_sock_addr(std::experimental::net::ip::tcp::endpoint const &addr);
+  void set_sock_addr(std::experimental::net::ip::tcp::endpoint const &endpoint);
 
   std::string get_signature(void);
-  void set_signature(std::string signature);
+  void set_signature(std::string const& signature);
 
   WORD get_command(void);
   void set_command(WORD command);
@@ -62,6 +63,7 @@ class header {
  private:
   std::vector<BYTE> *message_data_;
   BYTE *data_;
+  DPMSG_HEADER *header_;
 };
 }  // namespace dp
 

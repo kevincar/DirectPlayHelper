@@ -3,8 +3,8 @@
 #include "gtest/gtest.h"
 
 TEST(header, constructor) {
-  std::vector<BYTE> data = TMP_HEADER;
-  dp::header header(&data);
+  auto data = std::make_shared<std::vector<BYTE>>(std::vector<BYTE>(TMP_HEADER));
+  dp::header header(data);
 
   // cbSize
   DWORD e_cbSize = 0x00169;

@@ -1,7 +1,7 @@
 #include "dp/header.hpp"
 
 namespace dp {
-header::header(std::vector<BYTE> *message_data)
+header::header(std::shared_ptr<std::vector<BYTE>> message_data)
     : message_data_(message_data),
       data_(reinterpret_cast<BYTE *>(&(*message_data->begin()))),
       header_(reinterpret_cast<DPMSG_HEADER *>(data_)) {}

@@ -40,7 +40,7 @@ class header {
  public:
   enum class token : DWORD { REMOTE = 0xFAB, FORWARD = 0xCAB, SERVER = 0xBAB };
 
-  explicit header(std::vector<BYTE> *message_data);
+  explicit header(std::shared_ptr<std::vector<BYTE>> message_data);
 
   DWORD get_cb_size(void);
   void set_cb_size(std::size_t size);
@@ -61,7 +61,7 @@ class header {
   void set_version(WORD version);
 
  private:
-  std::vector<BYTE> *message_data_;
+  std::shared_ptr<std::vector<BYTE>> message_data_;
   BYTE *data_;
   DPMSG_HEADER *header_;
 };

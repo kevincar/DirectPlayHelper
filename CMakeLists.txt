@@ -149,7 +149,7 @@ endif()
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		#nathp
-		dppl
+		#dppl
     dp
 		${LIBTINS_LIBRARY}
 		g3log

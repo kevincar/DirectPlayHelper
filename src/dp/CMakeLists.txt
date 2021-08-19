@@ -5,6 +5,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Dependencies
 add_library(dp
   ./header.cpp
+  ./sessiondesc.cpp
   )
 
 target_link_libraries(dp

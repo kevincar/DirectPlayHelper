@@ -5,35 +5,6 @@
 #include "dp/types.h"
 
 /*
- * DPMSG_HEADER
- *
- * The DPMSG_HEADER is prepended to all DirectPlay Protocol messages and
- * contains an identifier that describes each message structure.
- */
-#pragma pack(push, 1)
-typedef struct {
-  DWORD cbSize : 20;    //  Indicates the size of the message
-  DWORD token : 12;     //  Describes high-level message
-                        //  characteristics:
-                        //    0xFAB = Indicates that the message
-                        //            was received from a remote
-                        //            DirectPlay machine.
-                        //    0xCAB = Indicates that the message
-                        //            will be forwarded to all
-                        //            registered servers.
-                        //    0xBAB = Indicates that the message
-                        //            was received from a
-                        //            DirectPlay server.
-  dpsockaddr sockAddr;  //  16 bytes of data containing the sockets
-  STR signature[4];     //  MUST be set to the value 0x79616c70
-                        //  (ASCII 'play')
-  WORD command;         //  For messages below
-  WORD version;         //  MUST be set to the version number of
-                        //  the protocol
-} DPMSG_HEADER;
-#pragma pack(pop)
-
-/*
  * DPSESSIONDESC2
  * Used to describe the properties of a DirectPlay
  * session instance

@@ -117,11 +117,11 @@ set(ARGPARSE_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse/include")
 # build the app
 add_executable("${PROJECT_NAME}"
 	src/main.cpp
-  src/Message.cpp
-  src/ClientRecord.cpp
-  src/Client.cpp
-  src/Server.cpp
-  src/DirectPlayHelper.cpp
+  #src/Message.cpp
+  #src/ClientRecord.cpp
+  #src/Client.cpp
+  #src/Server.cpp
+  #src/DirectPlayHelper.cpp
 	)
 
 # Add dependency targets to this main target
@@ -137,7 +137,8 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 		)
 
 # build the libraries
-add_subdirectory(src/dppl)
+add_subdirectory(src/dp)
+#add_subdirectory(src/dppl)
 #add_subdirectory(src/nathp)
 
 # Link dependencies
@@ -149,6 +150,7 @@ target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		#nathp
 		dppl
+    dp
 		${LIBTINS_LIBRARY}
 		g3log
 		${PTHREAD_LIB}

@@ -25,25 +25,26 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 
 # Make the test executable
 add_executable("${TEST_PROJECT_NAME}"
-  ../src/Message.cpp
-  ../src/ClientRecord.cpp
-  ../src/Client.cpp
-  ../src/Server.cpp
+  #../src/Message.cpp
+  #../src/ClientRecord.cpp
+  #../src/Client.cpp
+  #../src/Server.cpp
 
   # Should be listed in order of dependecies
-  ./src/dppl/hardware_test.cpp
-  ./src/dppl/AppSimulator.cpp
-  ./src/dppl/dplay_size_test.cpp
-  ./src/dppl/PacketSniffer_test.cpp
-  ./src/dppl/DPProxyMessage_test.cpp
-  ./src/dppl/DPSuperPackedPlayer_test.cpp
-  ./src/dppl/DirectPlayServer_test.cpp
-  ./src/dppl/proxy_test.cpp
-  ./src/dppl/interceptor_test.cpp
-  ./src/Message_test.cpp
-  ./src/ClientRecord_test.cpp
-  ./src/Client_test.cpp
-  ./src/Server_test.cpp
+  ./src/dp/header_test.cpp
+  #./src/dppl/hardware_test.cpp
+  #./src/dppl/AppSimulator.cpp
+  #./src/dppl/dplay_size_test.cpp
+  #./src/dppl/PacketSniffer_test.cpp
+  #./src/dppl/DPProxyMessage_test.cpp
+  #./src/dppl/DPSuperPackedPlayer_test.cpp
+  #./src/dppl/DirectPlayServer_test.cpp
+  #./src/dppl/proxy_test.cpp
+  #./src/dppl/interceptor_test.cpp
+  #./src/Message_test.cpp
+  #./src/ClientRecord_test.cpp
+  #./src/Client_test.cpp
+  #./src/Server_test.cpp
 	./src/main_test.cpp
 
 	#./src/nathp/Packet_test.cpp
@@ -68,7 +69,8 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		#nathp
-		dppl
+		#dppl
+    dp
 		gtest_main
 		g3log
 		${LIBTINS_LIBRARY}

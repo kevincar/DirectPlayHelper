@@ -23,11 +23,13 @@ TEST(header, constructor) {
   ASSERT_EQ(header.get_token(), dp::header::token::SERVER);
 
   // sockAddr
-  std::experimental::net::ip::tcp::endpoint e_address (std::experimental::net::ip::make_address_v4("0.0.0.0"), 2300);
+  std::experimental::net::ip::tcp::endpoint e_address(
+      std::experimental::net::ip::make_address_v4("0.0.0.0"), 2300);
   std::experimental::net::ip::tcp::endpoint o_address = header.get_sock_addr();
   ASSERT_EQ(o_address, e_address);
 
-  std::experimental::net::ip::tcp::endpoint new_endpoint(std::experimental::net::ip::address_v4::loopback(), 1234);
+  std::experimental::net::ip::tcp::endpoint new_endpoint(
+      std::experimental::net::ip::address_v4::loopback(), 1234);
   header.set_sock_addr(new_endpoint);
   ASSERT_EQ(header.get_sock_addr(), new_endpoint);
 

@@ -180,7 +180,7 @@ void packedplayer::assign_player_data(void) {
 
 void packedplayer::assign_player_ids(void) {
   DWORD* player_ids_ptr = reinterpret_cast<DWORD*>(this->get_player_ids_ptr());
-  for(auto player_id : this->player_ids) {
+  for (auto player_id : this->player_ids) {
     *player_ids_ptr++ = player_id;
   }
 }

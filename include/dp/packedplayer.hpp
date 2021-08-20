@@ -2,8 +2,8 @@
 #define INCLUDE_DP_PACKEDPLAYER_HPP_
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "dp/types.h"
 #include "experimental/net"
@@ -45,7 +45,7 @@ class packedplayer {
     PLAYERSENDINGMACHINE = 0x8
   };
 
-  packedplayer(BYTE* data);
+  explicit packedplayer(BYTE* data);
 
   std::vector<BYTE> to_vector(void);
   std::size_t size(void);
@@ -87,12 +87,12 @@ class packedplayer {
   void assign_player_data(void);
   void assign_player_ids(void);
 
-  DPLAYI_PACKEDPLAYER *player_;
+  DPLAYI_PACKEDPLAYER* player_;
 };
 }  // namespace dp
 
-inline dp::packedplayer::Flags operator|(dp::packedplayer::Flags const &lhs,
-                                         dp::packedplayer::Flags const &rhs) {
+inline dp::packedplayer::Flags operator|(dp::packedplayer::Flags const& lhs,
+                                         dp::packedplayer::Flags const& rhs) {
   return static_cast<dp::packedplayer::Flags>(static_cast<int>(lhs) |
                                               static_cast<int>(rhs));
 }

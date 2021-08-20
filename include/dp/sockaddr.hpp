@@ -24,7 +24,7 @@ T sockaddr_to_endpoint(sockaddr addr) {
   uint16_t port = ntohs(addr.sin_port);
   uint32_t netaddr = ntohl(addr.sin_addr);
   std::experimental::net::ip::address_v4 address(netaddr);
-  return std::experimental::net::ip::tcp::endpoint(address, port);
+  return T(address, port);
 }
 template<typename T = std::experimental::net::ip::tcp::endpoint>
 sockaddr endpoint_to_sockaddr(T endpoint) {

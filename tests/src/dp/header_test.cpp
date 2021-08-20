@@ -3,58 +3,22 @@
 #include "gtest/gtest.h"
 
 TEST(header, constructor) {
-  auto data =
-      std::make_shared<std::vector<BYTE>>(std::vector<BYTE>(TMP_HEADER));
-  dp::header header(data);
+  std::vector<BYTE> data = TMP_HEADER;
+  dp::header header(reinterpret_cast<BYTE *>(&(*data.begin())));
 
-  // cbSize
-  DWORD e_cbSize = 0x00169;
-  DWORD o_cbSize = header.get_cb_size();
-  ASSERT_EQ(o_cbSize, e_cbSize);
+  // Ensure loading
+  ASSERT_EQ(header.size, 0x00169);
+  ASSERT_EQ(header.token, dp::header::Token::REMOTE);
 
-  header.set_cb_size(0x170);
-  ASSERT_EQ(header.get_cb_size(), 0x170);
-
-  // token
-  dp::header::token e_token = dp::header::token::REMOTE;
-  dp::header::token o_token = header.get_token();
-  ASSERT_EQ(o_token, e_token);
-
-  header.set_token(dp::header::token::SERVER);
-  ASSERT_EQ(header.get_token(), dp::header::token::SERVER);
-
-  // sockAddr
   std::experimental::net::ip::tcp::endpoint e_address(
       std::experimental::net::ip::make_address_v4("0.0.0.0"), 2300);
-  std::experimental::net::ip::tcp::endpoint o_address = header.get_sock_addr();
-  ASSERT_EQ(o_address, e_address);
+  ASSERT_EQ(header.sock_addr, e_address);
 
-  std::experimental::net::ip::tcp::endpoint new_endpoint(
-      std::experimental::net::ip::address_v4::loopback(), 1234);
-  header.set_sock_addr(new_endpoint);
-  ASSERT_EQ(header.get_sock_addr(), new_endpoint);
+  ASSERT_STREQ(header.signature.c_str(), "play");
 
-  // Signature
-  std::string e_signature = "play";
-  std::string o_signature = header.get_signature();
-  ASSERT_EQ(o_signature, e_signature);
+  ASSERT_EQ(header.command, 0x29);
+  ASSERT_EQ(header.version, 0xe);
 
-  header.set_signature("DANG");
-  ASSERT_STREQ(header.get_signature().c_str(), "DANG");
-
-  // Command
-  WORD e_command = 0x29;
-  WORD o_command = header.get_command();
-  ASSERT_EQ(o_command, e_command);
-
-  header.set_command(0x10);
-  ASSERT_EQ(header.get_command(), 0x10);
-
-  // Version
-  WORD e_version = 0xe;
-  WORD o_version = header.get_version();
-  ASSERT_EQ(o_version, e_version);
-
-  header.set_version(0x2);
-  ASSERT_EQ(header.get_version(), 0x2);
+  // Retrieval
+  ASSERT_EQ(header.to_vector(), data);
 }

@@ -39,31 +39,25 @@ typedef struct {
 namespace dp {
 class header {
  public:
-  enum class token : DWORD { REMOTE = 0xFAB, FORWARD = 0xCAB, SERVER = 0xBAB };
+  enum class Token : DWORD { REMOTE = 0xFAB, FORWARD = 0xCAB, SERVER = 0xBAB };
 
-  explicit header(std::shared_ptr<std::vector<BYTE>> message_data);
+  explicit header(BYTE *data);
 
-  DWORD get_cb_size(void);
-  void set_cb_size(std::size_t size);
+  std::vector<BYTE> to_vector(void);
 
-  token get_token(void);
-  void set_token(token new_token);
-
-  std::experimental::net::ip::tcp::endpoint get_sock_addr(void);
-  void set_sock_addr(std::experimental::net::ip::tcp::endpoint const &endpoint);
-
-  std::string get_signature(void);
-  void set_signature(std::string const &signature);
-
-  WORD get_command(void);
-  void set_command(WORD command);
-
-  WORD get_version(void);
-  void set_version(WORD version);
+  DWORD size;
+  Token token;
+  std::experimental::net::ip::tcp::endpoint sock_addr;
+  std::string signature;
+  WORD command;
+  WORD version;
 
  private:
-  std::shared_ptr<std::vector<BYTE>> message_data_;
-  BYTE *data_;
+  DWORD load_size(void);
+  Token load_token(void);
+  std::experimental::net::ip::tcp::endpoint load_sock_addr(void);
+  std::string load_signature(void);
+
   DPMSG_HEADER *header_;
 };
 }  // namespace dp

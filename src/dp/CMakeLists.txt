@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(dp
   ./header.cpp
   ./sessiondesc.cpp
+  ./packedplayer.cpp
   )
 
 target_link_libraries(dp

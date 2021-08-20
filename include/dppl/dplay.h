@@ -5,35 +5,6 @@
 #include "dp/types.h"
 
 /*
- * DPLAYI_PACKEDPLAYER
- *
- * This structure contains data related to players or groups
- */
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwSize;
-  DWORD dwFlags;
-  DWORD dwPlayerID;
-  DWORD dwShortNameLength;  //  Length of the player's shortname
-  DWORD dwLongNameLength;   //  Length of the player's longname
-  DWORD dwSPDataSize;       //  Size of the service provider field
-  DWORD dwPlayerDataSize;
-  DWORD dwNumberOfPlayers;
-  DWORD dwSysPlayerID;
-  DWORD dwFixedSize;  //  = 48
-  DWORD dwPlayerVersion;
-  DWORD dwParentID;
-  BYTE data[];
-  //  WSTR  szShortName[];
-  //  WSTR  szLongName[];
-  //  sockaddr_in addrStream;
-  //  sockaddr_in addrDatagram;
-  //  BYTE  playerData[];
-  //  DWORD playerIDs[];
-} DPLAYI_PACKEDPLAYER;
-#pragma pack(pop)
-
-/*
  * DPLAYI_SUPERPACKEDPLAYER
  *
  * This structure is used to transmit player or group-related data.

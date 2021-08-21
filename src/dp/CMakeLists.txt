@@ -7,6 +7,8 @@ add_library(dp
   ./header.cpp
   ./sessiondesc.cpp
   ./packedplayer.cpp
+  ./playerinfomask.cpp
+  ./superpackedplayer.cpp
   )
 
 target_link_libraries(dp

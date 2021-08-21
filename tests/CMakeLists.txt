@@ -34,6 +34,8 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/header_test.cpp
   ./src/dp/sessiondesc_test.cpp
   ./src/dp/packedplayer_test.cpp
+  ./src/dp/playerinfomask_test.cpp
+  ./src/dp/superpackedplayer_test.cpp
   #./src/dppl/hardware_test.cpp
   #./src/dppl/AppSimulator.cpp
   #./src/dppl/dplay_size_test.cpp

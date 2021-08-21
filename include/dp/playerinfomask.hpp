@@ -9,7 +9,7 @@
 // PlayerInfoMask field MUST be a bitmask that is composed of the following
 // fields
 #pragma pack(push, 1)
-struct {
+typedef struct {
   // SN (1 bit): MUST be set if the ShortName field is present in the structure.
   bool shortNamePresent : 1;
 

@@ -5,7 +5,7 @@ enumsessionsreply::enumsessionsreply(BYTE* data)
     : message_(reinterpret_cast<DPMSG_ENUMSESSIONSREPLY*>(data)),
       session_desc(data) {
   this->load_session_name();
-};
+}
 
 inline BYTE* enumsessionsreply::get_session_name_ptr(void) {
   DWORD name_offset_message = this->message_->dwNameOffset - 0x8;

@@ -4,45 +4,11 @@
 
 #include "dp/types.h"
 
-/*
- * DPSECURITYDESC
- *
- * This structure describes the security properties of a session instance.
- */
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwSize;
-  DWORD dwFlags;
-  DWORD dwSSPIProvider;
-  DWORD dwCAPIProvider;
-  DWORD dwCAPIProviderType;
-  DWORD dwEncryptionAlgorithm;
-} DPSECURITYDESC;
-#pragma pack(pop)
-
 /*****************************************************************************
  *
  * DirectPlay System Messages
  *
  ****************************************************************************/
-
-/*
- * DPMSG_ENUMSESSIONSREPLY
- *
- * This packet is sent by the server in response to a DPSP_MSG_ENUMSESSIONS
- * request
- */
-#define DPSYS_ENUMSESSIONSREPLY 0x0001
-#pragma pack(push, 1)
-typedef struct {
-  DPSESSIONDESC2 dpSessionInfo;  //  Session info
-  DWORD dwNameOffset;            //  offsets, in octets from the beginning
-                                 //  of the message in dpSessionInfo to the
-                                 //  beginning of the message in
-                                 //  szSessionName
-  WSTR szSessionName[];          //  Name of the session
-} DPMSG_ENUMSESSIONSREPLY;
-#pragma pack(pop)
 
 /*
  * DPMSG_ENUMSESSIONS

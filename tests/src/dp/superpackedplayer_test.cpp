@@ -6,12 +6,10 @@
 #include "gtest/gtest.h"
 
 TEST(superpackedplayer, contructor) {
-  std::vector<BYTE> message_data = TMP_SUPERENUMPLAYERSREPLY;
-  BYTE* start = reinterpret_cast<BYTE*>(&(*message_data.begin()));
-  BYTE* data = start + 296;
-  BYTE* end = data + 65;
-  std::vector<BYTE> player_data(data, end);
-  dp::superpackedplayer player(data);
+  std::vector<BYTE> full_message_data = TMP_SUPERENUMPLAYERSREPLY;
+  std::vector<BYTE> player_data(full_message_data.begin() + 296,
+                                full_message_data.end());
+  dp::superpackedplayer player(player_data.data());
 
   ASSERT_EQ(player.flags, dp::superpackedplayer::Flags::isingroup |
                               dp::superpackedplayer::Flags::islocalplayer);

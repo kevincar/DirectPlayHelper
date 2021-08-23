@@ -33,8 +33,8 @@ inline BYTE* enumsessionsreply::get_session_name_ptr(void) {
 }
 
 void enumsessionsreply::load_session_name(void) {
-  LPWSTR session_name_ptr =
-      reinterpret_cast<LPWSTR>(this->get_session_name_ptr());
+  char16_t* session_name_ptr =
+      reinterpret_cast<char16_t*>(this->get_session_name_ptr());
   std::u16string u16sessionname = std::u16string(session_name_ptr);
   this->session_name =
       std::string(u16sessionname.begin(), u16sessionname.end());

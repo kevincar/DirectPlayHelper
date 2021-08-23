@@ -11,33 +11,6 @@
  ****************************************************************************/
 
 /*
- * DPMSG_ENUMSESSIONS
- *
- * This packet is sent by the client to request an enumeration of DirectPlay
- * sessions
- */
-#define DPSYS_ENUMSESSIONS 0x0002
-#pragma pack(push, 1)
-typedef struct {
-  GUID guidApplication;    //  MUST be set to the application
-                           //  identifier for the session.
-  DWORD dwPasswordOffset;  //  MUST be set to the offset, in octets,
-                           //  of the password from the beginning of
-                           //  the message.
-  DWORD dwFlags;           //  AV, AL, X, PR, Y
-  // WSTR szPassword[];     //  a null-terminated Unicode string that
-  //  contains the password.
-} DPMSG_ENUMSESSIONS;
-#pragma pack(pop)
-enum ENUMSESSIONSFLAGS {
-  joinablesessions = 0x1,  //  Enumerate sessions that can be joined
-  allsessions = 0x2,       //  Enumerate sessions even if they cannot be joined
-  unksessions = 0x10,      //  Unknown but used
-  passwordprotectedsessions =
-      0x40  // Enumerate sessions even if they are password protected
-};
-
-/*
  * DPMSG__ENUMPLAYERSREPLY
  *
  * This packet can be sent in response to a DPMSG_ENUMPLAYER message or a

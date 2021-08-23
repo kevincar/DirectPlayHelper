@@ -10,6 +10,7 @@ add_library(dp
   ./playerinfomask.cpp
   ./superpackedplayer.cpp
   ./enumsessionsreply.cpp
+  ./enumsessions.cpp
   )
 
 target_link_libraries(dp

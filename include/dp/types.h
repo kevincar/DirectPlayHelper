@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include <string>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include <winsock2.h>
 #include <windows.h>
@@ -43,6 +44,10 @@ inline bool operator==(GUID const& lhs, GUID const& rhs) {
     data4;
 }
 
+inline std::size_t get_u16string_size(std::string const& s) {
+  // Accounts for the null byte pair
+  return s.size() ? s.size() * 2 + 2 : 0;
+}
 #endif  // define(WIN32)
 
 #endif  // INCLUDE_DP_TYPES_H_

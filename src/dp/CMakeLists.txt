@@ -12,6 +12,8 @@ add_library(dp
   ./enumsessionsreply.cpp
   ./enumsessions.cpp
   ./enumplayersreply.cpp
+  ./requestplayerid.cpp
+  ./requestplayerreply.cpp
   )
 
 target_link_libraries(dp

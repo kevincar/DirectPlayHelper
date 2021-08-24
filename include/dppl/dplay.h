@@ -11,42 +11,6 @@
  ****************************************************************************/
 
 /*
- * DPMSG_DPSP_MSG_ENUMPLAYER
- *
- * This packet is sent to the server to request an enumeration of players
- */
-#define DPSYS_ENUMPLAYER 0x0004
-#pragma pack(push, 1)
-typedef struct {
-} DPMSG_ENUMPLAYER;
-#pragma pack(pop)
-
-/*
- * DPMSG_REQUESTPLAYERID
- *
- * This packet is sent to the host to request a new player ID
- * Two of these messages are often sent to optain two different IDs
- * the Player ID (dwFlags=8) and the System Player ID  (dwFlags=9)
- */
-#define DPSYS_REQUESTPLAYERID 0x0005
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwFlags;
-  //  bit 0 = This player is the system player
-  //  bit 1/2 = 0
-  //  bit 3 = Player is on the sending machine
-  //  bits 4-31 = 0
-} DPMSG_REQUESTPLAYERID;
-#pragma pack(pop)
-enum REQUESTPLAYERIDFLAGS {
-  issystemplayer = 0x1,
-  isnameserver = 0x2,
-  islocalplayer = 0x4,
-  unknown = 0x8,
-  issecuresession = 0x200
-};
-
-/*
  * DPMSG_REQUESTGROUPID
  *
  * This packet is sent to the host to request a new group identifier.
@@ -56,43 +20,6 @@ enum REQUESTPLAYERIDFLAGS {
 typedef struct {
   DWORD dwFlags;
 } DPMSG_REQUESTGROUPID;
-#pragma pack(pop)
-
-/*
- * DPMSG_REQUESTPLAYERREPLY
- *
- * This packet is sent in response to a DPSP_MSG_REQUESTPLAYERID  or
- * DPMSG_REQUESTGROUPID  message.
- */
-#define DPSYS_REQUESTPLAYERREPLY 0x0007
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwID;
-  DPSECURITYDESC dpSecurityDesc;
-  DWORD dwSSPIProviderOffsert;  //  Offset of the Security Support Provider
-                                //  Interface (SSPI) provider name from the
-                                //  beginning of the message. Zero means
-                                //  that the session is not secure.
-  DWORD CAPIProviderOffset;     //  The offset of the Crypto API provider
-                                //  name from the beginning of the message.
-                                //  Zero means that the session will
-                                //  not use encryption.
-  DWORD Results;                //  MUST be set to a Win32 HRESULT error
-                                //  code. If 0, the request succeeded; if
-                                //  nonzero, indicates the reason the
-                                //  request failed. For a complete list of
-                                //  HRESULT codes.
-  BYTE data[];
-  // WSTR  szSSPIProvider[];        //  Null-terminated Unicode string that
-  //  contains the SSPI name. If no SSPI
-  //  provider is specified, the session
-  //  is not a secure session.
-  //  WSTR  szCAPIProvider[];       //  CAPIProvider (variable):
-  //  Null-terminated Unicode string that
-  //  contains the Crypto API provider name.
-  //  For a list of provider names, see
-  //  Cryptographic Provider Names.
-} DPMSG_REQUESTPLAYERREPLY;
 #pragma pack(pop)
 
 /*

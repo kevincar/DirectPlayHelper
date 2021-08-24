@@ -39,6 +39,8 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/enumsessionsreply_test.cpp
   ./src/dp/enumsessions_test.cpp
   ./src/dp/enumplayersreply_test.cpp
+  ./src/dp/requestplayerid_test.cpp
+  ./src/dp/requestplayerreply_test.cpp
   #./src/dppl/hardware_test.cpp
   #./src/dppl/AppSimulator.cpp
   #./src/dppl/dplay_size_test.cpp

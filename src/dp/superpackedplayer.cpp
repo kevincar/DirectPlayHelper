@@ -228,7 +228,7 @@ void superpackedplayer::load_num_shortcut_ids(void) {
   if (!this->mask.n_shortcut_count_size_bytes) {
     this->num_shortcut_ids = 0;
     return;
-  };
+  }
   BYTE* num_shortcut_ids_ptr = this->get_num_shortcut_ids_ptr();
   this->num_shortcut_ids = *reinterpret_cast<DWORD*>(num_shortcut_ids_ptr);
 }

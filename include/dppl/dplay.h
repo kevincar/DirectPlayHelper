@@ -11,30 +11,6 @@
  ****************************************************************************/
 
 /*
- * DPMSG__ENUMPLAYERSREPLY
- *
- * This packet can be sent in response to a DPMSG_ENUMPLAYER message or a
- * DPMSG_ADDFORWARDREQUEST message
- */
-#define DPSYS_ENUMPLAYERSREPLY 0x0003
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwPlayerCount;           //  number of players
-  DWORD dwGroupCount;            //  number of groups
-  DWORD dwPlayerOffset;          //  the offset of the PlayerInfo field
-  DWORD dwShortcutCount;         //  MUST be ignored on receipt
-  DWORD dwDescriptionOffset;     //  the offset of the SessionDesc field
-  DWORD dwNameOffest;            //  The offset to the SessionName field
-  DWORD dwPasswordOffset;        //  The offset to the Password field
-  DPSESSIONDESC2 dpSessionDesc;  //  Session description information
-  BYTE data[];
-  //  WSTR            szSessionName[];      //  Name for the session
-  //  WSTR            szPassword[];         //  Password
-  //  DPLAYI_PACKEDPLAYER playerInfo[];
-} DPMSG_ENUMPLAYERSREPLY;
-#pragma pack(pop)
-
-/*
  * DPMSG_DPSP_MSG_ENUMPLAYER
  *
  * This packet is sent to the server to request an enumeration of players

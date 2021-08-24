@@ -38,6 +38,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/superpackedplayer_test.cpp
   ./src/dp/enumsessionsreply_test.cpp
   ./src/dp/enumsessions_test.cpp
+  ./src/dp/enumplayersreply_test.cpp
   #./src/dppl/hardware_test.cpp
   #./src/dppl/AppSimulator.cpp
   #./src/dppl/dplay_size_test.cpp

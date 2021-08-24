@@ -11,6 +11,7 @@ add_library(dp
   ./superpackedplayer.cpp
   ./enumsessionsreply.cpp
   ./enumsessions.cpp
+  ./enumplayersreply.cpp
   )
 
 target_link_libraries(dp

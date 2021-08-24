@@ -7,7 +7,7 @@ superpackedplayer::superpackedplayer(BYTE* data)
     : player_(reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(data)),
       mask(reinterpret_cast<BYTE*>(
           &(reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(data)
-               ->dwPlayerInfoMask))) {
+                ->dwPlayerInfoMask))) {
   this->flags = superpackedplayer::Flags(this->player_->dwFlags);
   this->id = this->player_->ID;
   this->system_id = this->player_->dwSystemPlayerID;
@@ -25,8 +25,7 @@ superpackedplayer::superpackedplayer(BYTE* data)
 
 std::vector<BYTE> superpackedplayer::to_vector(void) {
   std::vector<BYTE> result(this->size(), '\0');
-  this->player_ =
-      reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(result.data());
+  this->player_ = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(result.data());
   this->player_->dwSize = 0x10;
   this->player_->dwFlags = static_cast<DWORD>(this->flags);
   this->player_->ID = this->id;
@@ -220,7 +219,7 @@ void superpackedplayer::load_parent_id(void) {
   if (!this->mask.parent_id_present) {
     this->parent_id = 0;
     return;
-  };
+  }
   BYTE* parent_id_ptr = this->get_parent_id_ptr();
   this->parent_id = *reinterpret_cast<DWORD*>(parent_id_ptr);
 }

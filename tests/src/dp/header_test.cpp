@@ -4,7 +4,7 @@
 
 TEST(header, constructor) {
   std::vector<BYTE> data = TMP_HEADER;
-  dp::header header(reinterpret_cast<BYTE *>(&(*data.begin())));
+  dp::header header(data.data());
 
   // Ensure loading
   ASSERT_EQ(header.size, 0x00169);

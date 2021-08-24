@@ -20,7 +20,7 @@ packedplayer::packedplayer(BYTE* data)
 std::vector<BYTE> packedplayer::to_vector(void) {
   std::vector<BYTE> result(this->size(), 0);
   DPLAYI_PACKEDPLAYER* player =
-      reinterpret_cast<DPLAYI_PACKEDPLAYER*>(&(*result.begin()));
+      reinterpret_cast<DPLAYI_PACKEDPLAYER*>(result.data());
   player->dwSize = this->size();
   player->dwFlags = static_cast<DWORD>(this->flags);
   player->dwPlayerID = this->player_id;
@@ -146,7 +146,7 @@ inline std::vector<DWORD> packedplayer::load_player_ids(void) {
 void packedplayer::assign_short_name(void) {
   if (this->short_name.size() < 1) return;
   std::u16string u16shortname(this->short_name.begin(), this->short_name.end());
-  BYTE* start = reinterpret_cast<BYTE*>(&(*u16shortname.begin()));
+  BYTE* start = reinterpret_cast<BYTE*>(u16shortname.data());
   BYTE* end = start + u16shortname.size() * 2;
   std::copy(start, end, this->get_short_name_ptr());
 }
@@ -154,7 +154,7 @@ void packedplayer::assign_short_name(void) {
 void packedplayer::assign_long_name(void) {
   if (this->long_name.size() < 1) return;
   std::u16string u16longname(this->long_name.begin(), this->long_name.end());
-  BYTE* start = reinterpret_cast<BYTE*>(&(*u16longname.begin()));
+  BYTE* start = reinterpret_cast<BYTE*>(u16longname.data());
   BYTE* end = start + u16longname.size() * 2;
   std::copy(start, end, this->get_long_name_ptr());
 }

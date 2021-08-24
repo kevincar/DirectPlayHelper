@@ -13,7 +13,7 @@ std::vector<BYTE> enumsessionsreply::to_vector(void) {
       (this->session_name.size() > 0 ? this->session_name.size() * 2 + 2 : 0);
   std::vector<BYTE> result(message_size, '\0');
   this->message_ =
-      reinterpret_cast<DPMSG_ENUMSESSIONSREPLY*>(&(*result.begin()));
+      reinterpret_cast<DPMSG_ENUMSESSIONSREPLY*>(result.data());
 
   std::vector<BYTE> session_desc_data = this->session_desc.to_vector();
   std::copy(session_desc_data.data(),
@@ -44,7 +44,7 @@ void enumsessionsreply::assign_session_name(void) {
   if (!this->session_name.size()) return;
   std::u16string u16sessionname(this->session_name.begin(),
                                 this->session_name.end());
-  BYTE* start = reinterpret_cast<BYTE*>(&(*u16sessionname.begin()));
+  BYTE* start = reinterpret_cast<BYTE*>(u16sessionname.data());
   BYTE* end = start + this->session_name.size() * 2 + 2;
   std::copy(start, end, this->get_session_name_ptr());
 }

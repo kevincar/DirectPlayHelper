@@ -26,7 +26,7 @@ superpackedplayer::superpackedplayer(BYTE* data)
 std::vector<BYTE> superpackedplayer::to_vector(void) {
   std::vector<BYTE> result(this->size(), '\0');
   this->player_ =
-      reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(&(*result.begin()));
+      reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER*>(result.data());
   this->player_->dwSize = 0x10;
   this->player_->dwFlags = static_cast<DWORD>(this->flags);
   this->player_->ID = this->id;
@@ -236,7 +236,7 @@ void superpackedplayer::load_shortcut_ids(void) {
 void superpackedplayer::assign_short_name(void) {
   if (!this->mask.short_name_present) return;
   std::u16string u16shortname(this->short_name.begin(), this->short_name.end());
-  BYTE* start = reinterpret_cast<BYTE*>(&(*u16shortname.begin()));
+  BYTE* start = reinterpret_cast<BYTE*>(u16shortname.data());
   BYTE* end = start + this->short_name.size() * 2 + 2;
   std::copy(start, end, this->get_short_name_ptr());
 }
@@ -244,7 +244,7 @@ void superpackedplayer::assign_short_name(void) {
 void superpackedplayer::assign_long_name(void) {
   if (!this->mask.long_name_present) return;
   std::u16string u16longname(this->long_name.begin(), this->long_name.end());
-  BYTE* start = reinterpret_cast<BYTE*>(&(*u16longname.begin()));
+  BYTE* start = reinterpret_cast<BYTE*>(u16longname.data());
   BYTE* end = start + this->long_name.size() * 2 + 2;
   std::copy(start, end, this->get_long_name_ptr());
 }

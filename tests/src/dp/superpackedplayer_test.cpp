@@ -7,8 +7,8 @@
 
 TEST(superpackedplayer, contructor) {
   std::vector<BYTE> full_message_data = TMP_SUPERENUMPLAYERSREPLY;
-  std::vector<BYTE> player_data(full_message_data.begin() + 296,
-                                full_message_data.end());
+  std::vector<BYTE> player_data(full_message_data.data() + 296,
+                                &(*full_message_data.end()));
   dp::superpackedplayer player(player_data.data());
 
   ASSERT_EQ(player.flags, dp::superpackedplayer::Flags::isingroup |

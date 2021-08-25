@@ -5,8 +5,8 @@
 
 #include <string>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 typedef unsigned char STR;
 typedef char16_t WSTR;
 typedef uint64_t QWORD;

@@ -15,6 +15,7 @@ add_library(dp
   ./requestplayerid.cpp
   ./requestplayerreply.cpp
   ./createplayer.cpp
+  ./addforwardrequest.cpp
   )
 
 target_link_libraries(dp

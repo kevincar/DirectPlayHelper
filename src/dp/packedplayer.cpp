@@ -98,6 +98,7 @@ inline BYTE* packedplayer::get_player_ids_ptr(void) {
 }
 
 inline std::string packedplayer::load_short_name(void) {
+  if (!this->player_->dwShortNameLength) return "";
   BYTE* short_name_ptr = this->get_short_name_ptr();
   DWORD short_name_size = this->player_->dwShortNameLength;
   std::u16string u16shortname(reinterpret_cast<char16_t*>(short_name_ptr),

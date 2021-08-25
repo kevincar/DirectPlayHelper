@@ -231,30 +231,6 @@ typedef struct {
 #pragma pack(pop)
 
 /*
- * DPMSG_ADDFORWARDREQUEST
- *
- * This packet is sent to forward a message to a downstream player.
- */
-#define DPSYS_ADDFORWARDREQUEST 0x0013
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwIDTo;            //  Identifier of the player to whom the
-                           //  message is being sent.
-  DWORD dwPlayerID;        //  The identity of the player being added.
-  DWORD dwGroupID;         //  SHOULD be set to zero
-  DWORD dwCreateOffset;    //  Offset of the PlayerInfo field
-  DWORD dwPasswordOffset;  //  Offset of the Password field
-  BYTE data[];
-  // DPLAYI_PACKEDPLAYER dpPlayer;  //  Information about the system player on
-  //  the newly added machine.
-  // WSTR  szPassword[];            //  Null-terminated Unicode string that
-  //  contains the session password.
-  // DWORD dwTickCount;             //  The computing system tick count when
-  //  the packet was generated.
-} DPMSG_ADDFORWARDREQUEST;
-#pragma pack(pop)
-
-/*
  * DPMSG_PACKET
  *
  * This packet contains player-to-player data that is part of a larger message

@@ -25,3 +25,14 @@ TEST(packedplayer, constructor) {
   ASSERT_EQ(player.size(), 0x5e);
   ASSERT_EQ(player.to_vector(), player_data);
 }
+
+TEST(packedplayer, player_no_name) {
+  std::vector<BYTE> full_message_data = TMP_ADDFORWARDREQUEST;
+  std::vector<BYTE> player_data(
+      full_message_data.data() + sizeof(DPMSG_HEADER) + 20,
+      full_message_data.data() + full_message_data.size() - 6);
+
+  dp::packedplayer player(player_data.data());
+  ASSERT_EQ(player.size(), player_data.size());
+  ASSERT_EQ(player.to_vector(), player_data);
+}

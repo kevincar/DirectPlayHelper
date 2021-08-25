@@ -23,27 +23,6 @@ typedef struct {
 #pragma pack(pop)
 
 /*
- * DPMSG_CREATEPLAYER
- *
- * This packet is sent to indicate that a new player has been created.
- */
-#define DPSYS_CREATEPLAYER 0x0008
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwIDTo;          //  ID Player to whom the
-                         //  message is being sent.
-  DWORD dwID;            //  ID Player from where it was sent
-  DWORD dwGroupID;       //  GroupID (4 bytes): Ignored
-  DWORD dwCreateOffset;  //  Offset of the PlayerInfo field. = 28
-  DWORD dwPasswordOffset;
-  BYTE data[];
-  //  DPLAYI_PACKEDPLAYER dpPlayerInfo;
-  //  WORD  cbReserved1;
-  //  DWORD dwReserved2;
-} DPMSG_CREATEPLAYER;
-#pragma pack(pop)
-
-/*
  * DPMSG_CREATEGROUP
  *
  * This packet is sent to indicate that a new group has been created.

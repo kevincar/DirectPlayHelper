@@ -14,6 +14,7 @@ add_library(dp
   ./enumplayersreply.cpp
   ./requestplayerid.cpp
   ./requestplayerreply.cpp
+  ./createplayer.cpp
   )
 
 target_link_libraries(dp

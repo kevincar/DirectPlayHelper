@@ -40,6 +40,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/enumsessions_test.cpp
   ./src/dp/enumplayersreply_test.cpp
   ./src/dp/requestplayerid_test.cpp
+  ./src/dp/requestgroupid_test.cpp
   ./src/dp/requestplayerreply_test.cpp
   ./src/dp/createplayer_test.cpp
   ./src/dp/addforwardrequest_test.cpp

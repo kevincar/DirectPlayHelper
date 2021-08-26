@@ -13,6 +13,7 @@ add_library(dp
   ./enumsessions.cpp
   ./enumplayersreply.cpp
   ./requestplayerid.cpp
+  ./requestgroupid.cpp
   ./requestplayerreply.cpp
   ./createplayer.cpp
   ./addforwardrequest.cpp

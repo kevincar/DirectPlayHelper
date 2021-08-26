@@ -11,18 +11,6 @@
  ****************************************************************************/
 
 /*
- * DPMSG_REQUESTGROUPID
- *
- * This packet is sent to the host to request a new group identifier.
- */
-#define DPSYS_REQUESTGROUPID 0x0006
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwFlags;
-} DPMSG_REQUESTGROUPID;
-#pragma pack(pop)
-
-/*
  * DPMSG_CREATEGROUP
  *
  * This packet is sent to indicate that a new group has been created.

@@ -16,6 +16,7 @@ add_library(dp
   ./requestplayerreply.cpp
   ./createplayer.cpp
   ./addforwardrequest.cpp
+  ./superenumplayersreply.cpp
   )
 
 target_link_libraries(dp

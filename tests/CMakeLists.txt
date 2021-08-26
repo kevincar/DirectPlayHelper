@@ -43,6 +43,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/requestplayerreply_test.cpp
   ./src/dp/createplayer_test.cpp
   ./src/dp/addforwardrequest_test.cpp
+  ./src/dp/superenumplayersreply_test.cpp
   #./src/dppl/hardware_test.cpp
   #./src/dppl/AppSimulator.cpp
   #./src/dppl/dplay_size_test.cpp

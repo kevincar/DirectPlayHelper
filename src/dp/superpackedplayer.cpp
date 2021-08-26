@@ -62,6 +62,10 @@ std::size_t superpackedplayer::size(void) {
          this->num_shortcut_ids * sizeof(DWORD);
 }
 
+bool superpackedplayer::is_group(void) {
+  return this->player_ids.size() > 0;
+}
+
 inline BYTE* superpackedplayer::get_short_name_ptr(void) {
   BYTE* start = reinterpret_cast<BYTE*>(this->player_);
   BYTE* short_name_ptr = start + sizeof(DPLAYI_SUPERPACKEDPLAYER);

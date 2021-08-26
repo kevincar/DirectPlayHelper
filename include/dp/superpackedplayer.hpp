@@ -133,6 +133,7 @@ class superpackedplayer {
   explicit superpackedplayer(BYTE* data);
   std::vector<BYTE> to_vector(void);
   std::size_t size(void);
+  bool is_group(void);
 
   Flags flags;
   DWORD id;

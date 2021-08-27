@@ -4,6 +4,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Dependencies
 add_library(dp
+  ./base_message.cpp
   ./header.cpp
   ./sessiondesc.cpp
   ./packedplayer.cpp
@@ -18,6 +19,8 @@ add_library(dp
   ./createplayer.cpp
   ./addforwardrequest.cpp
   ./superenumplayersreply.cpp
+  ./message.cpp
+  ./transmission.cpp
   )
 
 target_link_libraries(dp

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "dp/types.h"
+#include "dp/base_message.hpp"
 
 // DPMSG_ENUMSESSIONS
 //
@@ -25,7 +26,7 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class enumsessions {
+class enumsessions : public base_message {
  public:
   enum class Flags : int {
     joinablesessions = 0x1,  //  Enumerate sessions that can be joined
@@ -36,6 +37,7 @@ class enumsessions {
   };
 
   explicit enumsessions(BYTE* data);
+  std::size_t size(void);
   std::vector<BYTE> to_vector(void);
 
   GUID application;

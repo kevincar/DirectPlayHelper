@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "dp/types.h"
+#include "dp/base_message.hpp"
 #include "dp/sessiondesc.hpp"
 #include "dp/superpackedplayer.hpp"
 
@@ -41,7 +42,7 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class superenumplayersreply {
+class superenumplayersreply : public base_message {
  public:
   explicit superenumplayersreply(BYTE* data);
   std::size_t size(void);

@@ -2,10 +2,15 @@
 
 namespace dp {
 enumsessions::enumsessions(BYTE* data)
-    : message_(reinterpret_cast<DPMSG_ENUMSESSIONS*>(data)) {
+    : base_message(data),
+      message_(reinterpret_cast<DPMSG_ENUMSESSIONS*>(data)) {
   this->application = this->message_->guidApplication;
   this->flags = enumsessions::Flags(this->message_->dwFlags);
   this->load_password();
+}
+
+std::size_t enumsessions::size(void) {
+  return sizeof(DPMSG_ENUMSESSIONS) + get_u16string_size(this->password);
 }
 
 std::vector<BYTE> enumsessions::to_vector(void) {

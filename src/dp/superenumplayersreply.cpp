@@ -2,7 +2,8 @@
 
 namespace dp {
 superenumplayersreply::superenumplayersreply(BYTE* data)
-    : message_(reinterpret_cast<DPMSG_SUPERENUMPLAYERSREPLY*>(data)),
+    : base_message(data),
+      message_(reinterpret_cast<DPMSG_SUPERENUMPLAYERSREPLY*>(data)),
       session_desc(data + 0x1C) {
   this->load_session_name();
   this->load_password();

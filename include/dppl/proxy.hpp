@@ -9,15 +9,14 @@
 #include <experimental/net>
 #include <vector>
 
-#include "dppl/DPMessage.hpp"
-#include "dppl/DPProxyMessage.hpp"
+#include "dppl/message.hpp"
 
 #define POLOG(X) LOG(X) << TXCY << TXFB
 #define PILOG(X) LOG(X) << TXCG << TXFB
 #define PELOG TXRS
 
 namespace dppl {
-class DPProxyMessage;
+class message;
 // Normally a DirectPlay application will connect to other DirectPlay
 // application directly through a network address and port. Without settting up
 // port forwarding NATS essentially block communication. This is because the
@@ -45,68 +44,73 @@ class proxy : public std::enable_shared_from_this<proxy> {
   // owns the proxy. THe `data_callback` is the same but for data that is
   // transfered once the connection is established (typically UDP 2350)
   proxy(std::experimental::net::io_context* io_context, type proxy_type,
-        std::function<void(DPProxyMessage)> dp_callback,
-        std::function<void(DPProxyMessage)> data_callback);
+        std::function<void(message)> dp_callback,
+        std::function<void(message)> data_callback);
 
-  void stop();
+  //void stop();
 
-  std::experimental::net::ip::tcp::endpoint const get_return_addr();
-  void set_return_addr(
-      std::experimental::net::ip::tcp::endpoint const& app_endpoint);
+  //std::experimental::net::ip::tcp::endpoint const get_return_addr();
+  //void set_return_addr(
+      //std::experimental::net::ip::tcp::endpoint const& app_endpoint);
 
   // When information either coming from a remote host or from our local
   // hosting DirectPlay application contains information about other players we
   // need to know about, this function registers those players so that other
   // proxies can be set up to establish connections with them when ready
-  void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
+  //void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
 
   // the `_deliver` functions are used by the owning class to send incoming
   // remote messages to the local DirectPlay application
-  void dp_deliver(DPProxyMessage data);
-  void data_deliver(DPProxyMessage data);
+  //void dp_deliver(DPProxyMessage data);
+  //void data_deliver(DPProxyMessage data);
 
-  DWORD get_client_id() const;
-  DWORD get_system_id() const;
-  DWORD get_player_id() const;
-  DPProxyEndpointIDs get_ids() const;
+  //DWORD get_client_id() const;
+  //DWORD get_system_id() const;
+  //DWORD get_player_id() const;
+  //DPProxyEndpointIDs get_ids() const;
 
-  bool operator==(proxy const& rhs);
-  bool operator<(proxy const& rhs);
-  operator DWORD() const;
+  //bool operator==(proxy const& rhs);
+  //bool operator<(proxy const& rhs);
+  //operator DWORD() const;
 
  private:
-  // Direct Play Socket Processes
-  void dp_accept();
-  void dp_accept_handler(std::error_code const& ec,
-                         std::experimental::net::ip::tcp::socket new_socket);
-  void dp_receive();
-  void dp_receive_handler(std::error_code const& ec,
-                          std::size_t bytes_transmitted);
-  void dp_receive_requestplayerreply();
-  void dp_receive_addforwardrequest_handler();
-  void dp_receive_superenumplayersreply_handler();
-  void dp_default_receive_handler();
-  void dp_send();
-  void dp_assert_connection();
-  void dp_send_enumsession_handler();
-  void dp_send_enumsessionreply_handler();
-  void dp_send_requestplayerid();
-  void dp_send_addforwardrequest();
-  void dp_send_createplayer_handler();
-  void dp_default_send_handler();
-  void dp_receipt_handler(std::error_code const& ec,
-                          std::size_t bytes_transmitted);
+  //void dp_assert_connection();
+  //bool validate_message(DPProxyMessage const& message);
 
-  // App Data Socket Processes
-  void data_receive();
-  void data_receive_handler(std::error_code const& ec,
-                            std::size_t bytes_transmitted);
-  void data_default_receive_handler();
-  void data_send();
-  void data_send_handler(std::error_code const& ec,
-                         std::size_t bytes_transmitted);
+  // DirectPlay Message Handling
+  //void dp_receive_requestplayerreply();
+  //void dp_receive_addforwardrequest_handler();
+  //void dp_receive_superenumplayersreply_handler();
+  //void dp_send_enumsession_handler();
+  //void dp_send_enumsessionreply_handler();
+  //void dp_send_requestplayerid();
+  //void dp_send_addforwardrequest();
+  //void dp_send_createplayer_handler();
 
-  bool validate_message(DPProxyMessage const& message);
+  //void dp_default_send_handler();
+  //void dp_default_receive_handler();
+
+  // Data Message Handling
+  //void data_default_receive_handler();
+
+  // Net handlers
+  //void dp_accept_handler(std::error_code const& ec,
+                         //std::experimental::net::ip::tcp::socket new_socket);
+  //void dp_receive_handler(std::error_code const& ec,
+                          //std::size_t bytes_transmitted);
+  //void dp_send_handler(std::error_code const& ec,
+                          //std::size_t bytes_transmitted);
+  //void data_receive_handler(std::error_code const& ec,
+                            //std::size_t bytes_transmitted);
+  //void data_send_handler(std::error_code const& ec,
+                         //std::size_t bytes_transmitted);
+
+  // Net Functions
+  //void dp_accept(void);
+  //void dp_receive(void);
+  //void dp_send(void);
+  //void data_receive();
+  //void data_send();
 
   // Proxy Attributes
   DWORD client_id_ = 0;
@@ -128,8 +132,8 @@ class proxy : public std::enable_shared_from_this<proxy> {
   std::experimental::net::ip::udp::socket dpsrvr_socket_;
   std::experimental::net::ip::udp::socket data_socket_;
 
-  std::function<void(DPProxyMessage const&)> dp_callback_;
-  std::function<void(DPProxyMessage const&)> data_callback_;
+  std::function<void(message)> dp_callback_;
+  std::function<void(message)> data_callback_;
 };
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_PROXY_HPP_

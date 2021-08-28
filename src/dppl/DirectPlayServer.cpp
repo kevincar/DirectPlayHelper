@@ -1,13 +1,12 @@
 #include <experimental/net>
 
-#include "dppl/DPMessage.hpp"
 #include "dppl/DirectPlayServer.hpp"
 #include "g3log/g3log.hpp"
 
 namespace dppl {
 DirectPlayServer::DirectPlayServer(
     std::experimental::net::io_context *io_context,
-    std::function<void(std::vector<char>)> forward, bool use_localhost)
+    std::function<void(dp::transmission)> forward, bool use_localhost)
     : io_context_(io_context),
       forward_(forward),
       sniffer_socket_(
@@ -33,7 +32,7 @@ void DirectPlayServer::receive_handler(std::error_code const &ec,
   if (!ec) {
     LOG(DEBUG)
         << "Direct Play Server received a request... Forwarding the message";
-    this->forward_(this->buf_);
+    this->forward_(dp::transmission(this->buf_));
   } else {
     LOG(WARNING) << "DirectPlayServer receive failed: " << ec.message();
   }

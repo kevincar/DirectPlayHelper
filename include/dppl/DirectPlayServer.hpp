@@ -4,6 +4,7 @@
 #include <functional>
 #include <vector>
 
+#include "dp/dp.hpp"
 #include "dppl/PacketSniffer.hpp"
 
 namespace dppl {
@@ -13,7 +14,7 @@ namespace dppl {
 class DirectPlayServer {
  public:
   DirectPlayServer(std::experimental::net::io_context* io_context,
-                   std::function<void(std::vector<char>)> forward,
+                   std::function<void (dp::transmission)> forward,
                    bool use_localhost = false);
 
  private:
@@ -23,8 +24,8 @@ class DirectPlayServer {
                        std::size_t bytes_transmitted);
 
   static int const kBufSize_ = 512;
-  std::vector<char> buf_;
-  std::function<void(std::vector<char>)> forward_;
+  std::vector<BYTE> buf_;
+  std::function<void (dp::transmission)> forward_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::udp::endpoint sniffer_endpoint_;
   std::experimental::net::ip::udp::socket sniffer_socket_;

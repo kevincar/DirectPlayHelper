@@ -73,7 +73,7 @@ class AppSimulator {
   std::vector<BYTE> data_send_buf_;
   std::vector<BYTE> dpsrvr_recv_buf_;
   std::vector<BYTE> dpsrvr_send_buf_;
-  std::shared_ptr<dp::transmission> transmission;
+  dp::transmission transmission;
   static int const k_dp_port_ = 2300;
   static int const k_data_port_ = 2350;
   static int const k_dpsrvr_port_ = 47624;

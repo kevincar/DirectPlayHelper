@@ -328,10 +328,10 @@ void AppSimulator::dpsrvr_timer_handler(std::error_code const& ec) {
   LOG(DEBUG) << "DPSRVR times up";
   if (!ec) {
     std::vector<BYTE> enumsessions_data = TMP_ENUMSESSIONS;
-    this->transmission = std::make_shared<dp::transmission>(enumsessions_data);
-    this->transmission->msg->header.sock_addr =
+    this->transmission = dp::transmission(enumsessions_data);
+    this->transmission.msg->header.sock_addr =
         this->dp_acceptor_.local_endpoint();
-    this->dpsrvr_send_buf_ = this->transmission->to_vector();
+    this->dpsrvr_send_buf_ = this->transmission.to_vector();
     this->dpsrvr_send();
     this->dpsrvr_timer_.expires_at(this->dpsrvr_timer_.expiry() +
                                    k_dpsrvr_time_);

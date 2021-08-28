@@ -42,7 +42,7 @@ TEST(PacketSnifferTest, JoinSim) {
   // process
 
   bool completed = false;
-  std::vector<char> receive_buffer(255, '\0');
+  std::vector<BYTE> receive_buffer(255, '\0');
 
   // Sockets and endpoints
   std::experimental::net::io_context io_context;
@@ -63,13 +63,12 @@ TEST(PacketSnifferTest, JoinSim) {
   // Callback implementations
   receive_handler = [&](std::error_code const& ec,
                         std::size_t bytes_transmitted) {
+    ASSERT_EQ(ec.value(), 0);
     if (!ec) {
       LOG(DEBUG) << "Received Transmission";
-      // ASSERT_EQ(ec.value(), 0);
-      // dp::transmission transmitted_message(receive_buffer);
-      // dppl::DPMessage dp_message(&receive_buffer);
-      // ASSERT_EQ(dp_message.header()->command, DPSYS_ENUMSESSIONS);
-      // completed = true;
+      dp::transmission transmitted(receive_buffer);
+      ASSERT_EQ(transmitted.msg->header.command, DPSYS_ENUMSESSIONS);
+      completed = true;
       io_context.stop();
     } else {
       LOG(WARNING) << "Failed to receive transmission";

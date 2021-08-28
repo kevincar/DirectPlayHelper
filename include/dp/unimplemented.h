@@ -1,6 +1,5 @@
-
-#ifndef INCLUDE_DPPL_DPLAY_H_
-#define INCLUDE_DPPL_DPLAY_H_
+#ifndef INCLUDE_DP_UNIMPLEMENTED_H_
+#define INCLUDE_DP_UNIMPLEMENTED_H_
 
 #include "dp/types.h"
 
@@ -845,4 +844,4 @@ typedef struct {
 } DPMSG_CREATEPLAYERVERIFY;
 #pragma pack(pop)
 
-#endif  // INCLUDE_DPPL_DPLAY_H_
+#endif  // INCLUDE_DP_UNIMPLEMENTED_H_

@@ -10,6 +10,9 @@ TEST(transmission, constructor) {
   dp::transmission trans_message((pmsg));
   ASSERT_EQ(trans_message.to_vector(), full_message_data);
 
+  dp::transmission raw_trans_message(full_message_data);
+  ASSERT_EQ(raw_trans_message.to_vector(), full_message_data);
+
   dp::transmission app_message(
       (std::make_shared<std::vector<BYTE>>(full_app_data)));
   ASSERT_EQ(app_message.to_vector(), full_app_data);

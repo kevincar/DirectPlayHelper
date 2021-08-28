@@ -47,10 +47,9 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/superenumplayersreply_test.cpp
   ./src/dp/message_test.cpp
   ./src/dp/transmission_test.cpp
-  #./src/dppl/hardware_test.cpp
-  #./src/dppl/AppSimulator.cpp
-  #./src/dppl/dplay_size_test.cpp
-  #./src/dppl/PacketSniffer_test.cpp
+  ./src/dppl/hardware_test.cpp
+  ./src/dppl/AppSimulator.cpp
+  ./src/dppl/PacketSniffer_test.cpp
   #./src/dppl/DPProxyMessage_test.cpp
   #./src/dppl/DPSuperPackedPlayer_test.cpp
   #./src/dppl/DirectPlayServer_test.cpp
@@ -84,7 +83,7 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		#nathp
-		#dppl
+    dppl
     dp
 		gtest_main
 		g3log

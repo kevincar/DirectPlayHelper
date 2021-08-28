@@ -138,7 +138,7 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 
 # build the libraries
 add_subdirectory(src/dp)
-#add_subdirectory(src/dppl)
+add_subdirectory(src/dppl)
 #add_subdirectory(src/nathp)
 
 # Link dependencies

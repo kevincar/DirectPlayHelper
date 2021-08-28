@@ -4,13 +4,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Dependencies
 add_library(dppl
-  ./DPMessage.cpp
-  ./DPSuperPackedPlayer.cpp
-  ./DPProxyMessage.cpp
   ./PacketSniffer.cpp
-  ./interceptor.cpp
-  ./proxy.cpp
-  ./DirectPlayServer.cpp
+  #./DPMessage.cpp
+  #./DPSuperPackedPlayer.cpp
+  #./DPProxyMessage.cpp
+  #./interceptor.cpp
+  #./proxy.cpp
+  #./DirectPlayServer.cpp
 	)
 
 target_link_libraries(dppl

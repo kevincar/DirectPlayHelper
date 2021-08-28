@@ -3,8 +3,9 @@
 #include <memory>
 #include <vector>
 
-#include "dppl/dplay.h"
+#include "dp/dp.hpp"
 #include "experimental/net"
+
 namespace dppl {
 class AppSimulator {
  public:
@@ -13,8 +14,7 @@ class AppSimulator {
                GUID instance = AppSimulator::instance);
 
   bool is_complete(void) const;
-  static std::vector<char> process_message(std::vector<char> message);
-  static bool is_dp_message(std::vector<char> message);
+  // static dp::transmission process_message(dp::transmission const& message);
 
   static GUID constexpr app = {0xbf0613c0, 0xde79, 0x11d0, 0x99, 0xc9, 0x00,
                                0xa0,       0x24,   0x76,   0xad, 0x4b};
@@ -23,48 +23,57 @@ class AppSimulator {
                                     0xef,       0x3c,   0xbb};
 
  private:
-  static std::vector<char> process_dp_message(std::vector<char> message);
-  static std::vector<char> process_data_message(std::vector<char> message);
-  std::vector<char> handle_dp_message(std::vector<char> message);
-  std::vector<char> handle_data_message(std::vector<char> message);
+  // DirectPlay Message Processing
 
-  void dp_accept();
-  void dp_accept_handler(std::error_code const& ec,
-                         std::experimental::net::ip::tcp::socket new_socket);
-  void dp_receive();
-  void dp_receive_handler(std::error_code const& ec,
-                          std::size_t bytes_transmitted);
-  void dp_connect(std::experimental::net::ip::tcp::endpoint const& endpoint);
-  void dp_send();
-  void dp_send_handler(std::error_code const& ec,
-                       std::size_t bytes_transmitted);
-  void dpsrvr_receive();
-  void dpsrvr_receive_handler(std::error_code const& ec,
-                              std::size_t bytes_transmitted);
-  void dpsrvr_send();
+  // DirectPlay Main Processing
+  // static std::vector<BYTE> process_dp_message(dp::transmission const&
+  // message); static std::vector<BYTE> process_data_message(dp);
+  // std::vector<BYTE> handle_dp_message(std::vector<BYTE> message);
+  // std::vector<BYTE> handle_data_message(std::vector<BYTE> message);
+
+  // Net Handlers
+  // void dp_accept_handler(std::error_code const& ec,
+  // std::experimental::net::ip::tcp::socket new_socket);
+  // void dp_receive_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+  // void dp_send_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+
+  // void data_receive_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+  // void data_send_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+
+  // void dpsrvr_receive_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
   void dpsrvr_send_handler(std::error_code const& ec,
                            std::size_t bytes_transmitted);
   void dpsrvr_timer_handler(std::error_code const& ec);
 
-  void data_receive();
-  void data_receive_handler(std::error_code const& ec,
-                            std::size_t bytes_transmitted);
-  void data_connect(std::experimental::net::ip::udp::endpoint const& endpoint);
-  void data_send();
-  void data_send_handler(std::error_code const& ec,
-                         std::size_t bytes_transmitted);
+  // Net Functions
+  // void dp_accept(void);
+  // void dp_connect(std::experimental::net::ip::tcp::endpoint const& endpoint);
+  // void dp_receive(void);
+  // void dp_send(void);
+
+  // void data_connect(std::experimental::net::ip::udp::endpoint const&
+  // endpoint); void data_receive(void); void data_send(void);
+
+  // void dpsrvr_receive(void);
+  void dpsrvr_send(void);
 
   bool hosting_;
   bool complete_ = false;
   static unsigned int n_id_requests;
   GUID guidInstance_;
   GUID guidApplication_;
-  std::vector<char> dp_recv_buf_;
-  std::vector<char> dp_send_buf_;
-  std::vector<char> data_recv_buf_;
-  std::vector<char> data_send_buf_;
-  std::vector<char> dpsrvr_recv_buf_;
-  std::vector<char> dpsrvr_send_buf_;
+  std::vector<BYTE> dp_recv_buf_;
+  std::vector<BYTE> dp_send_buf_;
+  std::vector<BYTE> data_recv_buf_;
+  std::vector<BYTE> data_send_buf_;
+  std::vector<BYTE> dpsrvr_recv_buf_;
+  std::vector<BYTE> dpsrvr_send_buf_;
+  std::shared_ptr<dp::transmission> transmission;
   static int const k_dp_port_ = 2300;
   static int const k_data_port_ = 2350;
   static int const k_dpsrvr_port_ = 47624;

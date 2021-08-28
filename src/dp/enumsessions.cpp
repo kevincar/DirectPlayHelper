@@ -15,13 +15,15 @@ std::size_t enumsessions::size(void) {
 
 std::vector<BYTE> enumsessions::to_vector(void) {
   std::size_t message_size =
-      sizeof(DPMSG_ENUMSESSIONS) +
-      (this->password.size() ? this->password.size() * 2 + 2 : 0);
+      sizeof(DPMSG_ENUMSESSIONS) + get_u16string_size(this->password);
   std::vector<BYTE> result(message_size, '\0');
   this->message_ = reinterpret_cast<DPMSG_ENUMSESSIONS*>(result.data());
   this->message_->guidApplication = this->application;
-  this->message_->dwPasswordOffset = 0x8 + sizeof(DPMSG_ENUMSESSIONS);
+  this->message_->dwPasswordOffset =
+      this->password.size() ? 0x8 + sizeof(DPMSG_ENUMSESSIONS) : 0;
   this->assign_password();
+  this->message_->dwFlags = static_cast<DWORD>(this->flags);
+  return result;
 }
 
 BYTE* enumsessions::get_password_ptr(void) {

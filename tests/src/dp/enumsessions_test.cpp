@@ -10,4 +10,5 @@ TEST(enumsessions, contructor) {
       full_message_data.end());
 
   dp::enumsessions message(message_data.data());
+  ASSERT_EQ(message.to_vector(), message_data);
 }

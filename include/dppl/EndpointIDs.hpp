@@ -24,4 +24,4 @@ inline std::string endpoint_to_str(ENDPOINTIDS const& rhs) {
          ", playerID: " + std::to_string(rhs.playerID);
 }
 }  // namespace dppl
-#endif  // INCLUDE_DPPL_DPPROXYENDPOINTIDS_HPP_
+#endif  // INCLUDE_DPPL_ENDPOINTIDS_HPP_

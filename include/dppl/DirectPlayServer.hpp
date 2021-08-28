@@ -14,7 +14,7 @@ namespace dppl {
 class DirectPlayServer {
  public:
   DirectPlayServer(std::experimental::net::io_context* io_context,
-                   std::function<void (dp::transmission)> forward,
+                   std::function<void(dp::transmission)> forward,
                    bool use_localhost = false);
 
  private:
@@ -25,7 +25,7 @@ class DirectPlayServer {
 
   static int const kBufSize_ = 512;
   std::vector<BYTE> buf_;
-  std::function<void (dp::transmission)> forward_;
+  std::function<void(dp::transmission)> forward_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::udp::endpoint sniffer_endpoint_;
   std::experimental::net::ip::udp::socket sniffer_socket_;

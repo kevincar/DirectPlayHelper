@@ -47,70 +47,70 @@ class proxy : public std::enable_shared_from_this<proxy> {
         std::function<void(message)> dp_callback,
         std::function<void(message)> data_callback);
 
-  //void stop();
+  // void stop();
 
-  //std::experimental::net::ip::tcp::endpoint const get_return_addr();
-  //void set_return_addr(
-      //std::experimental::net::ip::tcp::endpoint const& app_endpoint);
+  // std::experimental::net::ip::tcp::endpoint const get_return_addr();
+  // void set_return_addr(
+  // std::experimental::net::ip::tcp::endpoint const& app_endpoint);
 
   // When information either coming from a remote host or from our local
   // hosting DirectPlay application contains information about other players we
   // need to know about, this function registers those players so that other
   // proxies can be set up to establish connections with them when ready
-  //void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
+  // void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
 
   // the `_deliver` functions are used by the owning class to send incoming
   // remote messages to the local DirectPlay application
-  //void dp_deliver(DPProxyMessage data);
-  //void data_deliver(DPProxyMessage data);
+  // void dp_deliver(DPProxyMessage data);
+  // void data_deliver(DPProxyMessage data);
 
-  //DWORD get_client_id() const;
-  //DWORD get_system_id() const;
-  //DWORD get_player_id() const;
-  //DPProxyEndpointIDs get_ids() const;
+  // DWORD get_client_id() const;
+  // DWORD get_system_id() const;
+  // DWORD get_player_id() const;
+  // DPProxyEndpointIDs get_ids() const;
 
-  //bool operator==(proxy const& rhs);
-  //bool operator<(proxy const& rhs);
-  //operator DWORD() const;
+  // bool operator==(proxy const& rhs);
+  // bool operator<(proxy const& rhs);
+  // operator DWORD() const;
 
  private:
-  //void dp_assert_connection();
-  //bool validate_message(DPProxyMessage const& message);
+  // void dp_assert_connection();
+  // bool validate_message(DPProxyMessage const& message);
 
   // DirectPlay Message Handling
-  //void dp_receive_requestplayerreply();
-  //void dp_receive_addforwardrequest_handler();
-  //void dp_receive_superenumplayersreply_handler();
-  //void dp_send_enumsession_handler();
-  //void dp_send_enumsessionreply_handler();
-  //void dp_send_requestplayerid();
-  //void dp_send_addforwardrequest();
-  //void dp_send_createplayer_handler();
+  // void dp_receive_requestplayerreply();
+  // void dp_receive_addforwardrequest_handler();
+  // void dp_receive_superenumplayersreply_handler();
+  // void dp_send_enumsession_handler();
+  // void dp_send_enumsessionreply_handler();
+  // void dp_send_requestplayerid();
+  // void dp_send_addforwardrequest();
+  // void dp_send_createplayer_handler();
 
-  //void dp_default_send_handler();
-  //void dp_default_receive_handler();
+  // void dp_default_send_handler();
+  // void dp_default_receive_handler();
 
   // Data Message Handling
-  //void data_default_receive_handler();
+  // void data_default_receive_handler();
 
   // Net handlers
-  //void dp_accept_handler(std::error_code const& ec,
-                         //std::experimental::net::ip::tcp::socket new_socket);
-  //void dp_receive_handler(std::error_code const& ec,
-                          //std::size_t bytes_transmitted);
-  //void dp_send_handler(std::error_code const& ec,
-                          //std::size_t bytes_transmitted);
-  //void data_receive_handler(std::error_code const& ec,
-                            //std::size_t bytes_transmitted);
-  //void data_send_handler(std::error_code const& ec,
-                         //std::size_t bytes_transmitted);
+  // void dp_accept_handler(std::error_code const& ec,
+  // std::experimental::net::ip::tcp::socket new_socket);
+  // void dp_receive_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+  // void dp_send_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+  // void data_receive_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
+  // void data_send_handler(std::error_code const& ec,
+  // std::size_t bytes_transmitted);
 
   // Net Functions
-  //void dp_accept(void);
-  //void dp_receive(void);
-  //void dp_send(void);
-  //void data_receive();
-  //void data_send();
+  // void dp_accept(void);
+  // void dp_receive(void);
+  // void dp_send(void);
+  // void data_receive();
+  // void data_send();
 
   // Proxy Attributes
   DWORD client_id_ = 0;

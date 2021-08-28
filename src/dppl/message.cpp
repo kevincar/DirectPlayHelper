@@ -5,7 +5,7 @@ namespace dppl {
 message::message(dp::transmission data, ENDPOINTIDS from, ENDPOINTIDS to)
     : data(data), from(from), to(to) {}
 
-std::vector<BYTE> message::to_vector() const { 
+std::vector<BYTE> message::to_vector() const {
   std::vector<BYTE> message_data = this->data.to_vector();
 
   std::size_t size = sizeof(PROXYMSG) + message_data.size();

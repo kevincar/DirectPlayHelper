@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "dp/base_message.hpp"
 #include "dp/types.h"
 
 // DPMSG_REQUESTPLAYERID
@@ -18,7 +19,7 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class requestplayerid {
+class requestplayerid : public base_message {
  public:
   enum class Flags : DWORD {
     issystemplayer = 0x1,
@@ -29,6 +30,7 @@ class requestplayerid {
   };
 
   explicit requestplayerid(BYTE* data);
+  std::size_t size(void);
   std::vector<BYTE> to_vector(void);
 
   Flags flags;
@@ -40,6 +42,14 @@ inline requestplayerid::Flags operator|(requestplayerid::Flags const& lhs,
                                         requestplayerid::Flags const& rhs) {
   return requestplayerid::Flags(static_cast<DWORD>(lhs) |
                                 static_cast<DWORD>(rhs));
+}
+inline DWORD operator&(requestplayerid::Flags const& lhs,
+                       requestplayerid::Flags const& rhs) {
+  return static_cast<DWORD>(lhs) & static_cast<DWORD>(rhs);
+}
+
+inline DWORD operator&(DWORD const& lhs, requestplayerid::Flags const& rhs) {
+  return lhs & static_cast<DWORD>(rhs);
 }
 }  // namespace dp
 

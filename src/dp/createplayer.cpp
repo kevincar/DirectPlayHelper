@@ -12,10 +12,13 @@ createplayer::createplayer(BYTE* data)
   this->load_reserved2();
 }
 
+std::size_t createplayer::size(void) {
+  return sizeof(DPMSG_CREATEPLAYER) + this->player.size() + sizeof(WORD) +
+         sizeof(DWORD);
+}
+
 std::vector<BYTE> createplayer::to_vector(void) {
-  std::size_t size = sizeof(DPMSG_CREATEPLAYER) + this->player.size() +
-                     sizeof(WORD) + sizeof(DWORD);
-  std::vector<BYTE> result(size, '\0');
+  std::vector<BYTE> result(this->size(), '\0');
   this->message_ = reinterpret_cast<DPMSG_CREATEPLAYER*>(result.data());
   this->message_->dwIDTo = this->to_id;
   this->message_->dwID = this->id;

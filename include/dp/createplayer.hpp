@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "dp/base_message.hpp"
 #include "dp/packedplayer.hpp"
 #include "dp/types.h"
 
@@ -26,9 +27,10 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class createplayer {
+class createplayer : public base_message {
  public:
   explicit createplayer(BYTE* data);
+  std::size_t size(void);
   std::vector<BYTE> to_vector(void);
 
   DWORD to_id;

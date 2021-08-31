@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "experimental/net"
-#include "dp/types.h"
 #include "dp/playerinfomask.hpp"
+#include "dp/types.h"
+#include "experimental/net"
 
 // DPLAYI_SUPERPACKEDPLAYER
 //
@@ -205,6 +205,10 @@ inline constexpr superpackedplayer::Flags operator|(
                                                static_cast<int>(rhs));
 }
 
+inline DWORD operator&(superpackedplayer::Flags const& lhs,
+                       superpackedplayer::Flags const& rhs) {
+  return static_cast<DWORD>(lhs) | static_cast<DWORD>(rhs);
+}
 }  // namespace dp
 
 #endif  // INCLUDE_DP_SUPERPACKEDPLAYER_HPP_

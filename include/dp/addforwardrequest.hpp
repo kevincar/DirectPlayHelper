@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "dp/base_message.hpp"
 #include "dp/packedplayer.hpp"
 #include "dp/types.h"
 
@@ -30,7 +31,7 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class addforwardrequest {
+class addforwardrequest : public base_message {
  public:
   explicit addforwardrequest(BYTE* data);
   std::size_t size(void);

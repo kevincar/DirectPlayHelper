@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "dp/base_message.hpp"
 #include "dp/securitydesc.hpp"
 #include "dp/types.h"
 
@@ -43,9 +44,10 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class requestplayerreply {
+class requestplayerreply : public base_message {
  public:
   explicit requestplayerreply(BYTE* data);
+  std::size_t size(void);
   std::vector<BYTE> to_vector(void);
 
   DWORD id;

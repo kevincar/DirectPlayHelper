@@ -7,13 +7,14 @@ enumsessionsreply::enumsessionsreply(BYTE* data)
   this->load_session_name();
 }
 
+std::size_t enumsessionsreply::size(void) {
+  return sizeof(DPMSG_ENUMSESSIONSREPLY) +
+         get_u16string_size(this->session_name);
+}
+
 std::vector<BYTE> enumsessionsreply::to_vector(void) {
-  std::size_t message_size =
-      sizeof(DPMSG_ENUMSESSIONSREPLY) +
-      (this->session_name.size() > 0 ? this->session_name.size() * 2 + 2 : 0);
-  std::vector<BYTE> result(message_size, '\0');
-  this->message_ =
-      reinterpret_cast<DPMSG_ENUMSESSIONSREPLY*>(result.data());
+  std::vector<BYTE> result(this->size(), '\0');
+  this->message_ = reinterpret_cast<DPMSG_ENUMSESSIONSREPLY*>(result.data());
 
   std::vector<BYTE> session_desc_data = this->session_desc.to_vector();
   std::copy(session_desc_data.data(),

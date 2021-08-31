@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "dp/base_message.hpp"
 #include "dp/sessiondesc.hpp"
 #include "dp/types.h"
 
@@ -24,9 +25,10 @@ typedef struct {
 #pragma pack(pop)
 
 namespace dp {
-class enumsessionsreply {
+class enumsessionsreply : public base_message {
  public:
   explicit enumsessionsreply(BYTE* data);
+  std::size_t size(void);
   std::vector<BYTE> to_vector(void);
 
   sessiondesc session_desc;

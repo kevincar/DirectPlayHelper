@@ -11,12 +11,14 @@ requestplayerreply::requestplayerreply(BYTE* data)
   this->load_capi_provider();
 }
 
-std::vector<BYTE> requestplayerreply::to_vector(void) {
-  std::size_t size = sizeof(DPMSG_REQUESTPLAYERREPLY) +
-                     get_u16string_size(this->sspi_provider) +
-                     get_u16string_size(this->capi_provider);
+std::size_t requestplayerreply::size(void) {
+  return sizeof(DPMSG_REQUESTPLAYERREPLY) +
+         get_u16string_size(this->sspi_provider) +
+         get_u16string_size(this->capi_provider);
+}
 
-  std::vector<BYTE> result(size, '\0');
+std::vector<BYTE> requestplayerreply::to_vector(void) {
+  std::vector<BYTE> result(this->size(), '\0');
   this->message_ = reinterpret_cast<DPMSG_REQUESTPLAYERREPLY*>(result.data());
   this->message_->dwID = this->id;
   this->message_->dpSecurityDesc = this->security_desc;

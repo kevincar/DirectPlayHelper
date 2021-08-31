@@ -47,70 +47,73 @@ class proxy : public std::enable_shared_from_this<proxy> {
         std::function<void(message)> dp_callback,
         std::function<void(message)> data_callback);
 
-  // void stop();
+  void stop(void);
 
-  // std::experimental::net::ip::tcp::endpoint const get_return_addr();
-  // void set_return_addr(
-  // std::experimental::net::ip::tcp::endpoint const& app_endpoint);
+  void set_return_addr(
+      std::experimental::net::ip::tcp::endpoint const& app_endpoint);
 
   // When information either coming from a remote host or from our local
   // hosting DirectPlay application contains information about other players we
   // need to know about, this function registers those players so that other
   // proxies can be set up to establish connections with them when ready
-  // void register_player(DPLAYI_SUPERPACKEDPLAYER* player);
+  void register_player(dp::superpackedplayer* player);
 
   // the `_deliver` functions are used by the owning class to send incoming
   // remote messages to the local DirectPlay application
-  // void dp_deliver(DPProxyMessage data);
-  // void data_deliver(DPProxyMessage data);
+  void dp_deliver(message proxy_msg);
+  void data_deliver(message proxy_data);
 
-  // DWORD get_client_id() const;
-  // DWORD get_system_id() const;
-  // DWORD get_player_id() const;
-  // DPProxyEndpointIDs get_ids() const;
-
-  // bool operator==(proxy const& rhs);
-  // bool operator<(proxy const& rhs);
-  // operator DWORD() const;
+  DWORD get_client_id(void) const;
+  DWORD get_system_id(void) const;
+  DWORD get_player_id(void) const;
+  ENDPOINTIDS get_ids(void) const;
 
  private:
   // void dp_assert_connection();
-  // bool validate_message(DPProxyMessage const& message);
+  bool validate_message(message const& proxy_msg);
 
   // DirectPlay Message Handling
-  // void dp_receive_requestplayerreply();
-  // void dp_receive_addforwardrequest_handler();
-  // void dp_receive_superenumplayersreply_handler();
-  // void dp_send_enumsession_handler();
-  // void dp_send_enumsessionreply_handler();
-  // void dp_send_requestplayerid();
-  // void dp_send_addforwardrequest();
-  // void dp_send_createplayer_handler();
+  void dp_receive_requestplayerid(dp::transmission request);
+  void dp_receive_requestplayerreply(dp::transmission request);
+  void dp_receive_addforwardrequest_handler(dp::transmission request);
+  void dp_receive_superenumplayersreply_handler(dp::transmission request);
+  void dp_send_enumsessionreply_handler(message proxy_msg);
+  void dp_send_enumsession_handler(message proxy_msg);
+  void dp_send_requestplayerid(message proxy_msg);
+  void dp_send_addforwardrequest(message proxy_msg);
+  void dp_send_createplayer_handler(message proxy_msg);
 
   // void dp_default_send_handler();
-  // void dp_default_receive_handler();
+  void dp_default_receive_handler(dp::transmission request);
+  void dp_process_incoming_message(message proxy_msg);
 
   // Data Message Handling
-  // void data_default_receive_handler();
+  void data_default_receive_handler(dp::transmission request);
 
   // Net handlers
-  // void dp_accept_handler(std::error_code const& ec,
-  // std::experimental::net::ip::tcp::socket new_socket);
-  // void dp_receive_handler(std::error_code const& ec,
-  // std::size_t bytes_transmitted);
-  // void dp_send_handler(std::error_code const& ec,
-  // std::size_t bytes_transmitted);
-  // void data_receive_handler(std::error_code const& ec,
-  // std::size_t bytes_transmitted);
-  // void data_send_handler(std::error_code const& ec,
-  // std::size_t bytes_transmitted);
+  void dp_accept_handler(std::error_code const& ec,
+                         std::experimental::net::ip::tcp::socket new_socket);
+  void dp_receive_handler(std::error_code const& ec,
+                          std::size_t bytes_transmitted);
+  void dp_send_handler(std::error_code const& ec,
+                       std::size_t bytes_transmitted);
+  void data_receive_handler(std::error_code const& ec,
+                            std::size_t bytes_transmitted);
+  void data_send_handler(std::error_code const& ec,
+                         std::size_t bytes_transmitted);
+  void dpsrvr_send_handler(std::error_code const& ec,
+                           std::size_t bytes_transmitted) const;
 
   // Net Functions
-  // void dp_accept(void);
-  // void dp_receive(void);
-  // void dp_send(void);
-  // void data_receive();
-  // void data_send();
+  void dp_connect(void);
+  void dp_accept(void);
+  void dp_receive(void);
+  void dp_send(void);
+  void data_connect(void);
+  void data_receive(void);
+  void data_send(void);
+  void dpsrvr_connect(void);
+  void dpsrvr_send(void);
 
   // Proxy Attributes
   DWORD client_id_ = 0;
@@ -120,17 +123,19 @@ class proxy : public std::enable_shared_from_this<proxy> {
   type proxy_type_;
 
   static int const kBufSize_ = 512;
-  std::vector<char> dp_recv_buf_;
-  std::vector<char> dp_send_buf_;
-  std::vector<char> data_recv_buf_;
-  std::vector<char> data_send_buf_;
+  static int constexpr kPortDPsrvr_ = 47624;
+  std::vector<BYTE> dp_recv_buf_;
+  std::vector<BYTE> dp_send_buf_;
+  std::vector<BYTE> data_recv_buf_;
+  std::vector<BYTE> data_send_buf_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::endpoint app_dp_endpoint_;
+  std::experimental::net::ip::udp::endpoint app_data_endpoint_;
   std::experimental::net::ip::tcp::acceptor dp_acceptor_;
   std::experimental::net::ip::tcp::socket dp_send_socket_;
   std::experimental::net::ip::tcp::socket dp_recv_socket_;
-  std::experimental::net::ip::udp::socket dpsrvr_socket_;
   std::experimental::net::ip::udp::socket data_socket_;
+  std::experimental::net::ip::udp::socket dpsrvr_socket_;
 
   std::function<void(message)> dp_callback_;
   std::function<void(message)> data_callback_;

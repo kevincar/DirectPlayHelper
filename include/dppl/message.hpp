@@ -18,6 +18,7 @@ class proxy;
 class message {
  public:
   message(dp::transmission, ENDPOINTIDS, ENDPOINTIDS);
+  explicit message(std::vector<BYTE> data);
 
   // Convert the DPProxyMessage into a byte vector
   std::vector<BYTE> to_vector() const;

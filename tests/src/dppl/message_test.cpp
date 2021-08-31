@@ -14,4 +14,6 @@ TEST(dppl_message, constructor) {
                                 0, 81, 0, 0, 0,  82, 0, 0, 0,  0, 1, 2, 3, 4};
   EXPECT_EQ(observed, expected);
   EXPECT_EQ(message.data.to_vector(), test_data);
+
+  EXPECT_NO_THROW({ dppl::message message(expected); });
 }

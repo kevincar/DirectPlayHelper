@@ -457,4 +457,4 @@ void proxy::dpsrvr_send(void) {
       std::experimental::net::buffer(this->dp_send_buf_), handler);
 }
 
-} // namespace dppl
+}  // namespace dppl

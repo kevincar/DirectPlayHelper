@@ -13,6 +13,7 @@ class transmission {
   transmission(void);
   explicit transmission(std::shared_ptr<std::vector<BYTE>> data);
   explicit transmission(std::vector<BYTE> data);
+  std::size_t size(void) const;
   std::vector<BYTE> const& to_vector(void) const;
   bool is_dp_message(void) const;
 

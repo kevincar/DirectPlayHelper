@@ -207,7 +207,7 @@ inline constexpr superpackedplayer::Flags operator|(
 
 inline DWORD operator&(superpackedplayer::Flags const& lhs,
                        superpackedplayer::Flags const& rhs) {
-  return static_cast<DWORD>(lhs) | static_cast<DWORD>(rhs);
+  return static_cast<DWORD>(lhs) & static_cast<DWORD>(rhs);
 }
 }  // namespace dp
 

@@ -30,18 +30,18 @@ void interceptor::dp_deliver(dppl::message const& request) {
     case DPSYS_REQUESTPLAYERID:
       this->dp_send_requestplayerid(request);
       break;
-      // case DPSYS_REQUESTPLAYERREPLY:
-      // this->dp_send_requestplayerreply();
-      // break;
+    case DPSYS_REQUESTPLAYERREPLY:
+      this->dp_send_requestplayerreply(request);
+      break;
     case DPSYS_CREATEPLAYER:
-      // this->dp_send_createplayer();
-      // break;
+      this->dp_send_createplayer(request);
+      break;
     case DPSYS_ADDFORWARDREQUEST:
       this->dp_send_addforwardrequest(request);
       break;
-      // case DPSYS_SUPERENUMPLAYERSREPLY:
-      // this->dp_send_superenumplayersreply();
-      // break;
+    case DPSYS_SUPERENUMPLAYERSREPLY:
+      this->dp_send_superenumplayersreply(request);
+      break;
     default:
       LOG(FATAL) << "Unrecognized DP command message ID " << command;
   }
@@ -56,7 +56,7 @@ void interceptor::data_deliver(dppl::message const& request) {
   proxy->data_deliver(request);
 }
 
-// void interceptor::set_client_id(DWORD id) { this->client_id_ = id; }
+void interceptor::set_client_id(DWORD id) { this->client_id_ = id; }
 
 // inline bool interceptor::has_proxies() { return !this->proxies_.empty(); }
 
@@ -89,109 +89,57 @@ std::shared_ptr<proxy> interceptor::add_proxy(proxy::type type) {
   return peer_proxy;
 }
 
-// void interceptor::dp_send_requestplayerreply() {
-// DPProxyMessage message = this->get_send_msg();
-// IILOG(DEBUG) << "dp send REQUESTPLAYERREPLY" << IELOG;
-// DPMessage packet = message.get_dp_msg();
-// DPMSG_REQUESTPLAYERREPLY *msg = packet.message<DPMSG_REQUESTPLAYERREPLY>();
-// if (this->recent_player_id_flags_ & REQUESTPLAYERIDFLAGS::issystemplayer) {
-// this->system_id_ = msg->dwID;
-//} else {
-// this->player_id_ = msg->dwID;
-//}
-// auto peer_proxy = this->find_proxy(message.get_from_ids());
-// peer_proxy->dp_deliver(message);
-//}
+void interceptor::register_player(dp::superpackedplayer* player,
+                                  ENDPOINTIDS from) {
+  DWORD system_id = 0;
+  DWORD player_id = 0;
+  auto host_proxy = this->find_proxy(from);
 
-// void interceptor::dp_send_superenumplayersreply() {
-// DPProxyMessage message = this->get_send_msg();
-// IILOG(DEBUG) << "Interceptor received DPMSG_SUPERENUMPLAYERSREPLY" << IELOG;
-// DPMessage response = message.get_dp_msg();
-// DPMSG_SUPERENUMPLAYERSREPLY *msg =
-// response.message<DPMSG_SUPERENUMPLAYERSREPLY>();
-// IILOG(DEBUG) << "Interceptor needs to register " << msg->dwPlayerCount
-//<< " players" << IELOG;
-// DPLAYI_SUPERPACKEDPLAYER *player =
-// response.property_data<DPLAYI_SUPERPACKEDPLAYER>(msg->dwPackedOffset);
-// for (int i = 0; i < msg->dwPlayerCount; i++) {
-// std::size_t len = this->register_player(player);
-// char *next_player_ptr = reinterpret_cast<char *>(player) + len;
-// player = reinterpret_cast<DPLAYI_SUPERPACKEDPLAYER *>(next_player_ptr);
-//}
-// auto peer_proxy = this->find_proxy(message.get_from_ids());
-// peer_proxy->dp_deliver(message);
-//}
+  if (player->flags & dp::superpackedplayer::Flags::issystemplayer) {
+    LOG(DEBUG) << "System Player";
+    system_id = player->id;
+  } else {
+    LOG(DEBUG) << "Player";
+    system_id = player->system_id;
+    player_id = player->id;
+  }
 
-// std::size_t interceptor::register_player(DPLAYI_SUPERPACKEDPLAYER *player) {
-// DPSuperPackedPlayer superpack = DPSuperPackedPlayer(player);
-// DWORD system_id = 0;
-// DWORD player_id = 0;
-// auto host_proxy = this->find_proxy(this->get_send_msg().get_from_ids());
+  // Check if this is the host system player
+  if (player->flags & dp::superpackedplayer::Flags::isnameserver) {
+    LOG(DEBUG) << "Registering the host player (system ID)";
+    host_proxy->register_player(player);
+    return;
+  }
 
-// if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::issystemplayer) {
-// LOG(DEBUG) << "System Player";
-// system_id = player->ID;
-//} else {
-// LOG(DEBUG) << "Player";
-// system_id = superpack.getSystemPlayerID();
-// player_id = player->ID;
-//}
+  LOG(DEBUG) << "systemPlayerID: " << player->system_id;
+  LOG(DEBUG) << "host_proxy == nullptr: " << (host_proxy == nullptr);
+  LOG(DEBUG) << "host system id: " << host_proxy->get_system_id();
+  if (player->system_id == host_proxy->get_system_id()) {
+    LOG(DEBUG) << "Registering the host player (player ID)";
+    host_proxy->register_player(player);
+    return;
+  }
 
-//// Check if this is the host system player
-// LOG(DEBUG) << "NICE1";
-// if (player->dwFlags & SUPERPACKEDPLAYERFLAGS::isnameserver) {
-// LOG(DEBUG) << "Registering the host player (system ID)";
-// host_proxy->register_player(player);
-// return superpack.size();
-//}
+  LOG(DEBUG) << "player->id: " << player->id;
+  LOG(DEBUG) << "system_id_: " << this->system_id_;
+  if (player->id == this->system_id_) {
+    LOG(DEBUG) << "Registering the local player";
+    return;
+  }
 
-// LOG(DEBUG) << "NICE2";
-// LOG(DEBUG) << "systemPlayerID: " << superpack.getSystemPlayerID();
-// LOG(DEBUG) << "host_proxy == nullptr: " << (host_proxy == nullptr);
-// LOG(DEBUG) << "host syste id: " << host_proxy->get_system_id();
-// if (superpack.getSystemPlayerID() == host_proxy->get_system_id()) {
-// LOG(DEBUG) << "Registering the host player (player ID)";
-// host_proxy->register_player(player);
-// return superpack.size();
-//}
+  // check if this is another peer
+  std::shared_ptr<proxy> peer = this->find_proxy({0, system_id, player_id});
+  if (peer != nullptr) {
+    peer->register_player(player);
+    return;
+  }
 
-// LOG(DEBUG) << "NICE3";
-// LOG(DEBUG) << "player->ID: " << player->ID;
-// LOG(DEBUG) << "system_id_: " << this->system_id_;
-// if (player->ID == this->system_id_) {
-// LOG(DEBUG) << "Registering the local player";
-// return superpack.size();
-//}
-
-//// check if this is another peer
-// LOG(DEBUG) << "NICE4";
-// std::shared_ptr<proxy> peer = this->find_proxy({0, system_id, player_id});
-// if (peer != nullptr) {
-// peer->register_player(player);
-// return superpack.size();
-//}
-
-//// New player
-// LOG(DEBUG) << "NICE5";
-// std::u16string uname(superpack.getShortName(), superpack.getShortNameSize());
-// LOG(DEBUG) << "NICE6";
-// std::string name(uname.begin(), uname.end());
-// LOG(INFO) << "New player: " << name;
-// auto dp_handler =
-// std::bind(&interceptor::proxy_dp_callback, this, std::placeholders::_1);
-// auto data_handler =
-// std::bind(&interceptor::proxy_data_callback, this, std::placeholders::_1);
-// this->proxies_.push_back(std::make_shared<proxy>(
-// this->io_context_, proxy::type::peer, dp_handler, data_handler));
-// peer->register_player(player);
-// return superpack.size();
-//}
-
-// void interceptor::dp_recv_requestplayerid() {
-// DPMessage packet(&this->recv_buf_);
-// DPMSG_REQUESTPLAYERID *msg = packet.message<DPMSG_REQUESTPLAYERID>();
-// this->recent_player_id_flags_ = msg->dwFlags;
-//}
+  // New player
+  LOG(INFO) << "New player: " << player->short_name;
+  peer = this->add_proxy(proxy::type::peer);
+  peer->register_player(player);
+  return;
+}
 
 void interceptor::dp_send_enumsessions(dppl::message const& request) {
   IILOG(DEBUG) << "dp send ENUMSESSIONS" << IELOG;
@@ -214,6 +162,20 @@ void interceptor::dp_send_enumsessionsreply(dppl::message const& request) {
   peer_proxy->dp_deliver(request);
 }
 
+void interceptor::dp_send_requestplayerreply(dppl::message const& request) {
+  IILOG(DEBUG) << "dp send REQUESTPLAYERREPLY" << IELOG;
+  auto msg =
+      std::dynamic_pointer_cast<dp::requestplayerreply>(request.data.msg->msg);
+  if (this->recent_player_id_flags_ &
+      dp::requestplayerid::Flags::issystemplayer) {
+    this->system_id_ = msg->id;
+  } else {
+    this->player_id_ = msg->id;
+  }
+  auto peer_proxy = this->find_proxy(request.from);
+  peer_proxy->dp_deliver(request);
+}
+
 void interceptor::dp_send_requestplayerid(dppl::message const& request) {
   DWORD id = request.from.clientID;
   IILOG(DEBUG) << "dp send REQUESTPLAYERID for player " << id << IELOG;
@@ -232,6 +194,25 @@ void interceptor::dp_send_addforwardrequest(dppl::message const& request) {
   IILOG(DEBUG) << "dp send ADDFORWARDREQUEST" << IELOG;
   std::shared_ptr<proxy> peer_proxy = this->find_proxy(request.from);
   peer_proxy->dp_deliver(request);
+}
+
+void interceptor::dp_send_superenumplayersreply(dppl::message const& request) {
+  IILOG(DEBUG) << "Interceptor received DPMSG_SUPERENUMPLAYERSREPLY" << IELOG;
+  auto msg = std::dynamic_pointer_cast<dp::superenumplayersreply>(
+      request.data.msg->msg);
+  IILOG(DEBUG) << "Interceptor needs to register " << msg->players.size()
+               << " players" << IELOG;
+  for (dp::superpackedplayer& player : msg->players) {
+    this->register_player(&player, request.from);
+  }
+  auto peer_proxy = this->find_proxy(request.from);
+  peer_proxy->dp_deliver(request);
+}
+
+void interceptor::dp_recv_requestplayerid(dppl::message const& request) {
+  auto msg =
+      std::dynamic_pointer_cast<dp::requestplayerid>(request.data.msg->msg);
+  this->recent_player_id_flags_ = static_cast<DWORD>(msg->flags);
 }
 
 void interceptor::dp_recv_superenumplayersreply(dppl::message const& response) {
@@ -262,11 +243,13 @@ void interceptor::proxy_dp_callback(dppl::message message) {
   switch (command) {
     case DPSYS_ENUMSESSIONSREPLY:
     case DPSYS_REQUESTPLAYERREPLY:
+    case DPSYS_ADDFORWARDREQUEST:
+    case DPSYS_CREATEPLAYER:
       // Nothing to handle
       break;
-    // case DPSYS_REQUESTPLAYERID:
-    // this->dp_recv_requestplayerid(message);
-    // break;
+    case DPSYS_REQUESTPLAYERID:
+      this->dp_recv_requestplayerid(message);
+      break;
     case DPSYS_SUPERENUMPLAYERSREPLY:
       this->dp_recv_superenumplayersreply(message);
       break;

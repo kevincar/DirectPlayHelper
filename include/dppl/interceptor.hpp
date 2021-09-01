@@ -40,7 +40,7 @@ class interceptor {
   void dp_deliver(dppl::message const& request);
   void data_deliver(dppl::message const& request);
 
-  // void set_client_id(DWORD id);
+  void set_client_id(DWORD id);
 
  private:
   // Proxy Helper Funcs
@@ -52,19 +52,19 @@ class interceptor {
   // DPProxyMessage get_send_msg();
 
   // For create proxies for other players in the session
-  // std::size_t register_player(DPLAYI_SUPERPACKEDPLAYER* player);
+  void register_player(dp::superpackedplayer* player, ENDPOINTIDS from);
 
   // handlers for messages from remotes
   void dp_send_enumsessions(dppl::message const& request);
   void dp_send_enumsessionsreply(dppl::message const& request);
   void dp_send_requestplayerid(dppl::message const& request);
-  // void dp_send_requestplayerreply();
+  void dp_send_requestplayerreply(dppl::message const& request);
   void dp_send_createplayer(dppl::message const& request);
   void dp_send_addforwardrequest(dppl::message const& request);
-  // void dp_send_superenumplayersreply();
+  void dp_send_superenumplayersreply(dppl::message const& request);
 
   // handlers for messages from local
-  // void dp_recv_requestplayerid();
+  void dp_recv_requestplayerid(dppl::message const& response);
   void dp_recv_superenumplayersreply(dppl::message const& response);
 
   // Proxy Callbacks

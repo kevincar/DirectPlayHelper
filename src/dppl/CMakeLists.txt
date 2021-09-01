@@ -8,7 +8,7 @@ add_library(dppl
   ./message.cpp
   ./DirectPlayServer.cpp
   ./proxy.cpp
-  #./interceptor.cpp
+  ./interceptor.cpp
 	)
 
 target_link_libraries(dppl

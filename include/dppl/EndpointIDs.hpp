@@ -23,5 +23,10 @@ inline std::string endpoint_to_str(ENDPOINTIDS const& rhs) {
          ", systemID: " + std::to_string(rhs.systemID) +
          ", playerID: " + std::to_string(rhs.playerID);
 }
+
+template <typename T>
+inline void operator<<(T& lhs, ENDPOINTIDS const& rhs) {
+  lhs << endpoint_to_str(rhs).c_str();
+}
 }  // namespace dppl
 #endif  // INCLUDE_DPPL_ENDPOINTIDS_HPP_

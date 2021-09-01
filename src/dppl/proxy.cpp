@@ -217,7 +217,7 @@ void proxy::dp_send_createplayer_handler(message proxy_msg) {
 
 void proxy::dp_default_receive_handler(dp::transmission request) {
   LOG(DEBUG) << "dp received default handler";
-  message proxy_message(request, this->get_ids(), {0, 0, 0});
+  message proxy_message(request, {0, 0, 0}, this->get_ids());
   this->dp_callback_(proxy_message);
 }
 
@@ -253,7 +253,7 @@ void proxy::dp_process_incoming_message(message proxy_msg) {
 }
 
 void proxy::data_default_receive_handler(dp::transmission request) {
-  message proxy_message(request, this->get_ids(), {0, 0, 0});
+  message proxy_message(request, {0, 0, 0}, this->get_ids());
   this->data_callback_(proxy_message);
 }
 

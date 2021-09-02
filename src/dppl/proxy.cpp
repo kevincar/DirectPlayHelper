@@ -7,8 +7,10 @@ namespace dppl {
 proxy::proxy(std::experimental::net::io_context *io_context, type proxy_type,
              std::function<void(message)> dp_callback,
              std::function<void(message)> data_callback)
-    : io_context_(io_context), proxy_type_(proxy_type),
-      dp_callback_(dp_callback), data_callback_(data_callback),
+    : io_context_(io_context),
+      proxy_type_(proxy_type),
+      dp_callback_(dp_callback),
+      data_callback_(data_callback),
       dp_acceptor_(*io_context,
                    std::experimental::net::ip::tcp::endpoint(
                        std::experimental::net::ip::address_v4::loopback(), 0)),
@@ -61,15 +63,13 @@ void proxy::register_player(dp::superpackedplayer *player) {
 
 void proxy::dp_deliver(message proxy_msg) {
   LOG(DEBUG) << "Proxy requested to deliver DP message";
-  if (!this->validate_message(proxy_msg))
-    return;
+  if (!this->validate_message(proxy_msg)) return;
   this->dp_process_incoming_message(proxy_msg);
 }
 
 void proxy::data_deliver(message proxy_msg) {
   LOG(DEBUG) << "Proxy requested to deliver data message";
-  if (!this->validate_message(proxy_msg))
-    return;
+  if (!this->validate_message(proxy_msg)) return;
   this->data_send_buf_ = proxy_msg.data.to_vector();
   DWORD *datum = reinterpret_cast<DWORD *>(this->data_send_buf_.data());
   DWORD from_player_id = *datum++;
@@ -139,7 +139,11 @@ void proxy::dp_receive_requestplayerreply(dp::transmission request) {
   }
 }
 
-void proxy::dp_receive_addforwardrequest_handler(dp::transmission request) {
+void proxy::dp_receive_deleteplayer(dp::transmission request) {
+  POLOG(DEBUG) << "dp receive DELETEPLAYER" << PELOG;
+}
+
+void proxy::dp_receive_addforwardrequest(dp::transmission request) {
   POLOG(DEBUG) << "dp receive handling ADDFORWARDREQUEST" << PELOG;
   auto msg = std::dynamic_pointer_cast<dp::addforwardrequest>(request.msg->msg);
   this->app_data_endpoint_ = msg->player.data_address;
@@ -148,7 +152,7 @@ void proxy::dp_receive_addforwardrequest_handler(dp::transmission request) {
   this->data_connect();
 }
 
-void proxy::dp_receive_superenumplayersreply_handler(dp::transmission request) {
+void proxy::dp_receive_superenumplayersreply(dp::transmission request) {
   POLOG(DEBUG) << "dp receive handling SUPERENUMSPLAYERREPLY" << PELOG;
   auto msg =
       std::dynamic_pointer_cast<dp::superenumplayersreply>(request.msg->msg);
@@ -166,7 +170,7 @@ void proxy::dp_receive_superenumplayersreply_handler(dp::transmission request) {
   }
 }
 
-void proxy::dp_send_enumsessionreply_handler(message proxy_msg) {
+void proxy::dp_send_enumsessionreply(message proxy_msg) {
   PILOG(DEBUG) << "dp sending ENUMSESSIONREPLY" << PELOG;
   // Received information from a host pass it on to the app
   this->dp_connect();
@@ -174,7 +178,7 @@ void proxy::dp_send_enumsessionreply_handler(message proxy_msg) {
   this->dp_send();
 }
 
-void proxy::dp_send_enumsession_handler(message proxy_msg) {
+void proxy::dp_send_enumsession(message proxy_msg) {
   PILOG(DEBUG) << "dpsrvr sending ENUMSESSIONS" << PELOG;
   this->app_dp_endpoint_ = proxy_msg.data.msg->header.sock_addr;
   this->app_dp_endpoint_.address(
@@ -205,7 +209,7 @@ void proxy::dp_send_addforwardrequest(message proxy_msg) {
   this->dp_send();
 }
 
-void proxy::dp_send_createplayer_handler(message proxy_msg) {
+void proxy::dp_send_createplayer(message proxy_msg) {
   PILOG(DEBUG) << "dp send CREATEPLAYER" << PELOG;
   auto msg =
       std::dynamic_pointer_cast<dp::createplayer>(proxy_msg.data.msg->msg);
@@ -226,29 +230,29 @@ void proxy::dp_process_incoming_message(message proxy_msg) {
   PILOG(DEBUG) << "dp sending message " << command << PELOG;
   proxy_msg.data.msg->header.sock_addr = this->dp_acceptor_.local_endpoint();
   switch (command) {
-  case DPSYS_ENUMSESSIONS:
-    this->dp_send_enumsession_handler(proxy_msg);
-    break;
-  case DPSYS_ENUMSESSIONSREPLY:
-    this->dp_send_enumsessionreply_handler(proxy_msg);
-    break;
-  case DPSYS_REQUESTPLAYERID:
-    this->dp_send_requestplayerid(proxy_msg);
-    break;
-  case DPSYS_ADDFORWARDREQUEST:
-    this->dp_send_addforwardrequest(proxy_msg);
-    break;
-  case DPSYS_CREATEPLAYER:
-    this->dp_send_createplayer_handler(proxy_msg);
-    break;
-  case DPSYS_REQUESTPLAYERREPLY:
-  case DPSYS_SUPERENUMPLAYERSREPLY: {
-    this->dp_send_buf_ = proxy_msg.data.to_vector();
-    this->dp_send();
-  } break;
-  default:
-    LOG(FATAL) << TXCR << TXFB << "dp proxy received an unrecognized command "
-               << command << TXRS;
+    case DPSYS_ENUMSESSIONS:
+      this->dp_send_enumsession(proxy_msg);
+      break;
+    case DPSYS_ENUMSESSIONSREPLY:
+      this->dp_send_enumsessionreply(proxy_msg);
+      break;
+    case DPSYS_REQUESTPLAYERID:
+      this->dp_send_requestplayerid(proxy_msg);
+      break;
+    case DPSYS_ADDFORWARDREQUEST:
+      this->dp_send_addforwardrequest(proxy_msg);
+      break;
+    case DPSYS_CREATEPLAYER:
+      this->dp_send_createplayer(proxy_msg);
+      break;
+    case DPSYS_REQUESTPLAYERREPLY:
+    case DPSYS_SUPERENUMPLAYERSREPLY: {
+      this->dp_send_buf_ = proxy_msg.data.to_vector();
+      this->dp_send();
+    } break;
+    default:
+      LOG(FATAL) << TXCR << TXFB << "dp proxy received an unrecognized command "
+                 << command << TXRS;
   }
 }
 
@@ -280,28 +284,48 @@ void proxy::dp_receive_handler(std::error_code const &ec,
     DWORD command = request.msg->header.command;
     POLOG(DEBUG) << "dp received message: " << command << PELOG;
     switch (command) {
-    case DPSYS_REQUESTPLAYERID:
-      this->dp_receive_requestplayerid(request);
-      break;
-    case DPSYS_REQUESTPLAYERREPLY:
-      this->dp_receive_requestplayerreply(request);
-      break;
-    case DPSYS_ADDFORWARDREQUEST:
-      this->dp_receive_addforwardrequest_handler(request);
-      break;
-    case DPSYS_SUPERENUMPLAYERSREPLY:
-      this->dp_receive_superenumplayersreply_handler(request);
-      break;
-    case DPSYS_ENUMSESSIONSREPLY:
-    case DPSYS_CREATEPLAYER:
-      break;
-    default:
-      LOG(FATAL) << TXCR << TXFB << "dp proxy received an unrecognized command "
-                 << command << TXRS;
+      case DPSYS_REQUESTPLAYERID:
+        this->dp_receive_requestplayerid(request);
+        break;
+      case DPSYS_REQUESTPLAYERREPLY:
+        this->dp_receive_requestplayerreply(request);
+        break;
+      case DPSYS_ADDFORWARDREQUEST:
+        this->dp_receive_addforwardrequest(request);
+        break;
+      case DPSYS_SUPERENUMPLAYERSREPLY:
+        this->dp_receive_superenumplayersreply(request);
+        break;
+      case DPSYS_ENUMSESSIONSREPLY:
+      case DPSYS_CREATEPLAYER:
+        break;
+      default:
+        LOG(FATAL) << TXCR << TXFB
+                   << "dp proxy received an unrecognized command " << command
+                   << TXRS;
     }
     this->dp_default_receive_handler(request);
   } else {
-    LOG(WARNING) << "dp receive error: " << ec.message();
+    switch (ec.value()) {
+      case std::experimental::net::error::misc_errors::eof: {
+        LOG(WARNING) << "DISCONNECTED";
+        std::vector<BYTE> data = {
+            0x30, 0x00, 0xb0, 0xfa, 0x02, 0x00, 0x08, 0xfc, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x70, 0x6c, 0x61, 0x79, 0x0b, 0x00, 0x0e, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        this->dp_recv_buf_ = data;
+        dp::transmission request(this->dp_recv_buf_);
+        this->dp_receive_deleteplayer(request);
+        this->dp_default_receive_handler(request);
+        return;
+      } break;
+      default:
+        LOG(WARNING) << "dp receive error: " << ec.message() << " : "
+                     << ec.value();
+    }
+    LOG(WARNING) << (ec == std::experimental::net::error::misc_errors::eof);
   }
   this->dp_receive();
 }

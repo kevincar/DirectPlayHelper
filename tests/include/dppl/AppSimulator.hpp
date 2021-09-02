@@ -13,6 +13,7 @@ class AppSimulator {
                GUID app = AppSimulator::app,
                GUID instance = AppSimulator::instance);
 
+  void shutdown(void);
   bool is_complete(void) const;
   static dp::transmission process_message(dp::transmission const& message);
 
@@ -21,6 +22,7 @@ class AppSimulator {
   static GUID constexpr instance = {0x87cdc14a, 0x15f0, 0x4721, 0x8f,
                                     0x94,       0x76,   0xc8,   0x4c,
                                     0xef,       0x3c,   0xbb};
+
 
  private:
   // DirectPlay Message Processing

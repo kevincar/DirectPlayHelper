@@ -404,3 +404,168 @@ TEST(ProxyTest, dp_initialization_join) {
     io_context.run();
   }
 }
+
+TEST(ProxyTest, disconnect) {
+  DWORD client_id = 9;
+  DWORD system_id = -1;
+  DWORD player_id = -1;
+  std::vector<BYTE> recv_buf(255, '\0');
+  std::vector<BYTE> send_buf(255, '\0');
+  std::experimental::net::io_context io_context;
+  std::shared_ptr<dppl::proxy> proxy;
+  auto const dpsrvr_timer_delay = std::chrono::seconds(5);
+  auto const simulated_internet_delay = std::chrono::milliseconds(750);
+  std::experimental::net::steady_timer internet_timer(io_context,
+                                                      simulated_internet_delay);
+  std::experimental::net::steady_timer dpsrvr_timer(io_context,
+                                                    dpsrvr_timer_delay);
+  std::experimental::net::steady_timer kill_timer(io_context);
+  std::unique_ptr<dppl::AppSimulator> app;
+
+  // Callback Function Definitions
+  std::function<void(std::error_code const &)> dpsrvr_timer_callback;
+  std::function<void(std::error_code const &)> internet_timer_callback;
+  std::function<void(dppl::message)> send_to_server;
+  std::function<void(dppl::message)> dp_callback;
+  std::function<void(dppl::message)> data_callback;
+  std::function<void(std::error_code const &)> kill_callback;
+
+  // Callback implementation
+  dp_callback = [&](dppl::message message) {
+    // We'll use the AppSimulator::process_message to simulate a response
+    // over the internet
+    LOG(DEBUG) << "Proxy received message from the app";
+
+    // Handl messages with player data that needs to have socket info
+    // resolved
+    dp::transmission transmitted = message.data;
+    dp::header header = transmitted.msg->header;
+    LOG(DEBUG) << "Message Command ID: " << header.command;
+
+    // Handle message appropriately
+    switch (header.command) {
+      case DPSYS_SUPERENUMPLAYERSREPLY: {
+        auto msg = std::dynamic_pointer_cast<dp::superenumplayersreply>(
+            transmitted.msg->msg);
+        for (dp::superpackedplayer &player : msg->players) {
+          // Check and handle System Players
+          if (player.flags & dp::superpackedplayer::Flags::issystemplayer) {
+            LOG(DEBUG) << "Found system player. system_id: " << player.id;
+
+            // Host system player
+            if (player.flags & dp::superpackedplayer::Flags::isnameserver) {
+              system_id = player.id;
+            } else {
+              proxy->register_player(&player);
+            }
+          } else {
+            LOG(DEBUG) << "Found application player, player_id: " << player.id;
+            if (player.system_id == system_id) {
+              player_id = player.id;
+            } else {
+              proxy->register_player(&player);
+            }
+          }
+        }
+      } break;
+      case DPSYS_DELETEPLAYER: {
+        proxy->stop();
+        std::experimental::net::defer([&] { io_context.stop(); });
+      } break;
+    }
+
+    LOG(DEBUG) << "Simulating sending this data over the internet to the "
+               << "server/other player. Message ID: " << header.command;
+    send_to_server(message);
+  };
+
+  data_callback = [&](dppl::message message) {
+    LOG(DEBUG) << "Proxy_test received a data message from the app";
+    std::vector<BYTE> const stream_data = message.data.to_vector();
+    DWORD const *ptr = reinterpret_cast<DWORD const *>(stream_data.data());
+    DWORD cmd = *(ptr + 2);
+    LOG(DEBUG) << "Simulating send this data over the internet to the "
+               << "server/other player. Data ID: " << cmd;
+    send_to_server(message);
+  };
+
+  dpsrvr_timer_callback = [&](std::error_code const &ec) {
+    if (!ec) {
+      LOG(DEBUG) << "dpsrvr timer: simulating ENUMSESSIONS request";
+      std::vector<BYTE> data = TMP_ENUMSESSIONS;
+      dppl::message message(dp::transmission(data), {1, 0, 0}, {0, 0, 0});
+      LOG(DEBUG) << "Sending from: " << message.from.clientID;
+      proxy->dp_deliver(message);
+      dpsrvr_timer.expires_at(dpsrvr_timer.expiry() + dpsrvr_timer_delay);
+      dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    } else {
+      LOG(WARNING) << "Timer error: " << ec.message();
+    }
+  };
+
+  kill_callback = [&](std::error_code const &ec) {
+    if (!ec) {
+      LOG(DEBUG) << "Killing App";
+      app->shutdown();
+    } else {
+      LOG(WARNING) << "Kill timer error: " << ec.message();
+    }
+  };
+
+  internet_timer_callback = [&](std::error_code const &ec) {
+    if (!ec) {
+      dpsrvr_timer.cancel();
+      dppl::message proxy_request(recv_buf);
+      dp::transmission response =
+          dppl::AppSimulator::process_message(proxy_request.data);
+      std::string command;
+      if (response.is_dp_message()) {
+        command =
+            std::string("DP") + std::to_string(response.msg->header.command);
+      } else {
+        std::vector<BYTE> data = response.to_vector();
+        DWORD *ptr = reinterpret_cast<DWORD *>(data.data());
+        DWORD cmd = *(ptr + 2);
+        command = std::string("DATA") + std::to_string(cmd);
+      }
+      LOG(DEBUG) << "Received response from simulated player with id "
+                 << proxy->get_client_id() << ", delivering back message id "
+                 << command << " to the app through proxy";
+      dppl::message proxy_response(response, proxy->get_ids(),
+                                   {client_id, system_id, player_id});
+      if (proxy_response.data.is_dp_message()) {
+        proxy->dp_deliver(proxy_response);
+      } else {
+        proxy->data_deliver(proxy_response);
+      }
+    } else {
+      LOG(WARNING) << "Timer error: " << ec.message();
+    }
+  };
+
+  send_to_server = [&](dppl::message request) {
+    recv_buf = request.to_vector();
+    internet_timer.expires_at(std::chrono::steady_clock::now() +
+                              simulated_internet_delay);
+    internet_timer.async_wait(internet_timer_callback);
+  };
+
+  proxy = std::make_shared<dppl::proxy>(&io_context, dppl::proxy::type::peer,
+                                        dp_callback, data_callback);
+
+  if (hardware_test_check() || test_check("TEST_PROXY_HOST")) {
+    prompt(
+        "Please begin a host session on your direct play application and press "
+        "enter...");
+    dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    io_context.run();
+    prompt("Please shutdown your application and press enter...");
+  } else {
+    kill_timer.expires_at(std::chrono::steady_clock::now() +
+                          std::chrono::seconds(7));
+    kill_timer.async_wait(kill_callback);
+    dpsrvr_timer.async_wait(dpsrvr_timer_callback);
+    app = std::make_unique<dppl::AppSimulator>(&io_context, true);
+    io_context.run();
+  }
+}

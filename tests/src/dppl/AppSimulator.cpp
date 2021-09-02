@@ -49,6 +49,20 @@ AppSimulator::AppSimulator(std::experimental::net::io_context* io_context,
   this->data_receive();
 }
 
+void AppSimulator::shutdown(void) {
+  std::experimental::net::defer([&] {
+    this->dp_recv_socket_.cancel();
+    this->dp_send_socket_.cancel();
+    this->data_socket_.cancel();
+    this->dpsrvr_socket_->cancel();
+
+    this->dp_recv_socket_.close();
+    this->dp_send_socket_.close();
+    this->data_socket_.close();
+    this->dpsrvr_socket_->close();
+  });
+}
+
 bool AppSimulator::is_complete(void) const { return this->complete_; }
 
 dp::transmission AppSimulator::process_message(
@@ -263,13 +277,13 @@ void AppSimulator::dp_receive_handler(std::error_code const& ec,
       this->data_send_buf_ = this->transmission.to_vector();
       this->data_send();
     }
+    this->dp_receive();
   } else {
     switch (ec.value()) {
       default:
         LOG(WARNING) << "dp_recv error: " << ec.message();
     }
   }
-  this->dp_receive();
 }
 
 void AppSimulator::dp_send_handler(std::error_code const& ec,
@@ -292,13 +306,13 @@ void AppSimulator::data_receive_handler(std::error_code const& ec,
     this->transmission = this->handle_data_message(this->transmission);
     this->data_send_buf_ = this->transmission.to_vector();
     this->data_send();
+    this->data_receive();
   } else {
     switch (ec.value()) {
       default:
         LOG(WARNING) << "data receive error: " << ec.message();
     }
   }
-  this->data_receive();
 }
 
 void AppSimulator::data_send_handler(std::error_code const& ec,

@@ -75,13 +75,14 @@ class proxy : public std::enable_shared_from_this<proxy> {
   // DirectPlay Message Handling
   void dp_receive_requestplayerid(dp::transmission request);
   void dp_receive_requestplayerreply(dp::transmission request);
-  void dp_receive_addforwardrequest_handler(dp::transmission request);
-  void dp_receive_superenumplayersreply_handler(dp::transmission request);
-  void dp_send_enumsessionreply_handler(message proxy_msg);
-  void dp_send_enumsession_handler(message proxy_msg);
+  void dp_receive_deleteplayer(dp::transmission request);
+  void dp_receive_addforwardrequest(dp::transmission request);
+  void dp_receive_superenumplayersreply(dp::transmission request);
+  void dp_send_enumsessionreply(message proxy_msg);
+  void dp_send_enumsession(message proxy_msg);
   void dp_send_requestplayerid(message proxy_msg);
   void dp_send_addforwardrequest(message proxy_msg);
-  void dp_send_createplayer_handler(message proxy_msg);
+  void dp_send_createplayer(message proxy_msg);
 
   // void dp_default_send_handler();
   void dp_default_receive_handler(dp::transmission request);

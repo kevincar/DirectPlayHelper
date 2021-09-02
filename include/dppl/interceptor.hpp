@@ -65,6 +65,7 @@ class interceptor {
 
   // handlers for messages from local
   void dp_recv_requestplayerid(dppl::message const& response);
+  void dp_recv_deleteplayer(dppl::message const& response);
   void dp_recv_superenumplayersreply(dppl::message const& response);
 
   // Proxy Callbacks

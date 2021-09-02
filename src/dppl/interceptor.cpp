@@ -215,6 +215,22 @@ void interceptor::dp_recv_requestplayerid(dppl::message const& request) {
   this->recent_player_id_flags_ = static_cast<DWORD>(msg->flags);
 }
 
+void interceptor::dp_recv_deleteplayer(dppl::message const& response) {
+  auto msg =
+      std::dynamic_pointer_cast<dp::deleteplayer>(response.data.msg->msg);
+  if (msg->player_id == 0xffffffff) {
+    msg->player_id = this->player_id_;
+  }
+  for (auto it = this->proxies_.begin(); it != this->proxies_.end();) {
+    if ((*it)->get_player_id() == msg->player_id) {
+      (*it)->stop();
+      this->proxies_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void interceptor::dp_recv_superenumplayersreply(dppl::message const& response) {
   // This function is used so that we can snag the interceptor ids
   auto msg = std::dynamic_pointer_cast<dp::superenumplayersreply>(
@@ -252,6 +268,9 @@ void interceptor::proxy_dp_callback(dppl::message message) {
       break;
     case DPSYS_SUPERENUMPLAYERSREPLY:
       this->dp_recv_superenumplayersreply(message);
+      break;
+    case DPSYS_DELETEPLAYER:
+      this->dp_recv_deleteplayer(message);
       break;
     default:
       LOG(FATAL) << "Unrecognized command from proxy dp callback. ID: "

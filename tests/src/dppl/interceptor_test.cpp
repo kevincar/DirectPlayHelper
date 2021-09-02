@@ -251,3 +251,134 @@ TEST(interceptorTest, join_test) {
     io_context.run();
   }
 }
+
+TEST(interceptorTest, disconnect) {
+  DWORD peer_id = 14;
+  std::vector<BYTE> buf;
+  auto internet_delay = std::chrono::milliseconds(750);
+  std::experimental::net::io_context io_context;
+  std::experimental::net::steady_timer internet_timer(io_context,
+                                                      internet_delay);
+  std::experimental::net::steady_timer end_timer(io_context,
+                                                 std::chrono::seconds(4));
+  std::experimental::net::steady_timer kill_timer(io_context);
+
+  std::shared_ptr<dppl::interceptor> interceptor;
+  std::shared_ptr<dppl::AppSimulator> app;
+
+  // Callback declarations
+  std::function<void(std::error_code const&)> internet_callback;
+  std::function<void(dppl::message const&)> send_to_internet;
+  std::function<void(dppl::message const&)> handle_dp_response;
+  std::function<void(dppl::message const&)> handle_data_response;
+  std::function<void(dppl::message const&)> dp_callback;
+  std::function<void(dppl::message const&)> data_callback;
+  std::function<void(std::error_code const&)> kill_callback;
+
+  // Callback definitions
+  handle_dp_response = [&](dppl::message message) {
+    DWORD command = message.data.msg->header.command;
+    LOG(DEBUG) << "Received dp message from host. Command: " << command;
+    switch (command) {
+      case DPSYS_ENUMSESSIONSREPLY: {
+        // when proxies receive their first message they will initialize
+        // their client_id_ values. For hosts, the first message is a
+        // ENUMSESSIONS message, for clients, it is the ENUMSESSIONSREPLY.
+        // For this test, the from and to ids are 0, because this test
+        // doesn't use an actual client yet, we need to initialize with e
+        // from.clientID field to an arbitrary value to use
+        message.from.clientID = peer_id;
+      } break;
+    }
+    interceptor->dp_deliver(message);
+  };
+
+  handle_data_response = [&](dppl::message const& message) {
+    std::vector<BYTE> data = message.data.to_vector();
+    DWORD* ptr = reinterpret_cast<DWORD*>(data.data());
+    DWORD command = *(ptr + 2);
+    LOG(DEBUG) << "Received data message from host. command: 0x" << std::hex
+               << command;
+    interceptor->data_deliver(message);
+  };
+
+  internet_callback = [&](std::error_code const& ec) {
+    if (!ec) {
+      dppl::message request_message(buf);
+
+      if (request_message.data.is_dp_message()) {
+        if (request_message.data.msg->header.command == DPSYS_DELETEPLAYER) {
+          std::experimental::net::defer([&] { io_context.stop(); });
+          return;
+        }
+      }
+
+      dp::transmission response =
+          dppl::AppSimulator::process_message(request_message.data);
+      dppl::message response_message(response, request_message.to,
+                                     request_message.from);
+
+      if (response_message.data.is_dp_message()) {
+        handle_dp_response(response_message);
+      } else {
+        handle_data_response(response_message);
+      }
+    } else {
+      LOG(DEBUG) << "Internet timer error: " << ec.message();
+    }
+  };
+
+  send_to_internet = [&](dppl::message const& message) {
+    LOG(DEBUG) << "Sending data over internet...";
+    buf = message.to_vector();
+    internet_timer.expires_at(internet_timer.expiry() + internet_delay);
+    internet_timer.async_wait(internet_callback);
+  };
+
+  dp_callback = [&](dppl::message const& message) {
+    DWORD command = message.data.msg->header.command;
+    LOG(DEBUG) << "interceptor dp callback. Command: " << command;
+    send_to_internet(message);
+  };
+
+  data_callback = [&](dppl::message const& message) {
+    std::vector<BYTE> data = message.data.to_vector();
+    DWORD* ptr = reinterpret_cast<DWORD*>(data.data());
+    DWORD command = *(ptr + 2);
+    LOG(DEBUG) << "interceptor data callback. Command: 0x" << std::hex
+               << command;
+    switch (command) {
+      case 0x20:
+      case 0x22:
+      case 0x29:
+        break;
+      default:
+        LOG(FATAL) << "Unhandled data command: 0x" << std::hex << command;
+    }
+    send_to_internet(message);
+  };
+
+  kill_callback = [&](std::error_code const& ec) {
+    if (!ec) {
+      app->shutdown();
+    } else {
+      LOG(WARNING) << "Problem with the kill timer: " << ec.message();
+    }
+  };
+
+  // Startup
+  interceptor = std::make_shared<dppl::interceptor>(&io_context, dp_callback,
+                                                    data_callback);
+  interceptor->set_client_id(3);
+  if (hardware_test_check() || test_check("TEST_INTER_JOIN")) {
+    prompt("Please begin to attempt to join a session...");
+    io_context.run();
+    prompt("Please shut down the app to continue and press enter");
+  } else {
+    kill_timer.expires_at(std::chrono::steady_clock::now() +
+                          std::chrono::seconds(10));
+    kill_timer.async_wait(kill_callback);
+    app = std::make_shared<dppl::AppSimulator>(&io_context, false);
+    io_context.run();
+  }
+}

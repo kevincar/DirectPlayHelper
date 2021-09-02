@@ -17,10 +17,11 @@ class proxy;
 // came from and who it's intended for
 class message {
  public:
+  message(void);
   message(dp::transmission, ENDPOINTIDS, ENDPOINTIDS);
   explicit message(std::vector<BYTE> data);
 
-  // Convert the DPProxyMessage into a byte vector
+  std::size_t size(void) const;
   std::vector<BYTE> to_vector() const;
 
   ENDPOINTIDS to;

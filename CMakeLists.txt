@@ -117,7 +117,7 @@ set(ARGPARSE_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/deps/argparse/include")
 # build the app
 add_executable("${PROJECT_NAME}"
 	src/main.cpp
-  #src/Message.cpp
+  src/Message.cpp
   #src/ClientRecord.cpp
   #src/Client.cpp
   #src/Server.cpp
@@ -149,7 +149,7 @@ endif()
 target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		#nathp
-		#dppl
+		dppl
     dp
 		${LIBTINS_LIBRARY}
 		g3log

@@ -66,23 +66,6 @@ typedef struct {
 #pragma pack(pop)
 
 /*
- * DPMSG_DELETEPLAYER
- *
- * This packet is sent to indicate that a player has been deleted.
- */
-#define DPSYS_DELETEPLAYER 0x000B
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwIDTo;            //  SHOULD be set to zero
-  DWORD dwPlayerID;        //  To the player ID of the newly deleted
-                           //  player.
-  DWORD dwGroupID;         //  SHOULD be set to zero
-  DWORD dwCreateOffset;    //  SHOULD be set to zero
-  DWORD dwPasswordOffset;  //  SHOULD be set to zero
-} DPMSG_DELETEPLAYER;
-#pragma pack(pop)
-
-/*
  * DPMSG_DELETEGROUP
  *
  * This packet is sent when a group is deleted

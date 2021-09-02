@@ -15,6 +15,7 @@
 #include "dp/requestgroupid.hpp"
 #include "dp/requestplayerreply.hpp"
 #include "dp/createplayer.hpp"
+#include "dp/deleteplayer.hpp"
 #include "dp/enumplayersreply.hpp"
 #include "dp/addforwardrequest.hpp"
 #include "dp/superenumplayersreply.hpp"

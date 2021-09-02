@@ -1,5 +1,6 @@
 #include "dp/addforwardrequest.hpp"
 #include "dp/createplayer.hpp"
+#include "dp/deleteplayer.hpp"
 #include "dp/enumsessions.hpp"
 #include "dp/enumsessionsreply.hpp"
 #include "dp/message.hpp"
@@ -31,6 +32,10 @@ message::message(BYTE* data) : data_(data), header(data) {
     case DPSYS_CREATEPLAYER:
       this->msg = std::static_pointer_cast<base_message>(
           std::make_shared<createplayer>(createplayer(msg_data)));
+      break;
+    case DPSYS_DELETEPLAYER:
+      this->msg = std::static_pointer_cast<base_message>(
+          std::make_shared<deleteplayer>(deleteplayer(msg_data)));
       break;
     case DPSYS_ADDFORWARDREQUEST:
       this->msg = std::static_pointer_cast<base_message>(

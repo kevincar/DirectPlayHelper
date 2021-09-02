@@ -43,6 +43,7 @@ add_executable("${TEST_PROJECT_NAME}"
   ./src/dp/requestgroupid_test.cpp
   ./src/dp/requestplayerreply_test.cpp
   ./src/dp/createplayer_test.cpp
+  ./src/dp/deleteplayer_test.cpp
   ./src/dp/addforwardrequest_test.cpp
   ./src/dp/superenumplayersreply_test.cpp
   ./src/dp/message_test.cpp

@@ -17,6 +17,7 @@ add_library(dp
   ./requestgroupid.cpp
   ./requestplayerreply.cpp
   ./createplayer.cpp
+  ./deleteplayer.cpp
   ./addforwardrequest.cpp
   ./superenumplayersreply.cpp
   ./message.cpp

@@ -4,6 +4,8 @@
 #include "dp/enumsessions.hpp"
 #include "dp/enumsessionsreply.hpp"
 #include "dp/message.hpp"
+#include "dp/ping.hpp"
+#include "dp/pingreply.hpp"
 #include "dp/requestplayerid.hpp"
 #include "dp/requestplayerreply.hpp"
 #include "dp/superenumplayersreply.hpp"
@@ -36,6 +38,14 @@ message::message(BYTE* data) : data_(data), header(data) {
     case DPSYS_DELETEPLAYER:
       this->msg = std::static_pointer_cast<base_message>(
           std::make_shared<deleteplayer>(deleteplayer(msg_data)));
+      break;
+    case DPSYS_PING:
+      this->msg = std::static_pointer_cast<base_message>(
+          std::make_shared<ping>(ping(msg_data)));
+      break;
+    case DPSYS_PINGREPLY:
+      this->msg = std::static_pointer_cast<base_message>(
+          std::make_shared<pingreply>(pingreply(msg_data)));
       break;
     case DPSYS_ADDFORWARDREQUEST:
       this->msg = std::static_pointer_cast<base_message>(

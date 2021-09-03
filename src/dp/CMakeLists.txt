@@ -18,6 +18,8 @@ add_library(dp
   ./requestplayerreply.cpp
   ./createplayer.cpp
   ./deleteplayer.cpp
+  ./ping.cpp
+  ./pingreply.cpp
   ./addforwardrequest.cpp
   ./superenumplayersreply.cpp
   ./message.cpp

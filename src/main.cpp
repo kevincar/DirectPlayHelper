@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "CustomSink.hpp"
-// #include "DirectPlayHelper.hpp"
+#include "DirectPlayHelper.hpp"
 #include "argparse/argparse.hpp"
 #include "experimental/net"
 #include "g3log/g3log.hpp"
@@ -84,14 +84,14 @@ int main(int argc, char const* argv[]) {
   if (server) {
     LOG(DEBUG) << "Getting server ready";
     LOG(DEBUG) << "Setting up on port: " << port;
-    // DirectPlayHelper dph(&io_context, port);
+    DirectPlayHelper dph(&io_context, port);
     io_context.run();
   } else {  // Client
     LOG(DEBUG) << "Getting client ready";
     auto host =
         app.is_used("--host") ? app.get<std::string>("--host") : "localhost";
     auto use_localhost = app.get<bool>("--localhost");
-    // DirectPlayHelper dph(&io_context, host, port, use_localhost);
+    DirectPlayHelper dph(&io_context, host, port, use_localhost);
     io_context.run();
   }
   return 0;

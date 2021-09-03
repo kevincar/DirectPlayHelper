@@ -23,10 +23,15 @@ std::vector<BYTE> const& transmission::to_vector(void) const {
   if (this->is_dp_message()) {
     this->data_ = std::make_shared<std::vector<BYTE>>(this->msg->to_vector());
   }
+
+  if (this->data_ == nullptr) {
+    this->data_ = std::make_shared<std::vector<BYTE>>();
+  }
   return *this->data_.get();
 }
 
 bool transmission::is_dp_message(void) const {
+  if (this->data_ == nullptr) return false;
   if (this->data_->size() < sizeof(DPMSG_HEADER)) return false;
   BYTE* data = this->data_->data();
   BYTE* play = data + sizeof(DPMSG_HEADER) - 0x8;

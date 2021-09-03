@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "dp/types.h"
 #include "dp/message.hpp"
+#include "dp/types.h"
 
 namespace dp {
 class transmission {

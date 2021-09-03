@@ -62,6 +62,7 @@ class interceptor {
   void dp_send_createplayer(dppl::message const& request);
   void dp_send_addforwardrequest(dppl::message const& request);
   void dp_send_superenumplayersreply(dppl::message const& request);
+  void dp_send_default(dppl::message const& request);
 
   // handlers for messages from local
   void dp_recv_requestplayerid(dppl::message const& response);

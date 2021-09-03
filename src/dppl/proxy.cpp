@@ -246,6 +246,8 @@ void proxy::dp_process_incoming_message(message proxy_msg) {
       this->dp_send_createplayer(proxy_msg);
       break;
     case DPSYS_REQUESTPLAYERREPLY:
+    case DPSYS_PING:
+    case DPSYS_PINGREPLY:
     case DPSYS_SUPERENUMPLAYERSREPLY: {
       this->dp_send_buf_ = proxy_msg.data.to_vector();
       this->dp_send();

@@ -1,5 +1,3 @@
-#include <experimental/net>
-
 #include "dppl/interceptor.hpp"
 #include "dppl/proxy.hpp"
 #include "g3log/g3log.hpp"
@@ -41,6 +39,10 @@ void interceptor::dp_deliver(dppl::message const& request) {
       break;
     case DPSYS_SUPERENUMPLAYERSREPLY:
       this->dp_send_superenumplayersreply(request);
+      break;
+    case DPSYS_PING:
+    case DPSYS_PINGREPLY:
+      this->dp_send_default(request);
       break;
     default:
       LOG(FATAL) << "Unrecognized DP command message ID " << command;
@@ -206,6 +208,13 @@ void interceptor::dp_send_superenumplayersreply(dppl::message const& request) {
     this->register_player(&player, request.from);
   }
   auto peer_proxy = this->find_proxy(request.from);
+  peer_proxy->dp_deliver(request);
+}
+
+void interceptor::dp_send_default(dppl::message const& request) {
+  DWORD command = request.data.msg->header.command;
+  IILOG(DEBUG) << "dp send default CMD: " << command << IELOG;
+  std::shared_ptr<proxy> peer_proxy = this->find_proxy(request.from);
   peer_proxy->dp_deliver(request);
 }
 

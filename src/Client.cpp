@@ -34,7 +34,8 @@ void Client::dp_deliver(std::vector<uint8_t> const& data) {
 void Client::forward_message(Message const& message) {
   std::vector<uint8_t> data = message.to_vector();
   this->send_buf_.clear();
-  this->send_buf_ = data;
+  this->send_buf_.resize(1024, 0);
+  this->send_buf_.assign(data.begin(), data.end());
   this->send();
 }
 

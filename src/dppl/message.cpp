@@ -3,7 +3,7 @@
 
 namespace dppl {
 
-message::message(void) {}
+message::message(void) : to({0, 0, 0}), from({0, 0, 0}) {}
 
 message::message(dp::transmission data, ENDPOINTIDS from, ENDPOINTIDS to)
     : data(data), from(from), to(to) {}
@@ -13,10 +13,13 @@ message::message(std::vector<BYTE> data) {
   this->to = message_ptr->to;
   this->from = message_ptr->from;
 
+  LOG(DEBUG) << "Calculating dppl Message size";
   std::size_t message_size = data.size() - sizeof(PROXYMSG);
   BYTE* message_data_ptr = reinterpret_cast<BYTE*>(&message_ptr->message);
+  LOG(DEBUG) << "Loading data into a new vector";
   std::vector<BYTE> message_data(message_data_ptr,
                                  message_data_ptr + message_size);
+  LOG(DEBUG) << "passing the vector to dp::transmission";
   this->data = dp::transmission(message_data);
 }
 

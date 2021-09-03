@@ -1,4 +1,5 @@
 #include "dppl/message.hpp"
+#include "g3log/g3log.hpp"
 
 namespace dppl {
 
@@ -32,6 +33,7 @@ std::vector<BYTE> message::to_vector() const {
   data->to = this->to;
   data->from = this->from;
 
+  if (!message_data.size()) return result;
   BYTE* message_data_ptr = reinterpret_cast<BYTE*>(&data->message);
   std::copy(message_data.begin(), message_data.end(), message_data_ptr);
   return result;

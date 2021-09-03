@@ -24,6 +24,7 @@ Message::Message(std::vector<uint8_t> const& data) : data_(data) {
 Message::Message(uint32_t from, uint32_t to, Command command,
                  uint32_t data_size, char const* data)
     : from_id(from), to_id(to), command(command) {
+  if (!data_size) return;
   std::vector<uint8_t> payload_data(data, data + data_size);
   this->payload = dppl::message(payload_data);
 }
@@ -41,6 +42,7 @@ std::vector<uint8_t> Message::to_vector(void) const {
   std::vector<uint8_t> payload_data = this->payload.to_vector();
   message->data_size = payload_data.size();
 
+  if (!payload_data.size()) return result;
   char* start = reinterpret_cast<char*>(payload_data.data());
   char* end = start + message->data_size;
   char* dest = reinterpret_cast<char*>(&message->data);

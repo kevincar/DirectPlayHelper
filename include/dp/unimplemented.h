@@ -236,37 +236,6 @@ typedef struct {
 #pragma pack(pop)
 
 /*
- * DPMSG_PING
- *
- * This packet is used to keep the UDP session active and to optimize the
- * protocol.
- */
-#define DPSYS_PING 0x0016
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwIDFrom;     //  The identifier of the player who sent
-                      //  the ping.
-  DWORD dwTickCount;  //  The number of milliseconds that have
-                      //  elapsed since the computer system was started.
-} DPMSG_PING;
-#pragma pack(pop)
-
-/*
- * DPMSG_PINGREPLY
- *
- * This packet is sent in response to a DPSP_MSG_PING message
- */
-#define DPSYS_PINGREPLY 0x0017
-#pragma pack(push, 1)
-typedef struct {
-  DWORD dwIDFrom;     //  The identifier of the player who sent
-                      //  the ping for which this is a response.
-  DWORD dwTickCount;  //  The value in the DPSP_MSG_PING for
-                      //  which this is the reply.
-} DPMSG_PINGREPLY;
-#pragma pack(pop)
-
-/*
  * DPMSG_YOUAREDEAD
  *
  * This packet is sent in response to a DPSP_MSG_PING message when the sender

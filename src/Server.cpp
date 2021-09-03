@@ -76,8 +76,10 @@ void Server::accept_handler(std::error_code const& ec,
 
 void Server::receive_handler(std::error_code const& ec,
                              std::size_t bytes_transmitted, uint32_t const id) {
-  LOG(DEBUG) << "Server received a message for client " << id;
+  LOG(DEBUG) << "Server received a " << bytes_transmitted
+             << " byte-sized message for client " << id;
   if (!ec) {
+    this->recv_buf_.resize(bytes_transmitted);
     dph::Message message(this->recv_buf_);
 
     // New Connection
@@ -124,6 +126,8 @@ void Server::receive(uint32_t const id) {
   LOG(DEBUG) << "Server listening for data on connection " << id;
   std::experimental::net::ip::tcp::socket& socket =
       this->connection_sockets_.at(id - 1);
+  this->recv_buf_.clear();
+  this->recv_buf_.resize(1024, 0);
   auto handler = std::bind(&Server::receive_handler, this,
                            std::placeholders::_1, std::placeholders::_2, id);
   socket.async_receive(std::experimental::net::buffer(this->recv_buf_),

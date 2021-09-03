@@ -1,65 +1,53 @@
 #include <g3log/g3log.hpp>
 
 #include "Message.hpp"
-#include "dppl/DPProxyMessage.hpp"
 
 namespace dph {
 Message::Message(void) : data_(1024, '\0') {}
-Message::Message(std::vector<char> const& data) : data_(data) {}
+
 Message::Message(uint32_t from, uint32_t to, Command command,
-                       uint32_t data_size, char const* data) {
-  std::size_t data_size_ = sizeof(MESSAGE) + data_size;
-  this->data_.resize(data_size_, 0);
-  MESSAGE* msg = this->get_message();
-  msg->from_id = from;
-  msg->to_id = to;
-  msg->msg_command = static_cast<uint8_t>(command);
-  msg->data_size = data_size;
-  std::copy(data, data + data_size, msg->data);
+                 dppl::message payload)
+    : from_id(from), to_id(to), command(command), payload(payload) {}
+
+Message::Message(std::vector<uint8_t> const& data) : data_(data) {
+  MESSAGE* message = reinterpret_cast<MESSAGE*>(this->data_.data());
+  uint8_t* start = reinterpret_cast<uint8_t*>(&message->data);
+  uint8_t* end = start + message->data_size;
+  std::vector<uint8_t> payload_data(start, end);
+  this->payload_data_ = payload_data;
+  this->from_id = message->from_id;
+  this->to_id = message->to_id;
+  this->command = Command(message->msg_command);
+  this->payload = dppl::message(this->payload_data_);
 }
 
-MESSAGE* Message::get_message(void) {
-  return reinterpret_cast<MESSAGE*>(&(*this->data_.begin()));
+Message::Message(uint32_t from, uint32_t to, Command command,
+                 uint32_t data_size, char const* data)
+    : from_id(from), to_id(to), command(command) {
+  if (!data_size) return;
+  std::vector<uint8_t> payload_data(data, data + data_size);
+  this->payload = dppl::message(payload_data);
 }
 
-std::vector<char> Message::get_payload(void) {
-  std::vector<char> result;
-  MESSAGE* dph_message = this->get_message();
-  char const* start = dph_message->data;
-  char const* end = start + dph_message->data_size;
-  result.assign(start, end);
+std::size_t Message::size(void) const {
+  return sizeof(MESSAGE) + this->payload.size();
+}
+
+std::vector<uint8_t> Message::to_vector(void) const {
+  std::vector<uint8_t> result(this->size(), 0);
+  MESSAGE* message = reinterpret_cast<MESSAGE*>(result.data());
+  message->from_id = this->from_id;
+  message->to_id = this->to_id;
+  message->msg_command = static_cast<uint8_t>(this->command);
+  std::vector<uint8_t> payload_data = this->payload.to_vector();
+  message->data_size = payload_data.size();
+
+  if (!payload_data.size()) return result;
+  char* start = reinterpret_cast<char*>(payload_data.data());
+  char* end = start + message->data_size;
+  char* dest = reinterpret_cast<char*>(&message->data);
+  std::copy(start, end, dest);
   return result;
 }
 
-void Message::set_payload(std::vector<char> const& payload) {
-  this->data_.resize(sizeof(MESSAGE) + payload.size(), '\0');
-  MESSAGE* dphm = this->get_message();
-  dphm->data_size = payload.size();
-  std::copy(payload.begin(), payload.end(), dphm->data);
-}
-
-std::vector<char> Message::to_vector(void) const { return this->data_; }
-
-bool Message::is_dp_message(void) const {
-  // Load the payload into a DPProxyMessage
-  dppl::DPProxyMessage proxy_message(this->to_vector());
-
-  return proxy_message.is_dp_message();
-}
-
-uint32_t Message::get_from_id(void) {
-  return this->get_message()->from_id;
-}
-
-void Message::set_from_id(uint32_t const id) {
-  this->get_message()->from_id = id;
-}
-
-uint32_t Message::get_to_id(void) {
-  return this->get_message()->to_id;
-}
-
-void Message::set_to_id(uint32_t const id) {
-  this->get_message()->to_id = id;
-}
 }  // namespace dph

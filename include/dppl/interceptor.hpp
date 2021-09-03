@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "dp/dp.hpp"
 #include "dppl/DirectPlayServer.hpp"
-#include "dppl/dplay.h"
 #include "dppl/proxy.hpp"
 #include "experimental/net"
 
@@ -28,8 +28,8 @@ class interceptor {
   // `proxy`s and `DirectPlayServer` will be bundled into DPProxyMessages and
   // forwarded through these callbacks.
   interceptor(std::experimental::net::io_context* io_context,
-              std::function<void(std::vector<char> const&)> dp_forward,
-              std::function<void(std::vector<char> const&)> data_forward,
+              std::function<void(dppl::message const&)> dp_forward,
+              std::function<void(dppl::message const&)> data_forward,
               bool use_localhost = false);
 
   // These `_deliver` functions allow the owning class to send data to the
@@ -37,46 +37,53 @@ class interceptor {
   // The proxy through which the message is sent is determined by the id
   // information providd in the structure of the message. The underlying data
   // should be in the format of a DPProxyMessage structure.
-  void dp_deliver(std::vector<char> const& buffer);
-  void data_deliver(std::vector<char> const& buffer);
+  void dp_deliver(dppl::message const& request);
+  void data_deliver(dppl::message const& request);
 
   void set_client_id(DWORD id);
 
  private:
   // Proxy Helper Funcs
-  inline bool has_proxies();
-  std::shared_ptr<proxy> find_proxy(DPProxyEndpointIDs const& ids);
-
-  void direct_play_server_callback(std::vector<char> const& buffer);
-  void proxy_dp_callback(DPProxyMessage const& message);
-  void proxy_data_callback(DPProxyMessage const& message);
-
-  // handlers for messages from remotes
-  void dp_send_enumsessions();
-  void dp_send_enumsessionsreply();
-  void dp_send_requestplayerid();
-  void dp_send_requestplayerreply();
-  void dp_send_createplayer();
-  void dp_send_addforwardrequest();
-  void dp_send_superenumplayersreply();
-  std::size_t register_player(DPLAYI_SUPERPACKEDPLAYER* player);
-
-  // handlers for messages from local
-  void dp_recv_requestplayerid();
-  void dp_recv_superenumplayersreply();
+  // inline bool has_proxies();
+  std::shared_ptr<proxy> find_proxy(ENDPOINTIDS const& ids);
+  std::shared_ptr<proxy> add_proxy(proxy::type type);
 
   // Convenience functions for accesing the buffers as DPProxyMessages
-  DPProxyMessage get_send_msg();
+  // DPProxyMessage get_send_msg();
+
+  // For create proxies for other players in the session
+  void register_player(dp::superpackedplayer* player, ENDPOINTIDS from);
+
+  // handlers for messages from remotes
+  void dp_send_enumsessions(dppl::message const& request);
+  void dp_send_enumsessionsreply(dppl::message const& request);
+  void dp_send_requestplayerid(dppl::message const& request);
+  void dp_send_requestplayerreply(dppl::message const& request);
+  void dp_send_createplayer(dppl::message const& request);
+  void dp_send_addforwardrequest(dppl::message const& request);
+  void dp_send_superenumplayersreply(dppl::message const& request);
+
+  // handlers for messages from local
+  void dp_recv_requestplayerid(dppl::message const& response);
+  void dp_recv_deleteplayer(dppl::message const& response);
+  void dp_recv_superenumplayersreply(dppl::message const& response);
+
+  // Proxy Callbacks
+  void proxy_dp_callback(dppl::message message);
+  void proxy_data_callback(dppl::message message);
+
+  // DPS Callback to receive ENUMSESSIONS requests
+  void direct_play_server_callback(dp::transmission request);
 
   DWORD client_id_ = 0;
   DWORD system_id_ = 0;
   DWORD player_id_ = 0;
-  int recent_player_id_flags_ = -1;
+  DWORD recent_player_id_flags_ = 0;
 
   std::vector<char> send_buf_;
   std::vector<char> recv_buf_;
-  std::function<void(std::vector<char> const&)> dp_forward_;
-  std::function<void(std::vector<char> const&)> data_forward_;
+  std::function<void(dppl::message const&)> dp_forward_;
+  std::function<void(dppl::message const&)> data_forward_;
   std::experimental::net::io_context* io_context_;
 
   DirectPlayServer dps;

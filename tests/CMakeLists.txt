@@ -31,15 +31,34 @@ add_executable("${TEST_PROJECT_NAME}"
   ../src/Server.cpp
 
   # Should be listed in order of dependecies
-  ./src/dppl/hardware_test.cpp
+  ./src/dp/header_test.cpp
+  ./src/dp/sessiondesc_test.cpp
+  ./src/dp/packedplayer_test.cpp
+  ./src/dp/playerinfomask_test.cpp
+  ./src/dp/superpackedplayer_test.cpp
+  ./src/dp/enumsessionsreply_test.cpp
+  ./src/dp/enumsessions_test.cpp
+  ./src/dp/enumplayersreply_test.cpp
+  ./src/dp/requestplayerid_test.cpp
+  ./src/dp/requestgroupid_test.cpp
+  ./src/dp/requestplayerreply_test.cpp
+  ./src/dp/createplayer_test.cpp
+  ./src/dp/deleteplayer_test.cpp
+  ./src/dp/addforwardrequest_test.cpp
+  ./src/dp/superenumplayersreply_test.cpp
+  ./src/dp/message_test.cpp
+  ./src/dp/transmission_test.cpp
+
   ./src/dppl/AppSimulator.cpp
-  ./src/dppl/dplay_size_test.cpp
+  ./src/dppl/hardware_test.cpp
   ./src/dppl/PacketSniffer_test.cpp
-  ./src/dppl/DPProxyMessage_test.cpp
-  ./src/dppl/DPSuperPackedPlayer_test.cpp
+  ./src/dppl/message_test.cpp
   ./src/dppl/DirectPlayServer_test.cpp
   ./src/dppl/proxy_test.cpp
   ./src/dppl/interceptor_test.cpp
+
+  ./src/MockServer.cpp
+
   ./src/Message_test.cpp
   ./src/ClientRecord_test.cpp
   ./src/Client_test.cpp
@@ -68,7 +87,8 @@ target_include_directories("${TEST_PROJECT_NAME}" BEFORE
 target_link_libraries("${TEST_PROJECT_NAME}"
 	PUBLIC
 		#nathp
-		dppl
+    dppl
+    dp
 		gtest_main
 		g3log
 		${LIBTINS_LIBRARY}

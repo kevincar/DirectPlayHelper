@@ -137,6 +137,7 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 		)
 
 # build the libraries
+add_subdirectory(src/dp)
 add_subdirectory(src/dppl)
 #add_subdirectory(src/nathp)
 
@@ -149,6 +150,7 @@ target_link_libraries("${PROJECT_NAME}"
 	PUBLIC
 		#nathp
 		dppl
+    dp
 		${LIBTINS_LIBRARY}
 		g3log
 		${PTHREAD_LIB}

@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "dppl/message.hpp"
+
 namespace dph {
 #pragma pack(push, 1)
 typedef struct {
@@ -30,28 +32,21 @@ typedef struct {
 class Message {
  public:
   Message(void);
-  explicit Message(std::vector<char> const& data);
+  Message(uint32_t from, uint32_t to, Command command, dppl::message payload);
+  explicit Message(std::vector<uint8_t> const& data);
   Message(uint32_t from, uint32_t to, Command command, uint32_t data_size,
              char const* data);
+  std::size_t size(void) const;
+  std::vector<uint8_t> to_vector(void) const;
 
-  MESSAGE* get_message(void);
-
-  std::vector<char> get_payload(void);
-  void set_payload(std::vector<char> const& payload);
-
-  std::vector<char> to_vector(void) const;
-
-  // Determines whether the payload is carring a DP or Data message
-  bool is_dp_message(void) const;
-
-  uint32_t get_from_id(void);
-  void set_from_id(uint32_t const id);
-
-  uint32_t get_to_id(void);
-  void set_to_id(uint32_t const id);
+  uint32_t from_id;
+  uint32_t to_id;
+  Command command;
+  dppl::message payload;
 
  private:
-  std::vector<char> data_;
+  std::vector<uint8_t> data_;
+  std::vector<uint8_t> payload_data_;
 };
 }  // namespace dph
 

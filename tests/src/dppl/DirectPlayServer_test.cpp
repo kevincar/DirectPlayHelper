@@ -1,25 +1,37 @@
-#include "dppl/DPMessage.hpp"
-#include "dppl/DirectPlayServer.hpp"
+#include "dp/dp.hpp"
 #include "dppl/hardware_test.hpp"
+#include "dppl/AppSimulator.hpp"
+#include "dppl/DirectPlayServer.hpp"
 #include "g3log/g3log.hpp"
 #include "gtest/gtest.h"
 
 TEST(DirectPlayServerTest, constructor) {
-  if (!(hardware_test_check() || test_check("TEST_DPSRVR"))) return SUCCEED();
-
-  std::experimental::net::io_context io_context;
-  dppl::DirectPlayServer dps(&io_context, [&](std::vector<char> buffer) {
-    dppl::DPMessage message(&buffer);
-    EXPECT_EQ(message.header()->cbSize,
-              sizeof(DPMSG_HEADER) + sizeof(DPMSG_ENUMSESSIONS));
-    io_context.stop();
-  });
-
-  std::cout << "Please attempt to join a game then press enter";
   std::string input;
-  std::getline(std::cin, input, '\n');
-  io_context.run();
+  std::experimental::net::io_context io_context;
+  std::shared_ptr<dppl::AppSimulator> simulator;
+  std::shared_ptr<dppl::DirectPlayServer> dps;
 
-  std::cout << "Please exit the game and press enter to continue";
-  std::getline(std::cin, input, '\n');
+  // Callback functions
+  std::function<void(dp::transmission)> callback;
+
+  // Callback Implementation
+  callback = [&](dp::transmission transmitted) {
+    LOG(DEBUG) << "DirectPlayServer call back received transmission";
+    EXPECT_EQ(transmitted.msg->header.command, DPSYS_ENUMSESSIONS);
+    io_context.stop();
+  };
+
+  // Start
+  if (hardware_test_check() || test_check("TEST_DPSERVER")) {
+    std::cout << "Please attempt to join a game then press enter";
+    std::getline(std::cin, input, '\n');
+    io_context.run();
+
+    std::cout << "Please exit the game and press enter to continue";
+    std::getline(std::cin, input, '\n');
+  } else {
+    dps = std::make_shared<dppl::DirectPlayServer>(&io_context, callback);
+    simulator = std::make_shared<dppl::AppSimulator>(&io_context, false);
+    io_context.run();
+  }
 }

@@ -20,22 +20,22 @@ class Server {
   void process_request_id(dph::Message message);
   void process_forward_message(dph::Message message);
 
-  // Net Calls
-  void accept(void);
-  void send(uint32_t const id);
-  void receive(uint32_t const id);
-  void stop(uint32_t const id);
-
   // Net Handlers
   void accept_handler(std::error_code const& ec,
                       std::experimental::net::ip::tcp::socket socket);
-  void send_handler(std::error_code const& ec, std::size_t bytes_transmitted);
   void receive_handler(std::error_code const& ec, std::size_t bytes_transmitted,
                        uint32_t const id);
+  void send_handler(std::error_code const& ec, std::size_t bytes_transmitted);
+
+  // Net Calls
+  void accept(void);
+  void receive(uint32_t const id);
+  void send(uint32_t const id);
+  void stop(uint32_t const id);
 
   uint16_t port_;
-  std::vector<char> recv_buf_;
-  std::vector<char> send_buf_;
+  std::vector<uint8_t> recv_buf_;
+  std::vector<uint8_t> send_buf_;
   std::vector<dph::ClientRecord> client_records_;
   std::experimental::net::io_context* io_context_;
   std::experimental::net::ip::tcp::acceptor server_socket_;

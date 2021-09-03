@@ -43,10 +43,6 @@ class Message {
   uint32_t to_id;
   Command command;
   dppl::message payload;
-
- private:
-  std::vector<uint8_t> data_;
-  std::vector<uint8_t> payload_data_;
 };
 }  // namespace dph
 

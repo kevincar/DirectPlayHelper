@@ -3,22 +3,31 @@
 #include "Message.hpp"
 
 namespace dph {
-Message::Message(void) : data_(1024, '\0') {}
+Message::Message(void) {}
 
 Message::Message(uint32_t from, uint32_t to, Command command,
                  dppl::message payload)
     : from_id(from), to_id(to), command(command), payload(payload) {}
 
-Message::Message(std::vector<uint8_t> const& data) : data_(data) {
-  MESSAGE* message = reinterpret_cast<MESSAGE*>(this->data_.data());
-  uint8_t* start = reinterpret_cast<uint8_t*>(&message->data);
-  uint8_t* end = start + message->data_size;
+Message::Message(std::vector<uint8_t> const& data) {
+  LOG(DEBUG) << "Received data";
+  MESSAGE const* message = reinterpret_cast<MESSAGE const*>(data.data());
+  uint8_t const* start = reinterpret_cast<uint8_t const*>(&message->data);
+  uint8_t const* end = start + message->data_size;
+  LOG(DEBUG) << "loading payload. Message data size = " << message->data_size;
   std::vector<uint8_t> payload_data(start, end);
-  this->payload_data_ = payload_data;
   this->from_id = message->from_id;
   this->to_id = message->to_id;
   this->command = Command(message->msg_command);
-  this->payload = dppl::message(this->payload_data_);
+  LOG(DEBUG) << "Initializing dppl message of size: " << payload_data.size();
+  if (!payload_data.size()) {
+    std::stringstream ss;
+    for (auto c : data) {
+      ss << "0x" << std::hex << +c << ", ";
+    }
+    LOG(DEBUG) << ss.str();
+  }
+  this->payload = dppl::message(payload_data);
 }
 
 Message::Message(uint32_t from, uint32_t to, Command command,

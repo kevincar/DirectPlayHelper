@@ -38,7 +38,7 @@ void MockServer::process_forward_message(dph::Message message) {
   // back the host response. On the real server, we simply forward the
   // message to the appropariate clinet. If the intended recipient is
   // the host, the message is forwarded to all.
-  dppl::message proxy_message = message.payload;
+  dppl::message proxy_message(message.payload);
 
   // We will simply simulate the message being processed on some other
   // client here though
@@ -67,9 +67,9 @@ void MockServer::process_forward_message(dph::Message message) {
   }
 
   dppl::message response_message(response, {99, 0, 0}, proxy_message.from);
-  dph::Message return_message(response_message.from.clientID,
-                              response_message.to.clientID,
-                              dph::Command::FORWARDMESSAGE, response_message);
+  dph::Message return_message(
+      response_message.from.clientID, response_message.to.clientID,
+      dph::Command::FORWARDMESSAGE, response_message.to_vector());
   this->send_buf_ = return_message.to_vector();
   this->send();
 }

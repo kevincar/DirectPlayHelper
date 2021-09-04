@@ -57,7 +57,7 @@ void Client::dp_callback(dppl::message const& proxy_message) {
   uint32_t to_id = proxy_message.to.clientID;
 
   dph::Message message(this->id_, to_id, dph::Command::FORWARDMESSAGE,
-                       proxy_message);
+                       proxy_message.to_vector());
   this->forward_message(message);
 }
 
@@ -71,7 +71,7 @@ void Client::data_callback(dppl::message const& proxy_message) {
   uint32_t to_id = proxy_message.to.clientID;
 
   dph::Message message(this->id_, to_id, dph::Command::FORWARDMESSAGE,
-                       proxy_message);
+                       proxy_message.to_vector());
   this->forward_message(message);
 }
 
@@ -102,7 +102,7 @@ void Client::receive_handler(std::error_code const& ec,
         this->interceptor_.set_client_id(this->id_);
       } break;
       case dph::Command::FORWARDMESSAGE: {
-        dppl::message proxy_message = dph_message.payload;
+        dppl::message proxy_message(dph_message.payload);
         LOG(DEBUG) << "Received forward message from "
                    << proxy_message.from.clientID << " to "
                    << proxy_message.to.clientID;

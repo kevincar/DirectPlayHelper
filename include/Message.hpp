@@ -16,11 +16,7 @@ typedef struct {
   char data[];
 } MESSAGE;
 #pragma pack(pop)
-enum Command {
-  REQUESTID,
-  REQUESTIDREPLY,
-  FORWARDMESSAGE
-};
+enum Command { REQUESTID, REQUESTIDREPLY, FORWARDMESSAGE };
 
 #pragma pack(push, 1)
 typedef struct {
@@ -32,17 +28,18 @@ typedef struct {
 class Message {
  public:
   Message(void);
-  Message(uint32_t from, uint32_t to, Command command, dppl::message payload);
+  Message(uint32_t from, uint32_t to, Command command,
+          std::vector<BYTE> payload);
   explicit Message(std::vector<uint8_t> const& data);
   Message(uint32_t from, uint32_t to, Command command, uint32_t data_size,
-             char const* data);
+          char const* data);
   std::size_t size(void) const;
   std::vector<uint8_t> to_vector(void) const;
 
   uint32_t from_id;
   uint32_t to_id;
   Command command;
-  dppl::message payload;
+  std::vector<BYTE> payload;
 };
 }  // namespace dph
 

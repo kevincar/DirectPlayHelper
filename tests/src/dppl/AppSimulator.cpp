@@ -241,7 +241,8 @@ void AppSimulator::dp_accept_handler(
     std::error_code const& ec,
     std::experimental::net::ip::tcp::socket new_socket) {
   if (!ec) {
-    LOG(DEBUG) << "DP accpted new connection";
+    LOG(DEBUG) << "DP accpted new connection from "
+               << new_socket.remote_endpoint();
     this->dp_recv_socket_ = std::move(new_socket);
     this->dp_receive();
   } else {

@@ -42,6 +42,7 @@ void interceptor::dp_deliver(dppl::message const& request) {
       break;
     case DPSYS_PING:
     case DPSYS_PINGREPLY:
+    case DPSYS_DELETEPLAYER:
       this->dp_send_default(request);
       break;
     default:

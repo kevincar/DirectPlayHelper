@@ -248,6 +248,7 @@ void proxy::dp_process_incoming_message(message proxy_msg) {
     case DPSYS_REQUESTPLAYERREPLY:
     case DPSYS_PING:
     case DPSYS_PINGREPLY:
+    case DPSYS_DELETEPLAYER:
     case DPSYS_SUPERENUMPLAYERSREPLY: {
       this->dp_send_buf_ = proxy_msg.data.to_vector();
       this->dp_send();
@@ -300,6 +301,7 @@ void proxy::dp_receive_handler(std::error_code const &ec,
         break;
       case DPSYS_ENUMSESSIONSREPLY:
       case DPSYS_CREATEPLAYER:
+      case DPSYS_DELETEPLAYER:
         break;
       default:
         LOG(FATAL) << TXCR << TXFB
@@ -344,6 +346,7 @@ void proxy::dp_send_handler(std::error_code const &ec,
 void proxy::data_receive_handler(std::error_code const &ec,
                                  std::size_t bytes_transmitted) {
   if (!ec) {
+    this->data_recv_buf_.resize(bytes_transmitted);
     dp::transmission transmitted(this->data_recv_buf_);
     DWORD *datum = reinterpret_cast<DWORD *>(this->data_recv_buf_.data());
     DWORD from_player_id = *datum++;

@@ -20,13 +20,6 @@ Message::Message(std::vector<uint8_t> const& data) {
   this->to_id = message->to_id;
   this->command = Command(message->msg_command);
   LOG(DEBUG) << "Initializing dppl message of size: " << this->payload.size();
-  if (!this->payload.size()) {
-    std::stringstream ss;
-    for (auto c : data) {
-      ss << "0x" << std::hex << +c << ", ";
-    }
-    LOG(DEBUG) << ss.str();
-  }
 }
 
 Message::Message(uint32_t from, uint32_t to, Command command,

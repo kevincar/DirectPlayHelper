@@ -82,6 +82,17 @@ void Server::receive_handler(std::error_code const& ec,
     this->recv_buf_.resize(bytes_transmitted);
     dph::Message message(this->recv_buf_);
 
+    if (message.size() > bytes_transmitted) {
+      std::stringstream ss;
+      ss << "Malformed data sent to the server. Only " << bytes_transmitted
+         << " byte(s) of data were transmitted but the message was "
+         << message.size() << "\n\n";
+      for (auto c : this->recv_buf_) {
+        ss << "0x" << std::hex << +c << ", ";
+      }
+      LOG(FATAL) << ss.str();
+    }
+
     // New Connection
     if (message.from_id == 0) {
       message.from_id = id;

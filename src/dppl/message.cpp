@@ -15,6 +15,16 @@ message::message(std::vector<BYTE> data) {
 
   LOG(DEBUG) << "Calculating dppl Message size";
   std::size_t message_size = data.size() - sizeof(PROXYMSG);
+
+  if (message_size > 0xFFFF) {
+    std::stringstream ss;
+    ss << "Proxy Message size is larger than is transmissable (" << message_size
+       << ")\n\n";
+    for (auto c : data) {
+      ss << "0x" << std::hex << +c << ", ";
+    }
+    LOG(FATAL) << ss.str();
+  }
   BYTE* message_data_ptr = reinterpret_cast<BYTE*>(&message_ptr->message);
   LOG(DEBUG) << "Loading data into a new vector";
   std::vector<BYTE> message_data(message_data_ptr,
